@@ -93,27 +93,58 @@
               <div class="font-bold text-xl my-1 text-indigo-600 tracking-wider">{{ g.code }}</div>
               <span :class="['text-xs px-2 py-0.5 rounded', g.status==='OPEN'?'bg-green-100 text-green-700':'bg-gray-200 text-gray-500']">{{ g.status === 'OPEN' ? '進行中' : '已結單' }}</span>
             </div>
-            <div class="flex flex-col gap-2">
-              <button @click="viewDetail(g)" class="bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm">明細/收款</button>
-              <button v-if="g.status === 'OPEN'" @click="closeGroup(g)" class="bg-red-50 text-red-600 px-3 py-1 rounded text-sm">結束此團</button>
-            </div>
+            <button @click="viewDetail(g)" class="bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm">明細/收款</button>
           </div>
           <div v-if="selectedGroup && selectedGroup.id === g.id" class="mt-4 pt-4 border-t">
-            <div v-if="loadingDetail" class="text-center py-2"><i class="fas fa-spinner fa-spin"></i></div>
-            <div v-else>
-              <table class="w-full text-left text-sm">
-                <thead class="bg-gray-50"><tr><th class="p-2">人名</th><th class="p-2">內容</th><th class="p-2 text-right">金額</th><th class="p-2 text-center">付</th></tr></thead>
-                <tbody>
-                  <tr v-for="p in selectedDetail.list" class="border-b">
-                    <td class="p-2 font-bold">{{ p.name }}</td>
-                    <td class="p-2 text-gray-600"><span v-for="i in p.items" class="mr-2 inline-block bg-gray-100 rounded px-1">{{ i }}</span></td>
-                    <td class="p-2 text-right">${{ p.total }}</td>
-                    <td class="p-2 text-center"><input type="checkbox" v-model="p.paid" @change="togglePaid(p)" class="w-4 h-4"></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <table class="w-full text-left text-sm">
+              <tr v-for="p in selectedDetail.list" class="border-b">
+                <td class="p-2 font-bold">{{ p.name }}</td>
+                <td class="p-2 text-right">${{ p.total }}</td>
+                <td class="p-2 text-center"><input type="checkbox" v-model="p.paid" @change="togglePaid(p)"></td>
+              </tr>
+            </table>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="currentView === 'admin'" class="p-4">
+      <div class="bg-white p-4 rounded shadow mb-6 flex justify-between items-center no-print">
+        <div class="flex items-center gap-4">
+          <h1 class="font-bold text-xl"><i class="fas fa-user-secret"></i> 總後台</h1>
+          <input type="date" v-model="dashboardDate" @change="fetchAdminData" class="border p-1 rounded">
+        </div>
+        <div class="flex gap-2">
+          <button @click="adminTab='stock'" :class="['px-3 py-1 rounded', adminTab=='stock'?'bg-gray-800 text-white':'bg-gray-200']">備貨</button>
+          <button @click="adminTab='details'" :class="['px-3 py-1 rounded', adminTab=='details'?'bg-gray-800 text-white':'bg-gray-200']">明細</button>
+          <button @click="adminTab='labels'" :class="['px-3 py-1 rounded', adminTab=='labels'?'bg-gray-800 text-white':'bg-gray-200']">標籤</button>
+          <button @click="logout" class="bg-red-500 text-white px-3 py-1 rounded">登出</button>
+        </div>
+      </div>
+
+      <div v-if="adminTab === 'stock'" class="max-w-xl mx-auto bg-white p-6 rounded shadow">
+        <h2 class="text-lg font-bold border-b pb-2 mb-4">總備貨量 ({{ dashboardDate }})</h2>
+        <div v-for="item in adminData.stockList" class="flex justify-between py-2 border-b border-dashed">
+          <span class="text-lg">{{ item.name }}</span>
+          <span class="text-xl font-bold text-orange-600">{{ item.qty }}</span>
+        </div>
+      </div>
+
+      <div v-if="adminTab === 'details'" class="max-w-4xl mx-auto space-y-4">
+        <div v-for="group in adminData.groupList" class="bg-white rounded shadow p-4">
+          <div class="font-bold text-indigo-700 border-b pb-2 mb-2">{{ group.companyName }} ({{ group.code }}) - 總計: ${{ group.total }}</div>
+          <div v-for="buyer in group.buyers" class="text-sm py-1 flex justify-between">
+            <span>{{ buyer.name }}: {{ buyer.items.join(', ') }}</span>
+            <span class="font-bold">${{ buyer.total }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="adminTab === 'labels'" class="grid grid-cols-2 md:grid-cols-4 gap-2 print-area">
+        <div v-for="l in adminData.labelList" class="label-card bg-white p-2 border text-xs">
+          <div class="font-bold border-b mb-1">{{ l.title }}</div>
+          <div v-for="i in l.items">{{ i.name }} x{{ i.qty }}</div>
+          <div class="text-right font-bold mt-1">Total: ${{ l.total }}</div>
         </div>
       </div>
     </div>
@@ -123,15 +154,16 @@
         <h2 class="text-xl font-bold mb-4 text-center">後台登入</h2>
         <input v-model="loginForm.id" placeholder="代碼" class="w-full p-2 border rounded mb-3 uppercase">
         <input v-model="loginForm.pass" type="password" placeholder="密碼" class="w-full p-2 border rounded mb-4">
-        <button @click="handleLogin" class="w-full bg-gray-800 text-white py-2 rounded">登入</button>
+        <button @click="handleLogin" :disabled="loading" class="w-full bg-gray-800 text-white py-2 rounded">
+            {{ loading ? '登入中...' : '登入' }}
+        </button>
         <button @click="currentView='home'" class="w-full text-center text-gray-400 text-xs mt-4">回首頁</button>
       </div>
     </div>
 
-    </div>
+  </div>
 
   <script>
-    // 🚨 這裡填入您部署後的網址 🚨
     const FOOD_API_URL = 'https://script.google.com/macros/s/AKfycbyh5E5mcB0_T7yAhacBL2LxvRXmZ2A4U61mAKO_rSubNGY68LG0_3z8yp-fEzMUZoXXUA/exec'; 
 
     const { createApp, ref, computed } = Vue;
@@ -154,62 +186,63 @@
         const selectedGroup = ref(null);
         const selectedDetail = ref({list:[], totalAmount:0});
         const loadingDetail = ref(false);
+        
+        // Admin States
+        const adminTab = ref('stock');
+        const dashboardDate = ref(new Date().toISOString().split('T')[0]);
+        const adminData = ref({ stockList: [], labelList: [], groupList: [] });
 
-		// 修改後的 api 函數
-		async function api(action, payload = {}) {
-			const res = await fetch(FOOD_API_URL, {
-				method: "POST",
-				// 關鍵：將內容轉為純文字發送，避開瀏覽器對 JSON 的 CORS 預檢
-				body: JSON.stringify({ action, ...payload }),
-			});
-			
-			// 檢查回傳是否成功
-			if (!res.ok) {
-				throw new Error('網路回應不正確');
-			}
-			return await res.json();
-		}
+        async function api(action, payload = {}) {
+            const res = await fetch(FOOD_API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action, ...payload }),
+            });
+            if (!res.ok) throw new Error('連線失敗');
+            return await res.json();
+        }
 
         const verifyCode = async () => {
           loading.value = true;
-          const res = await api('validateOrderCode', { code: inputCode.value });
-          loading.value = false;
-          if(res.success) {
-            sessionInfo.value = res; 
-            items.value = res.items.map(i => ({...i, qty:0}));
-            currentView.value = 'order';
-          } else { alert(res.message); }
+          try {
+            const res = await api('validateOrderCode', { code: inputCode.value });
+            if(res.success) {
+              sessionInfo.value = res; 
+              items.value = res.items.map(i => ({...i, qty:0}));
+              currentView.value = 'order';
+            } else { alert(res.message); }
+          } finally { loading.value = false; }
         };
 
         const submitOrder = async () => {
           if(!buyerName.value) return alert('請輸入姓名');
           submitting.value = true;
-          const cart = items.value.filter(i => i.qty > 0);
-          const res = await api('submitOrder', { 
-            orderData: {
-              groupOrderId: sessionInfo.value.groupOrderId,
-              companyId: sessionInfo.value.companyId,
-              companyName: sessionInfo.value.companyName,
-              buyerName: buyerName.value,
-              items: cart,
-              note: note.value
-            }
-          });
-          if(res.success) {
-            alert('訂購成功！');
-            items.value.forEach(i=>i.qty=0); buyerName.value = ''; note.value = '';
-            currentView.value = 'home';
-          }
-          submitting.value = false;
+          try {
+            const cart = items.value.filter(i => i.qty > 0);
+            const res = await api('submitOrder', { 
+              orderData: {
+                groupOrderId: sessionInfo.value.groupOrderId,
+                companyId: sessionInfo.value.companyId,
+                companyName: sessionInfo.value.companyName,
+                buyerName: buyerName.value,
+                items: cart,
+                note: note.value
+              }
+            });
+            if(res.success) { alert('訂購成功！'); currentView.value = 'home'; }
+          } finally { submitting.value = false; }
         };
 
         const handleLogin = async () => {
-          const res = await api('loginUser', { id: loginForm.value.id, pass: loginForm.value.pass });
-          if(res.success){
-            user.value = res;
-            currentView.value = res.role === 'ADMIN' ? 'admin' : 'leader';
-            if(res.role === 'LEADER') loadLeaderData();
-          } else { alert(res.message); }
+          loading.value = true;
+          try {
+            const res = await api('loginUser', { id: loginForm.value.id, pass: loginForm.value.pass });
+            if(res.success){
+              user.value = res;
+              currentView.value = res.role === 'ADMIN' ? 'admin' : 'leader'; 
+              if(res.role === 'LEADER') loadLeaderData();
+              if(res.role === 'ADMIN') fetchAdminData();
+            } else { alert(res.message); }
+          } finally { loading.value = false; }
         };
 
         const loadLeaderData = async () => {
@@ -217,30 +250,25 @@
            leaderGroups.value = res.groups;
         };
 
-        const createGroup = async () => {
-          if(!confirm('開新團？')) return;
-          creating.value = true;
-          const res = await api('createGroupOrder', { companyId: user.value.companyId, companyName: user.value.companyName });
-          creating.value = false;
-          alert(`序號是：${res.code}`);
-          loadLeaderData();
+        const fetchAdminData = async () => {
+          const res = await api('getDashboardData', { role: 'ADMIN', dateStr: dashboardDate.value });
+          adminData.value = res;
         };
 
         const viewDetail = async (group) => {
           selectedGroup.value = group;
-          loadingDetail.value = true;
           const res = await api('getGroupOrderDetails', { groupOrderId: group.id });
           selectedDetail.value = res;
-          loadingDetail.value = false;
         };
 
         const togglePaid = async (p) => {
           await api('setPaidStatus', { orderIds: p.orderIds, isPaid: p.paid });
         };
 
-        const closeGroup = async (group) => {
-          if(!confirm('結束？')) return;
-          await api('closeGroupOrder', { groupOrderId: group.id });
+        const createGroup = async () => {
+          if(!confirm('發起新團購？')) return;
+          const res = await api('createGroupOrder', { companyId: user.value.companyId, companyName: user.value.companyName });
+          alert(`開團成功！序號是：${res.code}`);
           loadLeaderData();
         };
 
@@ -253,7 +281,8 @@
         return {
           currentView, loading, inputCode, sessionInfo, buyerName, note, items, submitting,
           loginForm, user, leaderGroups, creating, selectedGroup, selectedDetail, loadingDetail,
-          verifyCode, submitOrder, handleLogin, createGroup, viewDetail, closeGroup, togglePaid, logout,
+          adminTab, dashboardDate, adminData,
+          verifyCode, submitOrder, handleLogin, createGroup, viewDetail, fetchAdminData, togglePaid, logout,
           categories, filteredItems, totalItems, totalAmount, filterCat
         };
       }
