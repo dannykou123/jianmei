@@ -157,7 +157,7 @@
 
 		// 修改後的 api 函數
 		async function api(action, payload = {}) {
-			const res = await fetch(GAS_API_URL, {
+			const res = await fetch(FOOD_API_URL, {
 				method: "POST",
 				// 關鍵：將內容轉為純文字發送，避開瀏覽器對 JSON 的 CORS 預檢
 				body: JSON.stringify({ action, ...payload }),
