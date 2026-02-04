@@ -155,14 +155,20 @@
         const selectedDetail = ref({list:[], totalAmount:0});
         const loadingDetail = ref(false);
 
-        // API 呼叫核心函數
-        async function api(action, payload = {}) {
-            const res = await fetch(FOOD_API_URL, {
-                method: "POST",
-                body: JSON.stringify({ action, ...payload }),
-            });
-            return await res.json();
-        }
+		// 修改後的 api 函數
+		async function api(action, payload = {}) {
+			const res = await fetch(GAS_API_URL, {
+				method: "POST",
+				// 關鍵：將內容轉為純文字發送，避開瀏覽器對 JSON 的 CORS 預檢
+				body: JSON.stringify({ action, ...payload }),
+			});
+			
+			// 檢查回傳是否成功
+			if (!res.ok) {
+				throw new Error('網路回應不正確');
+			}
+			return await res.json();
+		}
 
         const verifyCode = async () => {
           loading.value = true;
