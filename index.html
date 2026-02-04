@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <title>健美滷味訂購系統</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @media print { .no-print { display: none !important; } .print-area { display: block !important; } body { background: white; } .label-card { break-inside: avoid; border: 1px dashed #999; margin-bottom: 10px; } }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
+  <div id="app" class="min-h-screen">
+
+    <div v-if="currentView === 'home'" class="flex flex-col items-center justify-center min-h-screen px-4 bg-gradient-to-br from-orange-50 to-orange-100">
+      <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">健美滷味</h1>
+        <p class="text-gray-500 mb-8 text-sm">請輸入團購序號開始點餐</p>
+        <div class="space-y-4">
+          <input v-model="inputCode" type="text" placeholder="例如：XY1234" class="w-full text-center text-2xl tracking-widest p-3 border-2 border-orange-200 rounded-xl focus:border-orange-500 focus:outline-none uppercase placeholder:tracking-normal placeholder:text-sm">
+          <button @click="verifyCode" :disabled="!inputCode || loading" class="w-full bg-orange-600 text-white text-lg font-bold py-3 rounded-xl shadow hover:bg-orange-700 transition disabled:bg-gray-300">
+            {{ loading ? '驗證中...' : '開始點餐' }}
+          </button>
+        </div>
+        <div class="mt-8 pt-6 border-t border-gray-100">
+          <button @click="currentView = 'login'" class="text-sm text-gray-400 hover:text-gray-600">我是團購主 / 管理員</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="currentView === 'order'" class="max-w-md mx-auto bg-white min-h-screen shadow-2xl pb-24 relative">
+      <div class="bg-orange-600 text-white p-4 sticky top-0 z-10 flex justify-between items-center shadow">
+        <div>
+          <h2 class="font-bold text-lg">{{ sessionInfo.companyName }}</h2>
+          <div class="text-xs opacity-80">團購序號: {{ sessionInfo.code }}</div>
+        </div>
+        <button @click="currentView='home'" class="text-sm bg-orange-700 px-3 py-1 rounded">離開</button>
+      </div>
+      <div class="p-4">
+        <label class="block text-sm font-bold text-gray-700 mb-1">您的姓名</label>
+        <input v-model="buyerName" class="w-full p-2 border rounded mb-4" placeholder="請輸入姓名">
+        <div class="flex overflow-x-auto space-x-2 pb-2 mb-2 no-scrollbar">
+           <button v-for="cat in categories" @click="filterCat = cat" :class="['px-3 py-1 rounded-full text-xs whitespace-nowrap', filterCat === cat ? 'bg-orange-600 text-white' : 'bg-gray-200']">{{ cat }}</button>
+        </div>
+        <div v-for="item in filteredItems" :key="item.id" class="flex justify-between items-center py-3 border-b">
+          <div>
+            <div class="font-bold">{{ item.name }}</div>
+            <div class="text-orange-600">${{ item.price }}</div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button @click="item.qty = Math.max(0, (item.qty||0)-1)" class="w-8 h-8 bg-gray-100 rounded text-gray-600">-</button>
+            <span class="w-6 text-center font-bold">{{ item.qty || 0 }}</span>
+            <button @click="item.qty = (item.qty||0)+1" class="w-8 h-8 bg-orange-500 rounded text-white">+</button>
+          </div>
+        </div>
+        <div class="mt-4">
+          <label class="text-xs font-bold text-gray-500">備註 (選填)</label>
+          <input v-model="note" class="w-full border rounded p-2 text-sm" placeholder="如: 不要辣">
+        </div>
+      </div>
+      <div v-if="totalItems > 0" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t p-4 shadow-[0_-5px_15px_rgba(0,0,0,0.1)] z-20">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-gray-500">已選 {{ totalItems }} 樣</span>
+          <span class="text-xl font-bold text-orange-600">${{ totalAmount }}</span>
+        </div>
+        <button @click="submitOrder" :disabled="submitting || !buyerName" class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg shadow disabled:bg-gray-400">
+          {{ submitting ? '處理中...' : '送出訂單' }}
+        </button>
+      </div>
+    </div>
+
+    <div v-else-if="currentView === 'leader'" class="max-w-4xl mx-auto p-4">
+      <div class="bg-white p-4 rounded shadow mb-4 flex justify-between items-center no-print">
+        <h2 class="text-xl font-bold text-indigo-700">{{ user.companyName }} 後台</h2>
+        <button @click="logout" class="text-sm text-gray-500">登出</button>
+      </div>
+      <div class="bg-indigo-600 text-white p-6 rounded-lg shadow mb-6 flex justify-between items-center">
+        <div>
+          <h3 class="text-lg font-bold mb-1">發起新團購</h3>
+          <p class="text-indigo-200 text-sm">產生新的序號給同事</p>
+        </div>
+        <button @click="createGroup" :disabled="creating" class="bg-white text-indigo-600 px-4 py-2 rounded-lg font-bold shadow hover:bg-gray-100">{{ creating ? '產生中...' : '+ 建立新團' }}</button>
+      </div>
+      <h3 class="font-bold text-gray-700 mb-2">團購紀錄</h3>
+      <div class="space-y-3">
+        <div v-for="g in leaderGroups" :key="g.id" class="bg-white border rounded p-4 shadow-sm">
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="text-xs text-gray-500">{{ g.date }}</div>
+              <div class="font-bold text-xl my-1 text-indigo-600 tracking-wider">{{ g.code }}</div>
+              <span :class="['text-xs px-2 py-0.5 rounded', g.status==='OPEN'?'bg-green-100 text-green-700':'bg-gray-200 text-gray-500']">{{ g.status === 'OPEN' ? '進行中' : '已結單' }}</span>
+            </div>
+            <div class="flex flex-col gap-2">
+              <button @click="viewDetail(g)" class="bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm">明細/收款</button>
+              <button v-if="g.status === 'OPEN'" @click="closeGroup(g)" class="bg-red-50 text-red-600 px-3 py-1 rounded text-sm">結束此團</button>
+            </div>
+          </div>
+          <div v-if="selectedGroup && selectedGroup.id === g.id" class="mt-4 pt-4 border-t">
+            <div v-if="loadingDetail" class="text-center py-2"><i class="fas fa-spinner fa-spin"></i></div>
+            <div v-else>
+              <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50"><tr><th class="p-2">人名</th><th class="p-2">內容</th><th class="p-2 text-right">金額</th><th class="p-2 text-center">付</th></tr></thead>
+                <tbody>
+                  <tr v-for="p in selectedDetail.list" class="border-b">
+                    <td class="p-2 font-bold">{{ p.name }}</td>
+                    <td class="p-2 text-gray-600"><span v-for="i in p.items" class="mr-2 inline-block bg-gray-100 rounded px-1">{{ i }}</span></td>
+                    <td class="p-2 text-right">${{ p.total }}</td>
+                    <td class="p-2 text-center"><input type="checkbox" v-model="p.paid" @change="togglePaid(p)" class="w-4 h-4"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="currentView === 'login'" class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <div class="bg-white p-8 rounded-lg shadow-md w-80">
+        <h2 class="text-xl font-bold mb-4 text-center">後台登入</h2>
+        <input v-model="loginForm.id" placeholder="代碼" class="w-full p-2 border rounded mb-3 uppercase">
+        <input v-model="loginForm.pass" type="password" placeholder="密碼" class="w-full p-2 border rounded mb-4">
+        <button @click="handleLogin" class="w-full bg-gray-800 text-white py-2 rounded">登入</button>
+        <button @click="currentView='home'" class="w-full text-center text-gray-400 text-xs mt-4">回首頁</button>
+      </div>
+    </div>
+
+    </div>
+
+  <script>
+    // 🚨 這裡填入您部署後的網址 🚨
+    const FOOD_API_URL = 'https://script.google.com/macros/s/AKfycbzgUki-4xdUjNzolkIbEBJ1ZLyUqgHSIxcixh_vJ1mxevp4waAqpeRZ8tnon6GDQzQtCA/exec'; 
+
+    const { createApp, ref, computed } = Vue;
+
+    createApp({
+      setup() {
+        const currentView = ref('home');
+        const loading = ref(false);
+        const inputCode = ref('');
+        const sessionInfo = ref({});
+        const buyerName = ref('');
+        const note = ref('');
+        const items = ref([]);
+        const filterCat = ref('全部');
+        const submitting = ref(false);
+        const loginForm = ref({id:'', pass:''});
+        const user = ref({});
+        const leaderGroups = ref([]);
+        const creating = ref(false);
+        const selectedGroup = ref(null);
+        const selectedDetail = ref({list:[], totalAmount:0});
+        const loadingDetail = ref(false);
+
+        // API 呼叫核心函數
+        async function api(action, payload = {}) {
+            const res = await fetch(FOOD_API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action, ...payload }),
+            });
+            return await res.json();
+        }
+
+        const verifyCode = async () => {
+          loading.value = true;
+          const res = await api('validateOrderCode', { code: inputCode.value });
+          loading.value = false;
+          if(res.success) {
+            sessionInfo.value = res; 
+            items.value = res.items.map(i => ({...i, qty:0}));
+            currentView.value = 'order';
+          } else { alert(res.message); }
+        };
+
+        const submitOrder = async () => {
+          if(!buyerName.value) return alert('請輸入姓名');
+          submitting.value = true;
+          const cart = items.value.filter(i => i.qty > 0);
+          const res = await api('submitOrder', { 
+            orderData: {
+              groupOrderId: sessionInfo.value.groupOrderId,
+              companyId: sessionInfo.value.companyId,
+              companyName: sessionInfo.value.companyName,
+              buyerName: buyerName.value,
+              items: cart,
+              note: note.value
+            }
+          });
+          if(res.success) {
+            alert('訂購成功！');
+            items.value.forEach(i=>i.qty=0); buyerName.value = ''; note.value = '';
+            currentView.value = 'home';
+          }
+          submitting.value = false;
+        };
+
+        const handleLogin = async () => {
+          const res = await api('loginUser', { id: loginForm.value.id, pass: loginForm.value.pass });
+          if(res.success){
+            user.value = res;
+            currentView.value = res.role === 'ADMIN' ? 'admin' : 'leader';
+            if(res.role === 'LEADER') loadLeaderData();
+          } else { alert(res.message); }
+        };
+
+        const loadLeaderData = async () => {
+           const res = await api('getDashboardData', { role: 'LEADER', companyId: user.value.companyId });
+           leaderGroups.value = res.groups;
+        };
+
+        const createGroup = async () => {
+          if(!confirm('開新團？')) return;
+          creating.value = true;
+          const res = await api('createGroupOrder', { companyId: user.value.companyId, companyName: user.value.companyName });
+          creating.value = false;
+          alert(`序號是：${res.code}`);
+          loadLeaderData();
+        };
+
+        const viewDetail = async (group) => {
+          selectedGroup.value = group;
+          loadingDetail.value = true;
+          const res = await api('getGroupOrderDetails', { groupOrderId: group.id });
+          selectedDetail.value = res;
+          loadingDetail.value = false;
+        };
+
+        const togglePaid = async (p) => {
+          await api('setPaidStatus', { orderIds: p.orderIds, isPaid: p.paid });
+        };
+
+        const closeGroup = async (group) => {
+          if(!confirm('結束？')) return;
+          await api('closeGroupOrder', { groupOrderId: group.id });
+          loadLeaderData();
+        };
+
+        const logout = () => location.reload();
+        const categories = computed(() => ['全部', ...new Set(items.value.map(i => i.category || '其他'))]);
+        const filteredItems = computed(() => filterCat.value === '全部' ? items.value : items.value.filter(i => (i.category||'其他') === filterCat.value));
+        const totalItems = computed(() => items.value.reduce((s,i)=>s+(i.qty||0),0));
+        const totalAmount = computed(() => items.value.reduce((s,i)=>s+(i.price*(i.qty||0)),0));
+
+        return {
+          currentView, loading, inputCode, sessionInfo, buyerName, note, items, submitting,
+          loginForm, user, leaderGroups, creating, selectedGroup, selectedDetail, loadingDetail,
+          verifyCode, submitOrder, handleLogin, createGroup, viewDetail, closeGroup, togglePaid, logout,
+          categories, filteredItems, totalItems, totalAmount, filterCat
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
