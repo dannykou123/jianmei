@@ -1,289 +1,914 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
-  <title>健美滷味訂購系統</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>健美滷味 - 官方訂購系統</title>
+  
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    @media print { .no-print { display: none !important; } .print-area { display: block !important; } body { background: white; } .label-card { break-inside: avoid; border: 1px dashed #999; margin-bottom: 10px; } }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-  </style>
-</head>
-<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
-  <div id="app" class="min-h-screen">
-
-    <div v-if="currentView === 'home'" class="flex flex-col items-center justify-center min-h-screen px-4 bg-gradient-to-br from-orange-50 to-orange-100">
-      <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">健美滷味</h1>
-        <p class="text-gray-500 mb-8 text-sm">請輸入團購序號開始點餐</p>
-        <div class="space-y-4">
-          <input v-model="inputCode" type="text" placeholder="例如：XY1234" class="w-full text-center text-2xl tracking-widest p-3 border-2 border-orange-200 rounded-xl focus:border-orange-500 focus:outline-none uppercase placeholder:tracking-normal placeholder:text-sm">
-          <button @click="verifyCode" :disabled="!inputCode || loading" class="w-full bg-orange-600 text-white text-lg font-bold py-3 rounded-xl shadow hover:bg-orange-700 transition disabled:bg-gray-300">
-            {{ loading ? '驗證中...' : '開始點餐' }}
-          </button>
-        </div>
-        <div class="mt-8 pt-6 border-t border-gray-100">
-          <button @click="currentView = 'login'" class="text-sm text-gray-400 hover:text-gray-600">我是團購主 / 管理員</button>
-        </div>
-      </div>
-    </div>
-
-    <div v-else-if="currentView === 'order'" class="max-w-md mx-auto bg-white min-h-screen shadow-2xl pb-24 relative">
-      <div class="bg-orange-600 text-white p-4 sticky top-0 z-10 flex justify-between items-center shadow">
-        <div>
-          <h2 class="font-bold text-lg">{{ sessionInfo.companyName }}</h2>
-          <div class="text-xs opacity-80">團購序號: {{ sessionInfo.code }}</div>
-        </div>
-        <button @click="currentView='home'" class="text-sm bg-orange-700 px-3 py-1 rounded">離開</button>
-      </div>
-      <div class="p-4">
-        <label class="block text-sm font-bold text-gray-700 mb-1">您的姓名</label>
-        <input v-model="buyerName" class="w-full p-2 border rounded mb-4" placeholder="請輸入姓名">
-        <div class="flex overflow-x-auto space-x-2 pb-2 mb-2 no-scrollbar">
-           <button v-for="cat in categories" @click="filterCat = cat" :class="['px-3 py-1 rounded-full text-xs whitespace-nowrap', filterCat === cat ? 'bg-orange-600 text-white' : 'bg-gray-200']">{{ cat }}</button>
-        </div>
-        <div v-for="item in filteredItems" :key="item.id" class="flex justify-between items-center py-3 border-b">
-          <div>
-            <div class="font-bold">{{ item.name }}</div>
-            <div class="text-orange-600">${{ item.price }}</div>
-          </div>
-          <div class="flex items-center space-x-2">
-            <button @click="item.qty = Math.max(0, (item.qty||0)-1)" class="w-8 h-8 bg-gray-100 rounded text-gray-600">-</button>
-            <span class="w-6 text-center font-bold">{{ item.qty || 0 }}</span>
-            <button @click="item.qty = (item.qty||0)+1" class="w-8 h-8 bg-orange-500 rounded text-white">+</button>
-          </div>
-        </div>
-        <div class="mt-4">
-          <label class="text-xs font-bold text-gray-500">備註 (選填)</label>
-          <input v-model="note" class="w-full border rounded p-2 text-sm" placeholder="如: 不要辣">
-        </div>
-      </div>
-      <div v-if="totalItems > 0" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t p-4 shadow-[0_-5px_15px_rgba(0,0,0,0.1)] z-20">
-        <div class="flex justify-between items-center mb-2">
-          <span class="text-gray-500">已選 {{ totalItems }} 樣</span>
-          <span class="text-xl font-bold text-orange-600">${{ totalAmount }}</span>
-        </div>
-        <button @click="submitOrder" :disabled="submitting || !buyerName" class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg shadow disabled:bg-gray-400">
-          {{ submitting ? '處理中...' : '送出訂單' }}
-        </button>
-      </div>
-    </div>
-
-    <div v-else-if="currentView === 'leader'" class="max-w-4xl mx-auto p-4">
-      <div class="bg-white p-4 rounded shadow mb-4 flex justify-between items-center no-print">
-        <h2 class="text-xl font-bold text-indigo-700">{{ user.companyName }} 後台</h2>
-        <button @click="logout" class="text-sm text-gray-500">登出</button>
-      </div>
-      <div class="bg-indigo-600 text-white p-6 rounded-lg shadow mb-6 flex justify-between items-center">
-        <div>
-          <h3 class="text-lg font-bold mb-1">發起新團購</h3>
-          <p class="text-indigo-200 text-sm">產生新的序號給同事</p>
-        </div>
-        <button @click="createGroup" :disabled="creating" class="bg-white text-indigo-600 px-4 py-2 rounded-lg font-bold shadow hover:bg-gray-100">{{ creating ? '產生中...' : '+ 建立新團' }}</button>
-      </div>
-      <h3 class="font-bold text-gray-700 mb-2">團購紀錄</h3>
-      <div class="space-y-3">
-        <div v-for="g in leaderGroups" :key="g.id" class="bg-white border rounded p-4 shadow-sm">
-          <div class="flex justify-between items-start">
-            <div>
-              <div class="text-xs text-gray-500">{{ g.date }}</div>
-              <div class="font-bold text-xl my-1 text-indigo-600 tracking-wider">{{ g.code }}</div>
-              <span :class="['text-xs px-2 py-0.5 rounded', g.status==='OPEN'?'bg-green-100 text-green-700':'bg-gray-200 text-gray-500']">{{ g.status === 'OPEN' ? '進行中' : '已結單' }}</span>
-            </div>
-            <button @click="viewDetail(g)" class="bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm">明細/收款</button>
-          </div>
-          <div v-if="selectedGroup && selectedGroup.id === g.id" class="mt-4 pt-4 border-t">
-            <table class="w-full text-left text-sm">
-              <tr v-for="p in selectedDetail.list" class="border-b">
-                <td class="p-2 font-bold">{{ p.name }}</td>
-                <td class="p-2 text-right">${{ p.total }}</td>
-                <td class="p-2 text-center"><input type="checkbox" v-model="p.paid" @change="togglePaid(p)"></td>
-              </tr>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div v-else-if="currentView === 'admin'" class="p-4">
-      <div class="bg-white p-4 rounded shadow mb-6 flex justify-between items-center no-print">
-        <div class="flex items-center gap-4">
-          <h1 class="font-bold text-xl"><i class="fas fa-user-secret"></i> 總後台</h1>
-          <input type="date" v-model="dashboardDate" @change="fetchAdminData" class="border p-1 rounded">
-        </div>
-        <div class="flex gap-2">
-          <button @click="adminTab='stock'" :class="['px-3 py-1 rounded', adminTab=='stock'?'bg-gray-800 text-white':'bg-gray-200']">備貨</button>
-          <button @click="adminTab='details'" :class="['px-3 py-1 rounded', adminTab=='details'?'bg-gray-800 text-white':'bg-gray-200']">明細</button>
-          <button @click="adminTab='labels'" :class="['px-3 py-1 rounded', adminTab=='labels'?'bg-gray-800 text-white':'bg-gray-200']">標籤</button>
-          <button @click="logout" class="bg-red-500 text-white px-3 py-1 rounded">登出</button>
-        </div>
-      </div>
-
-      <div v-if="adminTab === 'stock'" class="max-w-xl mx-auto bg-white p-6 rounded shadow">
-        <h2 class="text-lg font-bold border-b pb-2 mb-4">總備貨量 ({{ dashboardDate }})</h2>
-        <div v-for="item in adminData.stockList" class="flex justify-between py-2 border-b border-dashed">
-          <span class="text-lg">{{ item.name }}</span>
-          <span class="text-xl font-bold text-orange-600">{{ item.qty }}</span>
-        </div>
-      </div>
-
-      <div v-if="adminTab === 'details'" class="max-w-4xl mx-auto space-y-4">
-        <div v-for="group in adminData.groupList" class="bg-white rounded shadow p-4">
-          <div class="font-bold text-indigo-700 border-b pb-2 mb-2">{{ group.companyName }} ({{ group.code }}) - 總計: ${{ group.total }}</div>
-          <div v-for="buyer in group.buyers" class="text-sm py-1 flex justify-between">
-            <span>{{ buyer.name }}: {{ buyer.items.join(', ') }}</span>
-            <span class="font-bold">${{ buyer.total }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="adminTab === 'labels'" class="grid grid-cols-2 md:grid-cols-4 gap-2 print-area">
-        <div v-for="l in adminData.labelList" class="label-card bg-white p-2 border text-xs">
-          <div class="font-bold border-b mb-1">{{ l.title }}</div>
-          <div v-for="i in l.items">{{ i.name }} x{{ i.qty }}</div>
-          <div class="text-right font-bold mt-1">Total: ${{ l.total }}</div>
-        </div>
-      </div>
-    </div>
-
-    <div v-else-if="currentView === 'login'" class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div class="bg-white p-8 rounded-lg shadow-md w-80">
-        <h2 class="text-xl font-bold mb-4 text-center">後台登入</h2>
-        <input v-model="loginForm.id" placeholder="代碼" class="w-full p-2 border rounded mb-3 uppercase">
-        <input v-model="loginForm.pass" type="password" placeholder="密碼" class="w-full p-2 border rounded mb-4">
-        <button @click="handleLogin" :disabled="loading" class="w-full bg-gray-800 text-white py-2 rounded">
-            {{ loading ? '登入中...' : '登入' }}
-        </button>
-        <button @click="currentView='home'" class="w-full text-center text-gray-400 text-xs mt-4">回首頁</button>
-      </div>
-    </div>
-
-  </div>
 
   <script>
-    const FOOD_API_URL = 'https://script.google.com/macros/s/AKfycbyh5E5mcB0_T7yAhacBL2LxvRXmZ2A4U61mAKO_rSubNGY68LG0_3z8yp-fEzMUZoXXUA/exec'; 
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans TC"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              dark: '#431407'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    [v-cloak] { display: none !important; }
+    body { background-color: #fafaf9; color: #44403c; -webkit-tap-highlight-color: transparent; }
+    
+    /* 優化滾動條 */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* 卡片浮動效果 */
+    .card-hover { transition: all 0.2s ease; }
+    .card-hover:active { transform: scale(0.98); }
+
+    /* --- 列印專用樣式 (針對 62mm 標籤機優化) --- */
+    @media print {
+      .no-print { display: none !important; }
+      @page { size: 62mm auto; margin: 0; }
+      body { background: white; margin: 0; padding: 0; width: 62mm; }
+      .print-area { display: block !important; width: 100%; padding: 1mm; box-sizing: border-box; }
+      .label-card { 
+        width: 100% !important; height: auto !important; min-height: 30mm;
+        border: 2px solid #000 !important; box-shadow: none !important;
+        page-break-inside: avoid; margin-bottom: 3mm; padding: 2mm !important;
+        box-sizing: border-box; background: white; color: black;
+      }
+      .text-stone-400, .text-brand-600, .text-stone-500 { color: black !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased selection:bg-brand-100 selection:text-brand-700">
+
+  <div id="app" v-cloak>
+    
+    <div v-if="previewImage" class="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out" @click="previewImage = null">
+      <img :src="previewImage" class="max-w-full max-h-full rounded-lg shadow-2xl animate-fade-in">
+    </div>
+
+    <div v-if="currentView === 'home'" class="flex flex-col items-center justify-center min-h-screen px-6 bg-stone-50 no-print">
+      <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl shadow-stone-200/50 w-full max-w-sm text-center border border-stone-100">
+        <div class="mb-6 inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-50 text-brand-600 text-2xl">
+          <i class="fas fa-utensils"></i>
+        </div>
+        <h1 class="text-4xl font-black text-stone-800 mb-3 tracking-tight">健美滷味</h1>
+        <p class="text-stone-400 text-base mb-10 font-medium tracking-wide">輸入團購序號，享受美味</p>
+        
+        <div class="space-y-5">
+          <input v-model="inputCode" type="text" placeholder="例如：BUI6OH" class="w-full text-center text-3xl font-bold tracking-[0.2em] py-5 border-2 border-stone-100 rounded-2xl focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 focus:outline-none uppercase transition-all placeholder:text-stone-200 text-stone-700">
+          
+          <button @click="verifyCode" :disabled="!inputCode || loading" class="w-full bg-brand-600 text-white text-lg font-bold py-5 rounded-2xl shadow-lg shadow-brand-500/30 hover:bg-brand-700 active:scale-[0.98] transition-all disabled:bg-stone-200 disabled:shadow-none disabled:cursor-not-allowed">
+            <span v-if="loading"><i class="fas fa-circle-notch fa-spin mr-2"></i>驗證中...</span>
+            <span v-else>開始點餐 <i class="fas fa-arrow-right ml-1"></i></span>
+          </button>
+        </div>
+        
+        <div class="mt-10 pt-8 border-t border-stone-100">
+          <button @click="currentView = 'login'" class="text-xs text-stone-400 hover:text-brand-600 font-bold transition-colors">
+            <i class="fas fa-lock mr-1"></i>管理員 / 團主登入
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="currentView === 'order'" class="max-w-lg mx-auto bg-stone-50 min-h-screen pb-48 relative no-print">
+      <div class="bg-white px-6 py-5 sticky top-0 z-30 shadow-sm border-b border-stone-100">
+        <div class="flex justify-between items-start">
+          <div>
+            <h2 class="font-black text-2xl text-stone-800 mb-1">{{ sessionInfo.companyName }}</h2>
+            <div class="flex items-center gap-2">
+              <span class="bg-brand-50 text-brand-700 text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide">團購中</span>
+              <span class="text-xs font-mono text-stone-400">#{{ sessionInfo.code }}</span>
+            </div>
+          </div>
+          <button @click="currentView='home'" class="w-8 h-8 flex items-center justify-center bg-stone-100 rounded-full text-stone-400 hover:bg-stone-200 transition">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="px-5 pt-6">
+        <div class="mb-8">
+          <label class="block text-xs font-bold text-stone-400 uppercase mb-2 ml-1 tracking-wider">您的姓名</label>
+          <input v-model="buyerName" class="w-full p-4 text-lg font-bold text-stone-700 border-none bg-white rounded-2xl shadow-sm ring-1 ring-stone-100 focus:ring-2 focus:ring-brand-500 outline-none transition placeholder:text-stone-300 placeholder:font-normal" placeholder="請輸入姓名以利對帳">
+        </div>
+        
+        <div class="flex overflow-x-auto space-x-3 pb-4 mb-2 hide-scroll sticky top-[88px] z-20 bg-stone-50/95 backdrop-blur-sm py-2 -mx-5 px-5">
+          <button v-for="cat in categories" @click="filterCat = cat" 
+            :class="['px-5 py-2.5 rounded-full text-sm whitespace-nowrap font-bold transition-all transform active:scale-95', 
+            filterCat === cat ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/25' : 'bg-white text-stone-500 shadow-sm border border-stone-100']">
+            {{ cat }}
+          </button>
+        </div>
+
+        <div v-if="items.length === 0" class="text-center py-20 text-stone-300 italic">載入菜單中...</div>
+        <div class="space-y-4">
+          <div v-for="item in filteredItems" :key="item.docId" class="group bg-white p-4 rounded-2xl shadow-sm border border-stone-100 flex gap-4 items-center transition hover:shadow-md">
+            <div v-if="item.image" class="w-20 h-20 flex-shrink-0 bg-stone-100 rounded-xl overflow-hidden cursor-zoom-in" @click.stop="previewImage = item.image">
+              <img :src="item.image" class="w-full h-full object-cover">
+            </div>
+            <div v-else class="w-20 h-20 flex-shrink-0 bg-stone-50 rounded-xl flex items-center justify-center text-stone-200">
+               <i class="fas fa-utensils"></i>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-stone-800 text-lg mb-1 leading-tight">{{ item.name }}</div>
+              <div class="text-brand-600 font-black text-lg">$ {{ item.price }}</div>
+            </div>
+            
+            <div class="flex items-center bg-stone-50 rounded-xl p-1 border border-stone-100">
+              <button @click="item.qty = Math.max(0, (item.qty||0)-1)" 
+                class="w-10 h-10 flex items-center justify-center bg-white rounded-lg text-stone-400 shadow-sm active:scale-90 transition hover:text-brand-600 disabled:opacity-50"
+                :disabled="!item.qty">
+                <i class="fas fa-minus text-xs"></i>
+              </button>
+              <span class="w-8 text-center font-bold text-lg text-stone-700">{{ item.qty || 0 }}</span>
+              <button @click="item.qty = (item.qty||0)+1" class="w-10 h-10 flex items-center justify-center bg-brand-500 rounded-lg text-white shadow-md shadow-brand-500/20 active:scale-90 transition hover:bg-brand-600">
+                <i class="fas fa-plus text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-10 mb-8">
+           <label class="block text-xs font-bold text-stone-400 uppercase mb-2 ml-1 tracking-wider">備註需求</label>
+           <div class="relative">
+             <i class="fas fa-pen absolute left-4 top-4 text-stone-300"></i>
+             <input v-model="note" class="w-full pl-10 pr-4 py-4 text-sm font-medium bg-white rounded-2xl border-none shadow-sm ring-1 ring-stone-100 focus:ring-2 focus:ring-brand-500 outline-none transition" placeholder="例如：要大辣、不切、分裝...">
+           </div>
+        </div>
+      </div>
+
+      <div v-if="totalAmount > 0" class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto z-40 p-4">
+        <div class="bg-stone-900/90 backdrop-blur-md text-white p-5 rounded-[2rem] shadow-2xl shadow-stone-900/20 flex items-center justify-between">
+          <div class="flex flex-col pl-2">
+            <span class="text-stone-400 text-xs font-bold uppercase tracking-widest mb-0.5">Total</span>
+            <div class="flex items-baseline gap-2">
+              <span class="text-3xl font-black text-white tracking-tight">${{ totalAmount }}</span>
+              <span class="text-sm text-stone-400 font-medium">/ {{ totalQty }} 項</span>
+            </div>
+          </div>
+          <button @click="submitOrder" :disabled="submitting || !buyerName" class="bg-brand-500 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg shadow-brand-500/30 hover:bg-brand-400 active:scale-95 transition disabled:bg-stone-700 disabled:text-stone-500 disabled:cursor-not-allowed">
+            {{ submitting ? '處理中...' : '送出訂單' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="currentView === 'login'" class="flex flex-col items-center justify-center min-h-screen bg-stone-100 px-6 no-print">
+      <form @submit.prevent="handleLogin" class="bg-white p-10 rounded-[2rem] shadow-2xl w-full max-w-sm border border-white">
+        <h2 class="text-2xl font-black mb-10 text-center text-stone-800 tracking-tight">後台管理登入</h2>
+        <div class="space-y-6">
+          <div class="group">
+            <label class="text-[10px] font-black text-stone-400 uppercase ml-1 tracking-widest group-focus-within:text-brand-600 transition-colors">Account ID</label>
+            <input v-model="loginForm.id" type="text" autocomplete="username" placeholder="例如: ADMIN" class="w-full p-4 mt-1 border-2 border-stone-100 bg-stone-50 rounded-2xl uppercase focus:border-brand-500 focus:bg-white outline-none transition font-bold text-stone-700 placeholder:font-normal" required>
+          </div>
+          <div class="group">
+            <label class="text-[10px] font-black text-stone-400 uppercase ml-1 tracking-widest group-focus-within:text-brand-600 transition-colors">Password</label>
+            <input v-model="loginForm.pass" type="password" autocomplete="current-password" placeholder="請輸入密碼" class="w-full p-4 mt-1 border-2 border-stone-100 bg-stone-50 rounded-2xl focus:border-brand-500 focus:bg-white outline-none transition" required>
+          </div>
+          <button type="submit" :disabled="loading" class="w-full bg-stone-800 text-white py-4 rounded-2xl shadow-xl font-black hover:bg-black active:scale-[0.98] transition mt-2">
+            {{ loading ? '驗證中...' : '確認登入' }}
+          </button>
+          <button type="button" @click="currentView='home'" class="w-full text-center text-stone-400 text-xs mt-6 hover:text-stone-600 transition font-bold">返回首頁</button>
+        </div>
+      </form>
+    </div>
+
+    <div v-else-if="currentView === 'leader'" class="min-h-screen bg-stone-50 pb-20 no-print">
+      <div class="bg-white px-6 py-6 shadow-sm sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-black text-stone-800">{{ user.companyName }}</h2>
+            <p class="text-xs text-stone-400 font-medium mt-0.5">專屬管理後台</p>
+          </div>
+          <button @click="logout" class="bg-stone-100 text-stone-500 px-4 py-2 rounded-xl text-xs font-bold hover:bg-stone-200 transition">登出</button>
+        </div>
+      </div>
+
+      <div class="max-w-4xl mx-auto p-6">
+        <div class="bg-gradient-to-r from-brand-600 to-brand-500 text-white p-8 rounded-[2rem] shadow-xl shadow-brand-500/20 mb-10 flex flex-col sm:flex-row justify-between items-center gap-6">
+          <div class="text-center sm:text-left">
+            <h3 class="text-2xl font-black mb-2">發起午茶團購？</h3>
+            <p class="text-brand-100 text-sm font-medium opacity-90">產生新的序號，讓同事們開始點餐吧！</p>
+          </div>
+          <button @click="createGroup" :disabled="loading" class="bg-white text-brand-600 px-8 py-4 rounded-2xl font-black shadow-lg hover:bg-brand-50 active:scale-95 transition whitespace-nowrap">
+            <i class="fas fa-plus mr-2"></i>建立新團
+          </button>
+        </div>
+
+        <h3 class="font-bold text-stone-400 mb-4 ml-2 uppercase tracking-widest text-xs">歷史紀錄</h3>
+        
+        <div v-if="leaderGroups.length === 0" class="text-center py-16 bg-white rounded-[2rem] border-2 border-dashed border-stone-200">
+            <div class="text-stone-300 text-4xl mb-3"><i class="fas fa-clipboard-list"></i></div>
+            <p class="text-stone-400 font-bold">目前沒有團購紀錄</p>
+        </div>
+        
+        <div class="space-y-6">
+          <div v-for="g in leaderGroups" :key="g.id" class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-stone-100 hover:shadow-md transition-all">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+              <div>
+                <div class="flex items-center gap-3 mb-1">
+                   <span class="text-xs font-bold text-stone-400 bg-stone-100 px-2 py-1 rounded-lg">{{ formatDate(g.createdAt) }}</span>
+                   <span v-if="g.status === 'OPEN'" class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-lg font-bold">
+                     <span class="w-1.5 h-1.5 bg-green-500 rounded-full inline-block mr-1"></span>進行中
+                   </span>
+                   <span v-else-if="g.status === 'SUBMITTED'" class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg font-bold">
+                     <span class="w-1.5 h-1.5 bg-yellow-500 rounded-full inline-block mr-1 animate-pulse"></span>已送出
+                   </span>
+                   <span v-else-if="g.status === 'CONFIRMED'" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-lg font-bold">
+                     <i class="fas fa-check-circle mr-1"></i>已確認
+                   </span>
+                </div>
+                <div class="font-black text-4xl text-brand-600 tracking-tighter">{{ g.code }}</div>
+              </div>
+              
+              <div class="flex gap-2 w-full sm:w-auto">
+                 <button @click="viewDetail(g)" class="flex-1 sm:flex-none bg-stone-50 text-stone-600 px-5 py-3 rounded-xl font-bold border border-stone-200 hover:bg-stone-100 transition text-sm">
+                  {{ selectedGroup && selectedGroup.id === g.id ? '收合' : '明細' }}
+                </button>
+                
+                <button v-if="g.status === 'OPEN'" @click="submitGroup(g)" class="flex-1 sm:flex-none bg-red-50 text-red-500 px-5 py-3 rounded-xl font-bold border border-red-100 hover:bg-red-100 transition text-sm">
+                  結單送出
+                </button>
+
+                <button v-if="g.status === 'SUBMITTED'" @click="recallGroup(g)" class="flex-1 sm:flex-none bg-yellow-50 text-yellow-600 px-5 py-3 rounded-xl font-bold border border-yellow-100 hover:bg-yellow-100 transition text-sm">
+                  <i class="fas fa-undo mr-1"></i>收回
+                </button>
+              </div>
+            </div>
+
+            <div v-if="selectedGroup && selectedGroup.id === g.id" class="mt-6 pt-6 border-t border-dashed border-stone-200 animation-fade-in">
+              <div v-if="loadingDetail" class="text-center py-8 text-stone-300"><i class="fas fa-spinner fa-spin text-2xl"></i></div>
+              <div v-else>
+                <div class="flex justify-between items-center mb-4 bg-stone-50 p-4 rounded-xl">
+                  <span class="font-bold text-stone-600 text-sm">訂單列表 ({{ selectedDetail.list.length }})</span>
+                  <span class="text-xl font-black text-brand-600">總計: ${{ selectedDetail.totalAmount }}</span>
+                </div>
+                
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left text-sm">
+                    <thead class="text-stone-400 text-[10px] uppercase tracking-wider border-b border-stone-100">
+                      <tr><th class="pb-3 pl-2">姓名</th><th class="pb-3">內容</th><th class="pb-3 text-right">金額</th><th class="pb-3 text-center">已付</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-stone-50">
+                      <tr v-for="order in selectedDetail.list" :key="order.id" class="group hover:bg-stone-50 transition-colors">
+                        <td class="py-4 pl-2 font-bold text-stone-700">{{ order.buyerName }}</td>
+                        <td class="py-4 text-xs text-stone-500 leading-relaxed">
+                          <span v-for="i in order.items" class="inline-block bg-white border border-stone-100 px-2 py-1 rounded mr-1 mb-1">
+                            {{ i.name }} <span class="text-brand-600 font-bold">x{{ i.qty }}</span>
+                          </span>
+                        </td>
+                        <td class="py-4 text-right font-bold text-stone-800">${{ order.totalAmount }}</td>
+                        <td class="py-4 text-center">
+                          <input type="checkbox" v-model="order.isPaid" @change="togglePaid(order)" class="w-5 h-5 rounded border-stone-300 text-brand-600 focus:ring-brand-500 cursor-pointer transition">
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div v-if="selectedDetail.list.length === 0" class="py-8 text-center text-stone-300 italic text-sm">尚無人下單</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="currentView === 'admin'" class="min-h-screen bg-stone-50 pb-20">
+      
+      <div class="bg-white/90 backdrop-blur-md px-6 py-4 shadow-sm sticky top-0 z-50 border-b border-stone-200 no-print">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div class="flex items-center gap-4 w-full md:w-auto">
+            <h1 class="font-black text-xl text-stone-800 flex items-center gap-2">
+              <span class="w-8 h-8 bg-brand-600 text-white rounded-lg flex items-center justify-center text-sm"><i class="fas fa-chart-pie"></i></span>
+              管理後台
+            </h1>
+            <input type="date" v-model="dashboardDate" @change="fetchAdminData" class="border-none bg-stone-100 py-2 px-3 rounded-lg text-sm font-bold text-stone-600 focus:ring-2 focus:ring-brand-500 outline-none cursor-pointer">
+          </div>
+          
+          <div class="flex gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 hide-scroll">
+            <button @click="adminTab='review'" :class="['px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap', adminTab=='review'?'bg-red-500 text-white shadow-md shadow-red-500/30':'bg-white text-stone-500 hover:bg-stone-50']">
+              待審核
+              <span v-if="adminData.reviewList.length > 0" class="bg-white text-red-500 text-[10px] px-1.5 rounded-md font-black">{{ adminData.reviewList.length }}</span>
+            </button>
+            
+            <button @click="adminTab='items'; fetchAdminItems()" :class="['px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap', adminTab=='items'?'bg-stone-800 text-white shadow-md':'bg-white text-stone-500 hover:bg-stone-50']">📦 產品管理</button>
+            
+            <button @click="adminTab='stock'" :class="['px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap', adminTab=='stock'?'bg-stone-800 text-white shadow-md':'bg-white text-stone-500 hover:bg-stone-50']">📊 備貨</button>
+            <button @click="adminTab='details'" :class="['px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap', adminTab=='details'?'bg-stone-800 text-white shadow-md':'bg-white text-stone-500 hover:bg-stone-50']">📝 訂單</button>
+            <button @click="adminTab='labels'" :class="['px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap', adminTab=='labels'?'bg-stone-800 text-white shadow-md':'bg-white text-stone-500 hover:bg-stone-50']">🏷️ 標籤</button>
+            <button @click="logout" class="bg-stone-100 text-stone-500 px-3 py-2 rounded-xl text-sm font-bold hover:bg-stone-200 ml-2"><i class="fas fa-sign-out-alt"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="loading" class="text-center py-32 text-brand-400 no-print"><i class="fas fa-circle-notch fa-spin text-4xl"></i></div>
+      
+      <div v-else class="max-w-6xl mx-auto p-6">
+        
+        <div v-if="adminTab === 'review'" class="max-w-3xl mx-auto space-y-6 no-print">
+           <div v-if="adminData.reviewList.length === 0" class="text-center py-20">
+             <div class="bg-green-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500 text-3xl"><i class="fas fa-check"></i></div>
+             <p class="text-stone-400 font-bold">目前沒有待確認的團購</p>
+           </div>
+           
+           <div v-for="g in adminData.reviewList" :key="g.id" class="bg-white border-l-8 border-yellow-400 p-8 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              <div>
+                 <div class="text-xs font-bold text-stone-400 mb-1 flex items-center gap-2">
+                   <i class="far fa-clock"></i> {{ formatDate(g.createdAt) }}
+                 </div>
+                 <div class="text-2xl font-black text-stone-800 mb-2">{{ g.companyName }}</div>
+                 <div class="inline-flex items-center gap-2 bg-yellow-50 text-yellow-700 px-3 py-1 rounded-lg text-sm font-bold">
+                   <span class="w-2 h-2 bg-yellow-500 rounded-full animate-ping"></span>
+                   等待確認中...
+                 </div>
+              </div>
+              <button @click="confirmGroup(g)" class="w-full md:w-auto bg-stone-800 text-white px-8 py-4 rounded-xl font-bold shadow-xl hover:bg-black active:scale-95 transition flex items-center justify-center gap-2">
+                 <span>確認接收</span> <i class="fas fa-check"></i>
+              </button>
+           </div>
+        </div>
+
+        <div v-if="adminTab === 'items'" class="max-w-4xl mx-auto no-print">
+          <div class="bg-white p-6 rounded-[2rem] shadow-xl border border-stone-100">
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-2xl font-black text-stone-800">產品清單</h2>
+              <button @click="openItemModal()" class="bg-brand-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-brand-700 transition">
+                <i class="fas fa-plus mr-1"></i> 新增產品
+              </button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead class="text-stone-400 text-xs uppercase border-b border-stone-100">
+                  <tr>
+                    <th class="pb-3 px-2">圖片</th>
+                    <th class="pb-3 px-2">分類</th>
+                    <th class="pb-3">品名</th>
+                    <th class="pb-3">價格</th>
+                    <th class="pb-3 text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-50">
+                  <tr v-for="item in adminItems" :key="item.docId" class="hover:bg-stone-50 transition">
+                    <td class="py-4 px-2">
+                      <div v-if="item.image" class="w-10 h-10 rounded-lg bg-stone-100 overflow-hidden">
+                        <img :src="item.image" class="w-full h-full object-cover">
+                      </div>
+                      <div v-else class="w-10 h-10 rounded-lg bg-stone-50 flex items-center justify-center text-stone-300 text-xs"><i class="fas fa-image"></i></div>
+                    </td>
+                    <td class="py-4 px-2"><span class="bg-stone-100 px-2 py-1 rounded text-xs font-medium">{{ item.category || '未分類' }}</span></td>
+                    <td class="py-4 font-bold text-stone-700">{{ item.name }}</td>
+                    <td class="py-4 text-brand-600 font-bold">${{ item.price }}</td>
+                    <td class="py-4 text-right">
+                      <button @click="openItemModal(item)" class="text-stone-400 hover:text-brand-600 p-2"><i class="fas fa-edit"></i></button>
+                      <button @click="deleteItem(item.docId)" class="text-stone-400 hover:text-red-500 p-2"><i class="fas fa-trash"></i></button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div v-if="editingItem" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
+            <div class="bg-white w-full max-w-md rounded-[2rem] p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+              <h3 class="text-xl font-black mb-6">{{ editingItem.docId ? '編輯產品' : '新增產品' }}</h3>
+              <div class="space-y-4">
+                
+                <div class="flex flex-col items-center justify-center p-4 border-2 border-dashed border-stone-200 rounded-xl bg-stone-50 hover:bg-stone-100 transition relative">
+                  <input type="file" @change="handleImageUpload" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10">
+                  
+                  <div v-if="editingItem.image" class="relative z-0">
+                     <img :src="editingItem.image" class="h-32 rounded-lg object-contain shadow-sm mb-2">
+                     <div class="text-xs text-stone-400 text-center font-bold">點擊更換圖片</div>
+                  </div>
+                  <div v-else class="text-center py-4">
+                    <i class="fas fa-cloud-upload-alt text-3xl text-stone-300 mb-2"></i>
+                    <div class="text-sm font-bold text-stone-500">點擊上傳產品圖片</div>
+                    <div class="text-xs text-stone-400 mt-1">支援 JPG, PNG</div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="text-xs font-bold text-stone-400 ml-1">分類</label>
+                  <input v-model="editingItem.category" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition" placeholder="例如：招牌、蔬食">
+                </div>
+                <div>
+                  <label class="text-xs font-bold text-stone-400 ml-1">產品名稱</label>
+                  <input v-model="editingItem.name" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition">
+                </div>
+                <div>
+                  <label class="text-xs font-bold text-stone-400 ml-1">價格</label>
+                  <input v-model.number="editingItem.price" type="number" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition">
+                </div>
+              </div>
+              <div class="flex gap-3 mt-8">
+                <button @click="editingItem = null" class="flex-1 py-3 bg-stone-100 text-stone-500 rounded-xl font-bold hover:bg-stone-200 transition">取消</button>
+                <button @click="saveItem" class="flex-1 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition">儲存</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="adminTab === 'stock'" class="max-w-xl mx-auto bg-white p-10 rounded-[2rem] shadow-xl border border-stone-100 no-print">
+          <div class="flex items-center justify-between border-b-2 border-brand-500 pb-4 mb-8">
+            <h2 class="text-2xl font-black text-stone-800">總備貨清單</h2>
+            <span class="bg-brand-100 text-brand-700 px-3 py-1 rounded-lg text-xs font-bold">已確認訂單</span>
+          </div>
+          
+          <div v-if="adminData.stockList.length === 0" class="text-center py-10 text-stone-300 italic">本日無確認訂單</div>
+          <div class="space-y-2">
+            <div v-for="item in adminData.stockList" :key="item.name" class="flex justify-between py-3 px-4 rounded-xl hover:bg-stone-50 transition items-center">
+              <span class="text-lg text-stone-600 font-bold">{{ item.name }}</span>
+              <span class="text-2xl font-black text-brand-600 bg-brand-50 px-4 py-1 rounded-lg min-w-[3rem] text-center">
+                {{ item.qty }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="adminTab === 'details'" class="max-w-5xl mx-auto space-y-8 no-print">
+           <div v-if="adminData.groupList.length === 0" class="text-center py-20 text-stone-300">本日無訂單</div>
+           
+           <div v-for="group in adminData.groupList" class="bg-white rounded-[1.5rem] shadow-sm border border-stone-200 overflow-hidden">
+               <div class="bg-stone-50/80 p-5 border-b border-stone-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-white border border-stone-200 flex items-center justify-center text-stone-400 font-bold"><i class="fas fa-building"></i></div>
+                    <div>
+                      <h3 class="font-black text-lg text-stone-800">{{ group.companyName }}</h3>
+                      <div class="text-xs text-stone-400 font-mono">{{ dashboardDate }} (團號: {{group.groupOrderId.substring(0,6)}}...)</div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-4">
+                    <button v-if="group.groupOrderId" @click="rejectGroup(group.groupOrderId)" class="text-xs font-bold text-red-400 hover:text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg transition border border-transparent hover:border-red-100">
+                      <i class="fas fa-undo mr-1"></i>整團退回 (重開)
+                    </button>
+                    <div class="text-right">
+                      <div class="text-[10px] text-stone-400 font-bold uppercase tracking-wider">Total</div>
+                      <div class="font-black text-2xl text-brand-600">${{ group.total }}</div>
+                    </div>
+                  </div>
+               </div>
+
+               <div class="divide-y divide-stone-100">
+                 <div v-for="order in group.orders" :class="['p-5 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between transition', order.status === 'PENDING' ? 'bg-yellow-50/50' : 'hover:bg-stone-50']">
+                   
+                   <div class="flex-1 min-w-0">
+                     <div class="flex items-center gap-2 mb-1">
+                       <span class="font-bold text-stone-700 text-lg">{{ order.buyerName }}</span>
+                       <span v-if="order.status === 'CONFIRMED'" class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold border border-green-200">已確認</span>
+                       <span v-else class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-bold border border-yellow-200">待確認</span>
+                     </div>
+                     <div class="text-xs text-stone-500 leading-relaxed break-words">
+                       <span v-for="i in order.items" class="inline-block bg-stone-100 px-2 py-0.5 rounded mr-1 mb-1 border border-stone-200">
+                         {{ i.name }} <strong class="text-stone-800">x{{ i.qty }}</strong>
+                       </span>
+                     </div>
+                     <div v-if="order.note" class="text-xs text-brand-600 mt-1 font-medium"><i class="fas fa-comment-alt mr-1"></i>{{ order.note }}</div>
+                   </div>
+
+                   <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                     <div class="font-bold text-stone-800 text-lg">${{ order.totalAmount }}</div>
+                   </div>
+
+                 </div>
+               </div>
+           </div>
+        </div>
+
+        <div v-if="adminTab === 'labels'">
+          <div class="no-print bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl mb-6 text-center text-sm font-bold shadow-sm flex flex-col items-center gap-3">
+             <span>💡 標籤模式：請將標籤機紙張設定為 62mm，並取消頁首頁尾列印。</span>
+             <button onclick="window.print()" class="bg-stone-800 text-white px-6 py-2 rounded-lg hover:bg-black transition shadow-lg flex items-center gap-2">
+               <i class="fas fa-print"></i> 列印標籤
+             </button>
+          </div>
+          
+          <div v-if="adminData.labelList.length === 0" class="text-center py-20 text-stone-300 no-print">本日無「已確認」標籤可印</div>
+          
+          <div class="print-area">
+            <div v-for="l in adminData.labelList" class="label-card relative">
+               <div class="border-b-2 border-black pb-1 mb-1">
+                 <div class="flex justify-between items-baseline">
+                    <div class="font-black text-xl leading-tight">{{ l.buyerName }}</div>
+                    <div class="text-xs font-bold text-right truncate pl-2">{{ l.companyName }}</div>
+                 </div>
+               </div>
+               
+               <div class="text-sm font-bold leading-tight min-h-[1.5cm]">
+                 <div v-for="i in l.items" class="flex justify-between mb-1 items-start">
+                   <span class="w-[80%]">{{ i.name }}</span>
+                   <span class="w-[20%] text-right">x{{ i.qty }}</span>
+                 </div>
+                 <div v-if="l.note" class="mt-2 pt-1 border-t border-black text-xs font-medium italic">註: {{ l.note }}</div>
+               </div>
+
+               <div class="flex justify-between items-end pt-2 border-t-2 border-black mt-2">
+                 <div class="text-[10px] font-mono">{{ dashboardDate }}</div>
+                 <div class="font-black text-2xl">${{ l.totalAmount }}</div>
+               </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp, orderBy, doc, updateDoc, writeBatch, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const { createApp, ref, computed } = Vue;
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDb3xTmnkscf9tC5znTBzkCfSzD0zLJTYk",
+      authDomain: "jianmei-food-54760.firebaseapp.com",
+      projectId: "jianmei-food-54760",
+      storageBucket: "jianmei-food-54760.firebasestorage.app",
+      messagingSenderId: "367136535654",
+      appId: "1:367136535654:web:119d8cb066dfb378e1a9a7"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const db = getFirestore(firebaseApp);
 
     createApp({
       setup() {
         const currentView = ref('home');
         const loading = ref(false);
+        const loadingDetail = ref(false);
+        const submitting = ref(false);
         const inputCode = ref('');
-        const sessionInfo = ref({});
         const buyerName = ref('');
         const note = ref('');
-        const items = ref([]);
         const filterCat = ref('全部');
-        const submitting = ref(false);
-        const loginForm = ref({id:'', pass:''});
+        const sessionInfo = ref({});
+        const items = ref([]);
+        const loginForm = ref({ id: '', pass: '' });
         const user = ref({});
         const leaderGroups = ref([]);
-        const creating = ref(false);
         const selectedGroup = ref(null);
-        const selectedDetail = ref({list:[], totalAmount:0});
-        const loadingDetail = ref(false);
-        
-        // Admin States
-        const adminTab = ref('stock');
+        const selectedDetail = ref({ list: [], totalAmount: 0 });
         const dashboardDate = ref(new Date().toISOString().split('T')[0]);
-        const adminData = ref({ stockList: [], labelList: [], groupList: [] });
-
-        async function api(action, payload = {}) {
-            const res = await fetch(FOOD_API_URL, {
-                method: "POST",
-                body: JSON.stringify({ action, ...payload }),
-            });
-            if (!res.ok) throw new Error('連線失敗');
-            return await res.json();
-        }
+        const adminTab = ref('stock');
+        const adminData = ref({ stockList: [], groupList: [], labelList: [], reviewList: [] });
+        
+        const adminItems = ref([]);
+        const editingItem = ref(null);
+        const previewImage = ref(null);
 
         const verifyCode = async () => {
+          if (!inputCode.value) return;
           loading.value = true;
           try {
-            const res = await api('validateOrderCode', { code: inputCode.value });
-            if(res.success) {
-              sessionInfo.value = res; 
-              items.value = res.items.map(i => ({...i, qty:0}));
+            const q = query(collection(db, "groupOrders"), where("code", "==", inputCode.value.toUpperCase()), where("status", "==", "OPEN"));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+              sessionInfo.value = { id: snap.docs[0].id, ...snap.docs[0].data() };
+              await fetchItems();
               currentView.value = 'order';
-            } else { alert(res.message); }
-          } finally { loading.value = false; }
+            } else { alert("序號錯誤，或該團已結單"); }
+          } catch(e) { alert("連線超時"); } finally { loading.value = false; }
+        };
+
+        const fetchItems = async () => {
+          const snap = await getDocs(collection(db, "items"));
+          // 修改處：讀取時將資料庫的 doc.id 存為 docId，以避免跟欄位 id 衝突
+          items.value = snap.docs.map(doc => {
+            const data = doc.data();
+            return {
+               ...data,
+               docId: doc.id
+            };
+          });
         };
 
         const submitOrder = async () => {
-          if(!buyerName.value) return alert('請輸入姓名');
+          if (!buyerName.value) return alert('請輸入您的姓名');
           submitting.value = true;
           try {
             const cart = items.value.filter(i => i.qty > 0);
-            const res = await api('submitOrder', { 
-              orderData: {
-                groupOrderId: sessionInfo.value.groupOrderId,
-                companyId: sessionInfo.value.companyId,
-                companyName: sessionInfo.value.companyName,
-                buyerName: buyerName.value,
-                items: cart,
-                note: note.value
-              }
+            await addDoc(collection(db, "orders"), {
+              groupOrderId: sessionInfo.value.id,
+              groupCode: sessionInfo.value.code,
+              companyName: sessionInfo.value.companyName,
+              buyerName: buyerName.value,
+              items: cart,
+              totalAmount: totalAmount.value,
+              note: note.value,
+              createdAt: serverTimestamp(),
+              orderDate: new Date().toISOString().split('T')[0],
+              isPaid: false,
+              status: "PENDING"
             });
-            if(res.success) { alert('訂購成功！'); currentView.value = 'home'; }
-          } finally { submitting.value = false; }
+            alert('訂購成功！');
+            currentView.value = 'home';
+            inputCode.value = ''; buyerName.value = ''; note.value = '';
+          } catch(e) { alert("送出失敗"); } finally { submitting.value = false; }
         };
 
         const handleLogin = async () => {
+          if (!loginForm.value.id || !loginForm.value.pass) return alert('請輸入帳密');
           loading.value = true;
           try {
-            const res = await api('loginUser', { id: loginForm.value.id, pass: loginForm.value.pass });
-            if(res.success){
-              user.value = res;
-              currentView.value = res.role === 'ADMIN' ? 'admin' : 'leader'; 
-              if(res.role === 'LEADER') loadLeaderData();
-              if(res.role === 'ADMIN') fetchAdminData();
-            } else { alert(res.message); }
-          } finally { loading.value = false; }
+            const inputId = loginForm.value.id.toUpperCase().trim();
+            const inputPass = String(loginForm.value.pass).trim();
+            const q = query(collection(db, "companies"), where("id", "==", inputId), where("password", "==", inputPass));
+            const snap = await getDocs(q);
+
+            if (!snap.empty) {
+              const userData = snap.docs[0].data();
+              const safeCompanyName = userData.name || userData.companyName || inputId;
+              user.value = { id: inputId, companyName: safeCompanyName, ...userData };
+              
+              if (inputId === 'ADMIN') {
+                currentView.value = 'admin';
+                await fetchAdminData();
+              } else {
+                currentView.value = 'leader';
+                await fetchLeaderGroups();
+              }
+            } else { alert("帳號或密碼錯誤"); }
+          } catch (e) { alert("資料庫錯誤"); } finally { loading.value = false; }
         };
 
-        const loadLeaderData = async () => {
-           const res = await api('getDashboardData', { role: 'LEADER', companyId: user.value.companyId });
-           leaderGroups.value = res.groups;
-        };
-
-        const fetchAdminData = async () => {
-          const res = await api('getDashboardData', { role: 'ADMIN', dateStr: dashboardDate.value });
-          adminData.value = res;
+        const fetchLeaderGroups = async () => {
+          try {
+            const q = query(collection(db, "groupOrders"), where("companyId", "==", user.value.id));
+            const snap = await getDocs(q);
+            const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            leaderGroups.value = list.sort((a, b) => {
+                const tA = a.createdAt ? a.createdAt.seconds : 0;
+                const tB = b.createdAt ? b.createdAt.seconds : 0;
+                return tB - tA;
+            });
+          } catch(e) { console.error(e); }
         };
 
         const viewDetail = async (group) => {
+          if (selectedGroup.value && selectedGroup.value.id === group.id) { selectedGroup.value = null; return; }
           selectedGroup.value = group;
-          const res = await api('getGroupOrderDetails', { groupOrderId: group.id });
-          selectedDetail.value = res;
+          loadingDetail.value = true;
+          try {
+            const q = query(collection(db, "orders"), where("groupOrderId", "==", group.id));
+            const snap = await getDocs(q);
+            const orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            selectedDetail.value = { list: orders, totalAmount: orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) };
+          } catch (e) { console.error(e); } finally { loadingDetail.value = false; }
         };
 
-        const togglePaid = async (p) => {
-          await api('setPaidStatus', { orderIds: p.orderIds, isPaid: p.paid });
+        const togglePaid = async (order) => {
+          try { await updateDoc(doc(db, "orders", order.id), { isPaid: order.isPaid }); } catch(e) {}
         };
 
         const createGroup = async () => {
-          if(!confirm('發起新團購？')) return;
-          const res = await api('createGroupOrder', { companyId: user.value.companyId, companyName: user.value.companyName });
-          alert(`開團成功！序號是：${res.code}`);
-          loadLeaderData();
+          loading.value = true;
+          const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+          try {
+            await addDoc(collection(db, "groupOrders"), {
+              code: newCode,
+              companyId: user.value.id,
+              companyName: user.value.companyName,
+              status: "OPEN",
+              createdAt: serverTimestamp()
+            });
+            alert(`開團成功！序號：${newCode}`);
+            await fetchLeaderGroups();
+          } finally { loading.value = false; }
         };
 
-        const logout = () => location.reload();
-        const categories = computed(() => ['全部', ...new Set(items.value.map(i => i.category || '其他'))]);
-        const filteredItems = computed(() => filterCat.value === '全部' ? items.value : items.value.filter(i => (i.category||'其他') === filterCat.value));
-        const totalItems = computed(() => items.value.reduce((s,i)=>s+(i.qty||0),0));
-        const totalAmount = computed(() => items.value.reduce((s,i)=>s+(i.price*(i.qty||0)),0));
+        const submitGroup = async (group) => {
+            if(!confirm(`確定要結單嗎？\n送出後同事將無法再下單，並會通知管理員備貨。`)) return;
+            try {
+                await updateDoc(doc(db, "groupOrders", group.id), { status: "SUBMITTED" });
+                alert("已送出給管理員確認！");
+                await fetchLeaderGroups();
+            } catch(e) { alert("結單失敗：" + e.message); }
+        };
+
+        const recallGroup = async (group) => {
+            if(!confirm("確定要收回嗎？\n收回後狀態將變回「進行中」，您可以繼續讓同事下單。")) return;
+            try {
+                await updateDoc(doc(db, "groupOrders", group.id), { status: "OPEN" });
+                alert("已收回！您可以繼續編輯。");
+                await fetchLeaderGroups();
+            } catch(e) { alert("收回失敗：" + e.message); }
+        };
+
+        const fetchAdminData = async () => {
+          loading.value = true;
+          try {
+            const qReview = query(collection(db, "groupOrders"), where("status", "==", "SUBMITTED"));
+            const reviewSnap = await getDocs(qReview);
+            
+            const qOrders = query(collection(db, "orders"), where("orderDate", "==", dashboardDate.value));
+            const orderSnap = await getDocs(qOrders);
+            const allOrders = orderSnap.docs.map(d => ({id: d.id, ...d.data()}));
+            
+            const confirmedOrders = allOrders.filter(o => o.status === 'CONFIRMED');
+
+            const stockMap = {};
+            confirmedOrders.forEach(o => {
+              if (o.items) o.items.forEach(i => stockMap[i.name] = (stockMap[i.name] || 0) + i.qty);
+            });
+            const stockList = Object.keys(stockMap).map(name => ({ name, qty: stockMap[name] }));
+
+            const groupMap = {};
+            allOrders.forEach(o => {
+              const gid = o.groupOrderId || o.companyName || 'unknown';
+              if (!groupMap[gid]) {
+                  groupMap[gid] = { 
+                    groupOrderId: o.groupOrderId,
+                    companyName: o.companyName || '散客', 
+                    orders: [], 
+                    total: 0 
+                  };
+              }
+              groupMap[gid].orders.push(o);
+              if (o.status === 'CONFIRMED') {
+                 groupMap[gid].total += o.totalAmount;
+              }
+            });
+
+            const labelList = confirmedOrders.sort((a, b) => (a.companyName || '').localeCompare(b.companyName || ''));
+
+            adminData.value.stockList = stockList;
+            adminData.value.groupList = Object.values(groupMap);
+            adminData.value.labelList = labelList;
+            adminData.value.reviewList = reviewSnap.docs.map(d => ({id: d.id, ...d.data()}));
+          } finally { loading.value = false; }
+        };
+
+        const fetchAdminItems = async () => {
+          loading.value = true;
+          try {
+            const snap = await getDocs(collection(db, "items"));
+            // 修改處：後台讀取時，使用 docId 作為 key，解決資料庫 ID 衝突
+            adminItems.value = snap.docs.map(doc => {
+              const data = doc.data();
+              return {
+                 ...data,
+                 docId: doc.id 
+              };
+            });
+          } finally {
+            loading.value = false;
+          }
+        };
+
+        const openItemModal = (item = null) => {
+          if (item) {
+            editingItem.value = { ...item };
+          } else {
+            editingItem.value = { name: '', price: 0, category: '', image: '' };
+          }
+        };
+
+        // 圖片處理：壓縮並轉 Base64
+        const handleImageUpload = (event) => {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+             const img = new Image();
+             img.onload = () => {
+                 const canvas = document.createElement('canvas');
+                 const ctx = canvas.getContext('2d');
+                 
+                 // 設定最大寬度，避免 Base64 太大塞爆 Firestore (1MB 限制)
+                 const MAX_WIDTH = 800;
+                 let width = img.width;
+                 let height = img.height;
+
+                 if (width > MAX_WIDTH) {
+                     height *= MAX_WIDTH / width;
+                     width = MAX_WIDTH;
+                 }
+
+                 canvas.width = width;
+                 canvas.height = height;
+                 ctx.drawImage(img, 0, 0, width, height);
+
+                 // 轉成 JPEG 格式，品質 0.6
+                 editingItem.value.image = canvas.toDataURL('image/jpeg', 0.6);
+             };
+             img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        };
+
+        const saveItem = async () => {
+          if (!editingItem.value.name || editingItem.value.price <= 0) return alert('請填寫正確品名與價格');
+          loading.value = true;
+          try {
+            // 準備資料 (直接存 Base64 字串)
+            const productData = {
+                name: editingItem.value.name,
+                price: editingItem.value.price,
+                category: editingItem.value.category,
+                image: editingItem.value.image || '' 
+            };
+
+            // 使用 docId 判斷是更新還是新增
+            if (editingItem.value.docId) {
+              await updateDoc(doc(db, "items", editingItem.value.docId), productData);
+            } else {
+              await addDoc(collection(db, "items"), productData);
+            }
+            editingItem.value = null;
+            await fetchAdminItems();
+            alert('儲存成功！');
+          } catch (e) {
+            alert('儲存失敗：' + e.message);
+            console.error(e);
+          } finally {
+            loading.value = false;
+          }
+        };
+
+        const deleteItem = async (docId) => {
+          if (!confirm('確定要刪除此產品嗎？這將影響之後的點餐選單。')) return;
+          try {
+            // 使用 docId 進行刪除
+            await deleteDoc(doc(db, "items", docId));
+            await fetchAdminItems();
+          } catch (e) {
+            alert('刪除失敗');
+          }
+        };
+
+        const confirmGroup = async (group) => {
+            if(!confirm(`確認接收 [${group.companyName}] 的訂單嗎？`)) return;
+            loading.value = true;
+            try {
+                await updateDoc(doc(db, "groupOrders", group.id), { status: "CONFIRMED" });
+                const qOrders = query(collection(db, "orders"), where("groupOrderId", "==", group.id));
+                const orderSnap = await getDocs(qOrders);
+                const batch = writeBatch(db);
+                orderSnap.docs.forEach(doc => { batch.update(doc.ref, { status: "CONFIRMED" }); });
+                await batch.commit();
+                alert("✅ 已確認接收！");
+                await fetchAdminData();
+            } finally { loading.value = false; }
+        };
+
+        const rejectGroup = async (groupId) => {
+            if (!groupId) return alert("無法識別團購單號");
+            if(!confirm("確定要將此團購退回「進行中」狀態嗎？\n\n注意：該團所有訂單都會變成「待確認」。")) return;
+            loading.value = true;
+            try {
+                await updateDoc(doc(db, "groupOrders", groupId), { status: "OPEN" });
+                const qOrders = query(collection(db, "orders"), where("groupOrderId", "==", groupId));
+                const orderSnap = await getDocs(qOrders);
+                const batch = writeBatch(db);
+                orderSnap.docs.forEach(doc => { batch.update(doc.ref, { status: "PENDING" }); });
+                await batch.commit();
+                alert("✅ 已整團退回！");
+                await fetchAdminData();
+            } catch(e) { alert("退回失敗：" + e.message); } finally { loading.value = false; }
+        };
+
+        const logout = () => { location.reload(); };
+        const formatDate = (ts) => ts ? new Date(ts.seconds*1000).toLocaleDateString() : '剛剛';
+        const categories = computed(() => ['全部', ...new Set(items.value.map(i => i.category || '精選'))]);
+        const filteredItems = computed(() => filterCat.value === '全部' ? items.value : items.value.filter(i => (i.category||'精選') === filterCat.value));
+        const totalQty = computed(() => items.value.reduce((s, i) => s + (i.qty || 0), 0));
+        const totalAmount = computed(() => items.value.reduce((s, i) => s + (i.price * (i.qty || 0)), 0));
 
         return {
-          currentView, loading, inputCode, sessionInfo, buyerName, note, items, submitting,
-          loginForm, user, leaderGroups, creating, selectedGroup, selectedDetail, loadingDetail,
-          adminTab, dashboardDate, adminData,
-          verifyCode, submitOrder, handleLogin, createGroup, viewDetail, fetchAdminData, togglePaid, logout,
-          categories, filteredItems, totalItems, totalAmount, filterCat
+          currentView, loading, loadingDetail, submitting, inputCode, sessionInfo, buyerName, note, items, filterCat,
+          loginForm, user, adminData, leaderGroups, selectedGroup, selectedDetail,
+          dashboardDate, adminTab,
+          adminItems, editingItem, previewImage,
+          verifyCode, handleLogin, submitOrder, logout, createGroup, submitGroup, recallGroup, confirmGroup, rejectGroup, formatDate, viewDetail, togglePaid, fetchAdminData,
+          fetchAdminItems, openItemModal, handleImageUpload, saveItem, deleteItem,
+          categories, filteredItems, totalQty, totalAmount
         };
       }
     }).mount('#app');

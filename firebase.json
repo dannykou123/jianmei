@@ -1,0 +1,11 @@
+{
+  "hosting": {
+	"site": "jianmei-food-54760",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
