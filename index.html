@@ -279,26 +279,37 @@
             
             <div class="space-y-6">
                 <div v-for="g in activeGroups" :key="g.id" class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-stone-100 hover:shadow-md transition-all">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                      <div>
-                        <div class="flex items-center gap-3 mb-1">
-                           <span class="text-xs font-bold text-stone-400 bg-stone-100 px-2 py-1 rounded-lg">{{ formatDate(g.createdAt) }}</span>
-                           <span v-if="g.status === 'OPEN'" class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-lg font-bold border border-green-200"><span class="w-1.5 h-1.5 bg-green-500 rounded-full inline-block mr-1"></span>進行中</span>
-                           <span v-else-if="g.status === 'SUBMITTED'" class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg font-bold border border-yellow-200"><span class="w-1.5 h-1.5 bg-yellow-500 rounded-full inline-block mr-1 animate-pulse"></span>已送出</span>
+                    <div class="flex flex-col gap-6">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-stone-400 bg-stone-50 px-2 py-1 rounded-lg border border-stone-100">{{ formatDate(g.createdAt) }}</span>
+                            <span v-if="g.status === 'OPEN'" class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-lg font-bold border border-green-200"><span class="w-1.5 h-1.5 bg-green-500 rounded-full inline-block mr-1"></span>進行中</span>
+                            <span v-else-if="g.status === 'SUBMITTED'" class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg font-bold border border-yellow-200"><span class="w-1.5 h-1.5 bg-yellow-500 rounded-full inline-block mr-1 animate-pulse"></span>已送出</span>
                         </div>
-                        <div class="flex flex-col">
-                            <span class="font-black text-4xl text-brand-600 tracking-tighter select-all">{{ g.code }}</span>
-                            <span v-if="g.groupName" class="text-sm font-bold text-stone-600 mt-1">{{ g.groupName }}</span>
-                            <span v-if="g.deliveryDate" class="text-xs text-stone-400 mt-0.5"><i class="far fa-calendar-alt mr-1"></i>交貨: {{ g.deliveryDate }}</span>
+
+                        <div>
+                            <h3 class="text-3xl font-black text-stone-800 mb-2 leading-tight">{{ g.groupName }}</h3>
+                            <div class="flex items-center text-stone-500 font-bold text-sm bg-stone-50 inline-block px-3 py-1.5 rounded-xl">
+                                <i class="far fa-calendar-alt mr-2 text-brand-600"></i>
+                                <span>交貨日期：{{ g.deliveryDate }}</span>
+                            </div>
                         </div>
-                      </div>
-                      <div class="flex gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap">
-                         <button @click="viewDetail(g)" class="flex-1 sm:flex-none bg-stone-50 text-stone-600 px-5 py-3 rounded-xl font-bold border border-stone-200 hover:bg-stone-100 transition text-sm whitespace-nowrap">{{ selectedGroup && selectedGroup.id === g.id ? '收合' : '明細' }}</button>
-                         <button v-if="g.status === 'OPEN'" @click="openEditModal(g)" class="flex-1 sm:flex-none bg-blue-50 text-blue-600 px-4 py-3 rounded-xl font-bold border border-blue-100 hover:bg-blue-100 transition text-sm whitespace-nowrap"><i class="fas fa-edit"></i></button>
-                        
-                        <button v-if="g.status === 'OPEN'" @click="submitGroup(g)" class="flex-1 sm:flex-none bg-red-50 text-red-500 px-5 py-3 rounded-xl font-bold border border-red-100 hover:bg-red-100 transition text-sm whitespace-nowrap">結單</button>
-                        <button v-if="g.status === 'SUBMITTED'" @click="recallGroup(g)" class="flex-1 sm:flex-none bg-yellow-50 text-yellow-600 px-5 py-3 rounded-xl font-bold border border-yellow-100 hover:bg-yellow-100 transition text-sm whitespace-nowrap"><i class="fas fa-undo mr-1"></i>收回</button>
-                      </div>
+
+                        <div class="bg-stone-50 rounded-2xl p-4 flex justify-between items-center border border-stone-100 group cursor-pointer hover:border-brand-200 transition" @click="copyCode(g.code)">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] uppercase font-bold text-stone-400 tracking-widest mb-0.5">團購序號</span>
+                                <span class="text-2xl font-black text-brand-600 font-mono tracking-wider">{{ g.code }}</span>
+                            </div>
+                            <button class="w-10 h-10 rounded-xl bg-white border border-stone-200 text-stone-400 shadow-sm flex items-center justify-center group-hover:text-brand-600 group-hover:border-brand-300 transition active:scale-90">
+                                <i class="far fa-copy"></i>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                             <button @click="viewDetail(g)" class="bg-stone-50 text-stone-600 px-4 py-3 rounded-xl font-bold border border-stone-200 hover:bg-stone-100 transition text-sm">{{ selectedGroup && selectedGroup.id === g.id ? '收合' : '明細' }}</button>
+                             <button v-if="g.status === 'OPEN'" @click="openEditModal(g)" class="bg-blue-50 text-blue-600 px-4 py-3 rounded-xl font-bold border border-blue-100 hover:bg-blue-100 transition text-sm"><i class="fas fa-edit mr-1"></i>編輯</button>
+                             <button v-if="g.status === 'OPEN'" @click="submitGroup(g)" class="bg-red-50 text-red-500 px-4 py-3 rounded-xl font-bold border border-red-100 hover:bg-red-100 transition text-sm">結單</button>
+                             <button v-if="g.status === 'SUBMITTED'" @click="recallGroup(g)" class="bg-yellow-50 text-yellow-600 px-4 py-3 rounded-xl font-bold border border-yellow-100 hover:bg-yellow-100 transition text-sm col-span-2 sm:col-span-1"><i class="fas fa-undo mr-1"></i>收回</button>
+                        </div>
                     </div>
                     
                     <div v-if="selectedGroup && selectedGroup.id === g.id" class="mt-6 pt-6 border-t border-dashed border-stone-200 animate-slide-down">
@@ -1052,6 +1063,15 @@
             }
         };
 
+        // 複製序號功能
+        const copyCode = (code) => {
+             navigator.clipboard.writeText(code).then(() => {
+                 alert("已複製團購序號！");
+             }).catch(err => {
+                 console.error('複製失敗', err);
+             });
+        };
+
         const viewDetail = async (group) => {
           if (selectedGroup.value && selectedGroup.value.id === group.id) { selectedGroup.value = null; return; }
           selectedGroup.value = group;
@@ -1348,13 +1368,13 @@
           adminAccounts, editingAccount,
           orderDate, stockStart, stockEnd, labelDate,
           historyStart, historyEnd, editingProfile,
-          showGroupModal, groupForm, isEditingGroup, // [UPDATE]
+          showGroupModal, groupForm, isEditingGroup,
           verifyCode, handleLogin, submitOrder, logout, createGroup, submitGroup, recallGroup, confirmGroup, rejectGroup, formatDate, viewDetail, togglePaid, fetchAdminData,
           fetchAdminItems, openItemModal, handleImageUpload, saveItem, deleteItem,
           fetchAdminAccounts, openAccountModal, saveAccount, deleteAccount,
           fetchOrderDetails, fetchStockList, fetchLabelList, fetchReviewList,
           openProfileModal, saveProfile, fetchActiveGroups, fetchHistoryGroups,
-          openCreateModal, openEditModal, saveGroup, // [UPDATE]
+          openCreateModal, openEditModal, saveGroup, copyCode, // [UPDATE] copyCode added
           categories, filteredItems, totalQty, totalAmount,
           toggleGroupExpand
         };
