@@ -533,6 +533,33 @@
            </div>
         </div>
 
+        <div v-if="adminTab === 'stock'" class="max-w-2xl mx-auto bg-white p-10 rounded-[2rem] shadow-xl border border-stone-100 no-print">
+          <div class="border-b-2 border-brand-500 pb-6 mb-8">
+            <h2 class="text-2xl font-black text-stone-800 mb-4">總備貨清單</h2>
+            <div class="flex flex-col sm:flex-row items-center gap-3">
+               <div class="flex items-center bg-stone-50 px-3 py-1.5 rounded-xl border border-stone-100">
+                   <span class="text-xs font-bold text-stone-400 mr-2">From</span>
+                   <input type="date" v-model="stockStart" @change="fetchStockList" class="bg-transparent text-sm font-bold text-stone-600 focus:outline-none cursor-pointer">
+               </div>
+               <span class="text-stone-300 font-bold">~</span>
+               <div class="flex items-center bg-stone-50 px-3 py-1.5 rounded-xl border border-stone-100">
+                   <span class="text-xs font-bold text-stone-400 mr-2">To</span>
+                   <input type="date" v-model="stockEnd" @change="fetchStockList" class="bg-transparent text-sm font-bold text-stone-600 focus:outline-none cursor-pointer">
+               </div>
+               <span class="bg-brand-100 text-brand-700 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap ml-auto">已確認訂單</span>
+            </div>
+          </div>
+          <div v-if="adminData.stockList.length === 0" class="text-center py-10 text-stone-300 italic">
+              該日期範圍無確認訂單
+          </div>
+          <div class="space-y-3">
+            <div v-for="item in adminData.stockList" :key="item.name" class="flex justify-between py-4 px-5 rounded-2xl bg-stone-50 hover:bg-white border border-stone-100 shadow-sm transition items-center">
+              <span class="text-lg text-stone-700 font-bold">{{ item.name }}</span>
+              <span class="text-2xl font-black text-brand-600 bg-white px-4 py-1 rounded-lg min-w-[3rem] text-center shadow-sm border border-brand-100">{{ item.qty }}</span>
+            </div>
+          </div>
+        </div>
+
         <div v-if="adminTab === 'labels'">
           <div class="no-print bg-amber-50 border border-amber-200 text-amber-900 p-6 rounded-[1.5rem] mb-8 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
              <div class="flex flex-col gap-1">
@@ -609,7 +636,9 @@
         
         const todayStr = new Date().toISOString().split('T')[0];
         const orderDate = ref(todayStr);
-        const stockDate = ref(todayStr);
+        // [UPDATE] 備貨日期改為範圍
+        const stockStart = ref(todayStr);
+        const stockEnd = ref(todayStr);
         const labelDate = ref(todayStr);
 
         const adminTab = ref('details'); 
@@ -801,16 +830,22 @@
             } finally { loading.value = false; }
         };
 
-        // 新增：切換整團展開狀態
         const toggleGroupExpand = (group) => {
            group.allExpanded = !group.allExpanded;
            group.orders.forEach(o => o.expanded = group.allExpanded);
         };
 
         const fetchStockList = async () => {
+            if (!stockStart.value || !stockEnd.value) return;
             loading.value = true;
             try {
-                const qOrders = query(collection(db, "orders"), where("orderDate", "==", stockDate.value), where("status", "==", "CONFIRMED"));
+                // [UPDATE] 使用範圍查詢
+                const qOrders = query(
+                    collection(db, "orders"), 
+                    where("status", "==", "CONFIRMED"),
+                    where("orderDate", ">=", stockStart.value),
+                    where("orderDate", "<=", stockEnd.value)
+                );
                 const orderSnap = await getDocs(qOrders);
                 const confirmedOrders = orderSnap.docs.map(d => ({id: d.id, ...d.data()}));
 
@@ -964,7 +999,7 @@
             try {
                 await deleteDoc(doc(db, "companies", docId));
                 await fetchAdminAccounts();
-            } catch (e) { alert('刪除失敗'); }
+            } catch(e) { alert('刪除失敗'); }
         };
 
         const confirmGroup = async (group) => {
@@ -1011,13 +1046,13 @@
           adminTab,
           adminItems, editingItem, previewImage,
           adminAccounts, editingAccount,
-          orderDate, stockDate, labelDate,
+          orderDate, stockStart, stockEnd, labelDate, // [UPDATE]
           verifyCode, handleLogin, submitOrder, logout, createGroup, submitGroup, recallGroup, confirmGroup, rejectGroup, formatDate, viewDetail, togglePaid, fetchAdminData,
           fetchAdminItems, openItemModal, handleImageUpload, saveItem, deleteItem,
           fetchAdminAccounts, openAccountModal, saveAccount, deleteAccount,
           fetchOrderDetails, fetchStockList, fetchLabelList, fetchReviewList,
           categories, filteredItems, totalQty, totalAmount,
-          toggleGroupExpand // 新增的函式
+          toggleGroupExpand
         };
       }
     }).mount('#app');
