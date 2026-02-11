@@ -103,14 +103,17 @@
       <div class="bg-white/90 backdrop-blur-md px-6 py-4 sticky top-0 z-30 shadow-sm border-b border-stone-100 transition-all">
         <div class="flex justify-between items-start">
           <div class="flex-1 min-w-0 pr-4">
-            <h2 class="font-black text-2xl text-stone-800 mb-1 truncate">{{ sessionInfo.companyName }}</h2>
-            <div class="flex flex-wrap items-center gap-2">
+            <h2 class="font-black text-2xl text-stone-800 mb-1 truncate">{{ sessionInfo.groupName || sessionInfo.companyName }}</h2>
+            <div class="flex flex-wrap items-center gap-2 mb-1">
               <span class="bg-brand-50 text-brand-700 text-[10px] font-bold px-2 py-0.5 rounded-md tracking-wide ring-1 ring-brand-100">團購進行中</span>
               <span class="text-xs font-mono text-stone-400">#{{ sessionInfo.code }}</span>
             </div>
-            <div v-if="sessionInfo.leaderName || sessionInfo.phone" class="mt-2 text-xs text-stone-500 font-medium flex items-center gap-2">
-               <span v-if="sessionInfo.leaderName" class="flex items-center"><i class="fas fa-user-circle mr-1 opacity-70"></i>{{ sessionInfo.leaderName }}</span>
-               <span v-if="sessionInfo.phone" class="flex items-center"><i class="fas fa-phone mr-1 opacity-70"></i>{{ sessionInfo.phone }}</span>
+            <div class="flex flex-col gap-1 mt-1 text-xs text-stone-500 font-medium">
+               <span v-if="sessionInfo.deliveryDate" class="flex items-center text-brand-600 font-bold"><i class="far fa-calendar-alt mr-1.5 opacity-70"></i>預計交貨：{{ sessionInfo.deliveryDate }}</span>
+               <div class="flex items-center gap-2">
+                   <span v-if="sessionInfo.contactName" class="flex items-center"><i class="fas fa-user-circle mr-1 opacity-70"></i>{{ sessionInfo.contactName }}</span>
+                   <span v-if="sessionInfo.contactPhone" class="flex items-center"><i class="fas fa-phone mr-1 opacity-70"></i>{{ sessionInfo.contactPhone }}</span>
+               </div>
             </div>
           </div>
           <button @click="currentView='home'" class="w-10 h-10 flex flex-shrink-0 items-center justify-center bg-stone-100 rounded-full text-stone-400 hover:bg-stone-200 hover:text-stone-600 transition active:scale-90">
@@ -262,7 +265,7 @@
                 <h3 class="text-2xl font-black mb-2">發起午茶團購？</h3>
                 <p class="text-brand-100 text-sm font-medium opacity-90">產生新的序號，讓同事們開始點餐吧！</p>
               </div>
-              <button @click="createGroup" :disabled="loading" class="relative z-10 bg-white text-brand-600 px-8 py-4 rounded-2xl font-black shadow-lg hover:bg-brand-50 active:scale-95 transition whitespace-nowrap">
+              <button @click="openCreateModal" :disabled="loading" class="relative z-10 bg-white text-brand-600 px-8 py-4 rounded-2xl font-black shadow-lg hover:bg-brand-50 active:scale-95 transition whitespace-nowrap">
                 <i class="fas fa-plus mr-2"></i>建立新團
               </button>
             </div>
@@ -283,12 +286,18 @@
                            <span v-if="g.status === 'OPEN'" class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-lg font-bold border border-green-200"><span class="w-1.5 h-1.5 bg-green-500 rounded-full inline-block mr-1"></span>進行中</span>
                            <span v-else-if="g.status === 'SUBMITTED'" class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg font-bold border border-yellow-200"><span class="w-1.5 h-1.5 bg-yellow-500 rounded-full inline-block mr-1 animate-pulse"></span>已送出</span>
                         </div>
-                        <div class="font-black text-4xl text-brand-600 tracking-tighter select-all">{{ g.code }}</div>
+                        <div class="flex flex-col">
+                            <span class="font-black text-4xl text-brand-600 tracking-tighter select-all">{{ g.code }}</span>
+                            <span v-if="g.groupName" class="text-sm font-bold text-stone-600 mt-1">{{ g.groupName }}</span>
+                            <span v-if="g.deliveryDate" class="text-xs text-stone-400 mt-0.5"><i class="far fa-calendar-alt mr-1"></i>交貨: {{ g.deliveryDate }}</span>
+                        </div>
                       </div>
-                      <div class="flex gap-2 w-full sm:w-auto">
-                         <button @click="viewDetail(g)" class="flex-1 sm:flex-none bg-stone-50 text-stone-600 px-5 py-3 rounded-xl font-bold border border-stone-200 hover:bg-stone-100 transition text-sm">{{ selectedGroup && selectedGroup.id === g.id ? '收合' : '明細' }}</button>
-                        <button v-if="g.status === 'OPEN'" @click="submitGroup(g)" class="flex-1 sm:flex-none bg-red-50 text-red-500 px-5 py-3 rounded-xl font-bold border border-red-100 hover:bg-red-100 transition text-sm">結單送出</button>
-                        <button v-if="g.status === 'SUBMITTED'" @click="recallGroup(g)" class="flex-1 sm:flex-none bg-yellow-50 text-yellow-600 px-5 py-3 rounded-xl font-bold border border-yellow-100 hover:bg-yellow-100 transition text-sm"><i class="fas fa-undo mr-1"></i>收回</button>
+                      <div class="flex gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+                         <button @click="viewDetail(g)" class="flex-1 sm:flex-none bg-stone-50 text-stone-600 px-5 py-3 rounded-xl font-bold border border-stone-200 hover:bg-stone-100 transition text-sm whitespace-nowrap">{{ selectedGroup && selectedGroup.id === g.id ? '收合' : '明細' }}</button>
+                         <button v-if="g.status === 'OPEN'" @click="openEditModal(g)" class="flex-1 sm:flex-none bg-blue-50 text-blue-600 px-4 py-3 rounded-xl font-bold border border-blue-100 hover:bg-blue-100 transition text-sm whitespace-nowrap"><i class="fas fa-edit"></i></button>
+                        
+                        <button v-if="g.status === 'OPEN'" @click="submitGroup(g)" class="flex-1 sm:flex-none bg-red-50 text-red-500 px-5 py-3 rounded-xl font-bold border border-red-100 hover:bg-red-100 transition text-sm whitespace-nowrap">結單</button>
+                        <button v-if="g.status === 'SUBMITTED'" @click="recallGroup(g)" class="flex-1 sm:flex-none bg-yellow-50 text-yellow-600 px-5 py-3 rounded-xl font-bold border border-yellow-100 hover:bg-yellow-100 transition text-sm whitespace-nowrap"><i class="fas fa-undo mr-1"></i>收回</button>
                       </div>
                     </div>
                     
@@ -350,7 +359,10 @@
                            <span v-if="g.status === 'CONFIRMED'" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-lg font-bold border border-blue-100"><i class="fas fa-check-circle mr-1"></i>已確認</span>
                            <span v-else class="text-[10px] bg-stone-100 text-stone-500 px-2 py-1 rounded-lg font-bold">{{ g.status }}</span>
                         </div>
-                        <div class="font-black text-4xl text-stone-300 tracking-tighter select-all">{{ g.code }}</div>
+                        <div class="flex flex-col">
+                           <span class="font-black text-4xl text-stone-300 tracking-tighter select-all">{{ g.code }}</span>
+                           <span v-if="g.groupName" class="text-sm font-bold text-stone-400 mt-1">{{ g.groupName }}</span>
+                        </div>
                       </div>
                       <div class="flex gap-2 w-full sm:w-auto">
                          <button @click="viewDetail(g)" class="flex-1 sm:flex-none bg-stone-50 text-stone-600 px-5 py-3 rounded-xl font-bold border border-stone-200 hover:bg-stone-100 transition text-sm">{{ selectedGroup && selectedGroup.id === g.id ? '收合' : '明細' }}</button>
@@ -407,6 +419,34 @@
              <div class="flex gap-3 mt-8">
                  <button @click="editingProfile = null" class="flex-1 py-3 bg-stone-100 text-stone-500 rounded-xl font-bold hover:bg-stone-200 transition">取消</button>
                  <button @click="saveProfile" class="flex-1 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition">儲存變更</button>
+             </div>
+          </div>
+      </div>
+
+      <div v-if="showGroupModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
+          <div class="bg-white w-full max-w-md rounded-[2rem] p-8 shadow-2xl overflow-y-auto max-h-[90vh] border border-white/20">
+             <h3 class="text-xl font-black mb-6 text-stone-800">{{ isEditingGroup ? '編輯團購資訊' : '建立新團購' }}</h3>
+             <div class="space-y-4">
+                 <div>
+                    <label class="text-xs font-bold text-stone-400 ml-1">開團名稱</label>
+                    <input v-model="groupForm.groupName" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700" placeholder="例如：2/14 下午茶團">
+                 </div>
+                 <div>
+                    <label class="text-xs font-bold text-stone-400 ml-1">交貨日期</label>
+                    <input v-model="groupForm.deliveryDate" type="date" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+                 </div>
+                 <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-xs font-bold text-stone-400 ml-1">聯絡人</label><input v-model="groupForm.contactName" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700"></div>
+                    <div><label class="text-xs font-bold text-stone-400 ml-1">連絡電話</label><input v-model="groupForm.contactPhone" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700"></div>
+                 </div>
+                 <div>
+                    <label class="text-xs font-bold text-stone-400 ml-1">交貨地址</label>
+                    <input v-model="groupForm.deliveryAddress" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+                 </div>
+             </div>
+             <div class="flex gap-3 mt-8">
+                 <button @click="showGroupModal = false" class="flex-1 py-3 bg-stone-100 text-stone-500 rounded-xl font-bold hover:bg-stone-200 transition">取消</button>
+                 <button @click="saveGroup" class="flex-1 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition">{{ isEditingGroup ? '更新資訊' : '確認開團' }}</button>
              </div>
           </div>
       </div>
@@ -782,6 +822,18 @@
         const editingAccount = ref(null);
         
         const editingProfile = ref(null);
+        
+        // 新增：開團設定相關變數
+        const showGroupModal = ref(false);
+        const isEditingGroup = ref(false);
+        const groupForm = ref({
+            id: null,
+            groupName: '',
+            deliveryDate: '',
+            contactName: '',
+            contactPhone: '',
+            deliveryAddress: ''
+        });
 
         const verifyCode = async () => {
           if (!inputCode.value) return;
@@ -858,7 +910,6 @@
           } catch (e) { alert("資料庫錯誤"); } finally { loading.value = false; }
         };
 
-        // 抓取進行中的團購
         const fetchActiveGroups = async () => {
             loading.value = true;
             try {
@@ -878,7 +929,6 @@
             } catch(e) { console.error(e); } finally { loading.value = false; }
         };
 
-        // 抓取歷史團購 (根據日期)
         const fetchHistoryGroups = async () => {
             loading.value = true;
             try {
@@ -925,6 +975,83 @@
             } catch(e) { alert("更新失敗：" + e.message); } finally { loading.value = false; }
         };
 
+        // 新增：開啟「建立新團」Modal
+        const openCreateModal = () => {
+            const now = new Date();
+            const defaultName = `${now.getMonth() + 1}/${now.getDate()} 下午茶團`;
+            
+            groupForm.value = {
+                id: null,
+                groupName: defaultName,
+                deliveryDate: '',
+                contactName: user.value.leaderName || '',
+                contactPhone: user.value.phone || '',
+                deliveryAddress: user.value.address || ''
+            };
+            isEditingGroup.value = false;
+            showGroupModal.value = true;
+        };
+
+        // 新增：開啟「編輯團購」Modal
+        const openEditModal = (group) => {
+            groupForm.value = {
+                id: group.id,
+                groupName: group.groupName || '',
+                deliveryDate: group.deliveryDate || '',
+                contactName: group.contactName || '',
+                contactPhone: group.contactPhone || '',
+                deliveryAddress: group.deliveryAddress || ''
+            };
+            isEditingGroup.value = true;
+            showGroupModal.value = true;
+        };
+
+        // 新增：儲存團購 (新增或更新)
+        const saveGroup = async () => {
+            const form = groupForm.value;
+            // 必填檢查
+            if(!form.groupName || !form.deliveryDate || !form.contactName || !form.contactPhone || !form.deliveryAddress) {
+                return alert("所有欄位都是必填的喔！");
+            }
+            
+            loading.value = true;
+            try {
+                const groupData = {
+                    groupName: form.groupName,
+                    deliveryDate: form.deliveryDate,
+                    contactName: form.contactName,
+                    contactPhone: form.contactPhone,
+                    deliveryAddress: form.deliveryAddress,
+                    // 如果是編輯，不更新以下欄位
+                    ...(!isEditingGroup.value && {
+                        code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+                        companyId: user.value.id,
+                        companyName: user.value.companyName,
+                        leaderName: user.value.leaderName || '', // 備份原始欄位
+                        phone: user.value.phone || '', // 備份原始欄位
+                        address: user.value.address || '', // 備份原始欄位
+                        status: "OPEN",
+                        createdAt: serverTimestamp()
+                    })
+                };
+
+                if (isEditingGroup.value) {
+                    await updateDoc(doc(db, "groupOrders", form.id), groupData);
+                    alert("團購資訊更新成功！");
+                } else {
+                    await addDoc(collection(db, "groupOrders"), groupData);
+                    alert(`開團成功！序號：${groupData.code}`);
+                }
+                
+                showGroupModal.value = false;
+                await fetchActiveGroups(); // 重新整理列表
+            } catch(e) { 
+                alert("儲存失敗：" + e.message); 
+            } finally { 
+                loading.value = false; 
+            }
+        };
+
         const viewDetail = async (group) => {
           if (selectedGroup.value && selectedGroup.value.id === group.id) { selectedGroup.value = null; return; }
           selectedGroup.value = group;
@@ -941,24 +1068,8 @@
           try { await updateDoc(doc(db, "orders", order.id), { isPaid: order.isPaid }); } catch(e) {}
         };
 
-        const createGroup = async () => {
-          loading.value = true;
-          const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-          try {
-            await addDoc(collection(db, "groupOrders"), {
-              code: newCode,
-              companyId: user.value.id,
-              companyName: user.value.companyName,
-              leaderName: user.value.leaderName || '',
-              phone: user.value.phone || '',
-              address: user.value.address || '',
-              status: "OPEN",
-              createdAt: serverTimestamp()
-            });
-            alert(`開團成功！序號：${newCode}`);
-            await fetchActiveGroups(); // 重新抓取 Active 列表
-          } finally { loading.value = false; }
-        };
+        // 已廢棄舊的 createGroup，改用 saveGroup
+        const createGroup = () => {}; 
 
         const submitGroup = async (group) => {
             if(!confirm(`確定要結單嗎？\n送出後同事將無法再下單，並會通知管理員備貨。`)) return;
@@ -1237,11 +1348,13 @@
           adminAccounts, editingAccount,
           orderDate, stockStart, stockEnd, labelDate,
           historyStart, historyEnd, editingProfile,
+          showGroupModal, groupForm, isEditingGroup, // [UPDATE]
           verifyCode, handleLogin, submitOrder, logout, createGroup, submitGroup, recallGroup, confirmGroup, rejectGroup, formatDate, viewDetail, togglePaid, fetchAdminData,
           fetchAdminItems, openItemModal, handleImageUpload, saveItem, deleteItem,
           fetchAdminAccounts, openAccountModal, saveAccount, deleteAccount,
           fetchOrderDetails, fetchStockList, fetchLabelList, fetchReviewList,
           openProfileModal, saveProfile, fetchActiveGroups, fetchHistoryGroups,
+          openCreateModal, openEditModal, saveGroup, // [UPDATE]
           categories, filteredItems, totalQty, totalAmount,
           toggleGroupExpand
         };
