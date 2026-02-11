@@ -839,15 +839,18 @@
             if (!stockStart.value || !stockEnd.value) return;
             loading.value = true;
             try {
-                // [UPDATE] 使用範圍查詢
+                // [FIX] 改為先抓範圍內所有訂單，再用 JS 過濾 status，避免需要建立複合索引
                 const qOrders = query(
                     collection(db, "orders"), 
-                    where("status", "==", "CONFIRMED"),
                     where("orderDate", ">=", stockStart.value),
                     where("orderDate", "<=", stockEnd.value)
                 );
                 const orderSnap = await getDocs(qOrders);
-                const confirmedOrders = orderSnap.docs.map(d => ({id: d.id, ...d.data()}));
+                
+                // 在前端過濾出 "CONFIRMED" 的訂單
+                const confirmedOrders = orderSnap.docs
+                    .map(d => ({id: d.id, ...d.data()}))
+                    .filter(o => o.status === "CONFIRMED");
 
                 const stockMap = {};
                 confirmedOrders.forEach(o => {
