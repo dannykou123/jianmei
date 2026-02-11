@@ -498,9 +498,6 @@
                        <div class="flex items-center gap-4">
                            <div :class="['w-3 h-3 rounded-full shadow-sm ring-2 ring-offset-2 transition-colors', order.status === 'CONFIRMED' ? 'bg-green-500 ring-green-100' : 'bg-yellow-400 ring-yellow-100 animate-pulse']"></div>
                            <div class="font-black text-stone-700 text-lg group-hover:text-stone-900 transition-colors">{{ order.buyerName }}</div>
-                           <span class="text-[10px] font-bold bg-stone-100 text-stone-400 px-2 py-0.5 rounded-full ml-1">
-                               {{ order.items.reduce((s,i)=>s+(i.qty||0), 0) }} 項
-                           </span>
                        </div>
 
                        <div class="flex items-center gap-5">
