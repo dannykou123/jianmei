@@ -217,15 +217,34 @@
 
     <div v-else-if="currentView === 'leader'" class="min-h-screen bg-stone-50 pb-20 no-print">
       <div class="bg-white px-6 py-6 shadow-sm sticky top-0 z-30 border-b border-stone-100">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-          <div>
-            <h2 class="text-xl font-black text-stone-800">{{ user.companyName }}</h2>
-            <p class="text-xs text-stone-400 font-medium mt-0.5 flex items-center gap-2">
-                專屬管理後台
-                <span v-if="user.leaderName" class="bg-stone-100 px-1.5 py-0.5 rounded text-stone-500">{{ user.leaderName }}</span>
-            </p>
+        <div class="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div class="flex items-center justify-between w-full md:w-auto">
+            <div>
+              <h2 class="text-xl font-black text-stone-800">{{ user.companyName }}</h2>
+              <p class="text-xs text-stone-400 font-medium mt-0.5 flex items-center gap-2">
+                  專屬管理後台
+                  <span v-if="user.leaderName" class="bg-stone-100 px-1.5 py-0.5 rounded text-stone-500">{{ user.leaderName }}</span>
+              </p>
+            </div>
+            
+            <div class="flex items-center gap-2 md:hidden">
+                 <button @click="openProfileModal" class="bg-stone-100 text-stone-600 w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold hover:bg-brand-50 hover:text-brand-600 transition border border-stone-200">
+                    <i class="fas fa-cog"></i>
+                 </button>
+                 <button @click="logout" class="bg-stone-800 text-white w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold hover:bg-black transition shadow-md"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
           </div>
-          <div class="flex items-center gap-2">
+          
+          <div class="flex bg-stone-100 p-1 rounded-xl w-full md:w-auto">
+             <button @click="leaderTab='active'; fetchActiveGroups()" :class="['flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all', leaderTab==='active' ? 'bg-white text-brand-600 shadow-sm' : 'text-stone-400 hover:text-stone-600']">
+               <i class="fas fa-tasks mr-2"></i>開團管理
+             </button>
+             <button @click="leaderTab='history'; fetchHistoryGroups()" :class="['flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all', leaderTab==='history' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400 hover:text-stone-600']">
+               <i class="fas fa-history mr-2"></i>歷史紀錄
+             </button>
+          </div>
+
+          <div class="hidden md:flex items-center gap-2">
              <button @click="openProfileModal" class="bg-stone-100 text-stone-600 px-3 py-2 rounded-xl text-xs font-bold hover:bg-brand-50 hover:text-brand-600 transition border border-stone-200">
                 <i class="fas fa-cog mr-1"></i>帳號
              </button>
@@ -235,82 +254,138 @@
       </div>
 
       <div class="max-w-4xl mx-auto p-6">
-        <div class="bg-gradient-to-br from-brand-600 to-brand-500 text-white p-8 rounded-[2rem] shadow-xl shadow-brand-500/20 mb-10 flex flex-col sm:flex-row justify-between items-center gap-6 relative overflow-hidden">
-          <div class="absolute right-0 top-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
-          <div class="text-center sm:text-left relative z-10">
-            <h3 class="text-2xl font-black mb-2">發起午茶團購？</h3>
-            <p class="text-brand-100 text-sm font-medium opacity-90">產生新的序號，讓同事們開始點餐吧！</p>
-          </div>
-          <button @click="createGroup" :disabled="loading" class="relative z-10 bg-white text-brand-600 px-8 py-4 rounded-2xl font-black shadow-lg hover:bg-brand-50 active:scale-95 transition whitespace-nowrap">
-            <i class="fas fa-plus mr-2"></i>建立新團
-          </button>
-        </div>
-
-        <div class="flex flex-col sm:flex-row justify-between items-end sm:items-center mb-4 gap-4">
-             <h3 class="font-bold text-stone-400 ml-2 uppercase tracking-widest text-xs whitespace-nowrap">歷史紀錄查詢</h3>
-             
-             <div class="flex items-center gap-2 bg-white p-2 rounded-xl shadow-sm border border-stone-100">
-                <input type="date" v-model="historyStart" class="bg-stone-50 rounded-lg px-2 py-1 text-xs font-bold text-stone-600 border border-stone-200 outline-none focus:border-brand-500">
-                <span class="text-stone-300 text-xs">~</span>
-                <input type="date" v-model="historyEnd" class="bg-stone-50 rounded-lg px-2 py-1 text-xs font-bold text-stone-600 border border-stone-200 outline-none focus:border-brand-500">
-                <button @click="fetchLeaderGroups" class="bg-brand-600 text-white w-8 h-8 rounded-lg flex items-center justify-center hover:bg-brand-700 transition shadow-sm"><i class="fas fa-search text-xs"></i></button>
-             </div>
-        </div>
         
-        <div v-if="loading" class="text-center py-16"><i class="fas fa-circle-notch fa-spin text-stone-300 text-2xl"></i></div>
-
-        <div v-else-if="leaderGroups.length === 0" class="text-center py-16 bg-white rounded-[2rem] border-2 border-dashed border-stone-200">
-            <div class="text-stone-300 text-4xl mb-3"><i class="fas fa-calendar-times"></i></div>
-            <p class="text-stone-400 font-bold">此日期範圍內沒有團購紀錄</p>
-        </div>
-        
-        <div v-else class="space-y-6 animate-slide-down">
-          <div v-for="g in leaderGroups" :key="g.id" class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-stone-100 hover:shadow-md transition-all">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-              <div>
-                <div class="flex items-center gap-3 mb-1">
-                   <span class="text-xs font-bold text-stone-400 bg-stone-100 px-2 py-1 rounded-lg">{{ formatDate(g.createdAt) }}</span>
-                   <span v-if="g.status === 'OPEN'" class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-lg font-bold border border-green-200"><span class="w-1.5 h-1.5 bg-green-500 rounded-full inline-block mr-1"></span>進行中</span>
-                   <span v-else-if="g.status === 'SUBMITTED'" class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg font-bold border border-yellow-200"><span class="w-1.5 h-1.5 bg-yellow-500 rounded-full inline-block mr-1 animate-pulse"></span>已送出</span>
-                   <span v-else-if="g.status === 'CONFIRMED'" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-lg font-bold border border-blue-100"><i class="fas fa-check-circle mr-1"></i>已確認</span>
-                </div>
-                <div class="font-black text-4xl text-brand-600 tracking-tighter select-all">{{ g.code }}</div>
+        <div v-if="leaderTab === 'active'" class="animate-slide-down">
+            <div class="bg-gradient-to-br from-brand-600 to-brand-500 text-white p-8 rounded-[2rem] shadow-xl shadow-brand-500/20 mb-10 flex flex-col sm:flex-row justify-between items-center gap-6 relative overflow-hidden">
+              <div class="absolute right-0 top-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+              <div class="text-center sm:text-left relative z-10">
+                <h3 class="text-2xl font-black mb-2">發起午茶團購？</h3>
+                <p class="text-brand-100 text-sm font-medium opacity-90">產生新的序號，讓同事們開始點餐吧！</p>
               </div>
-              <div class="flex gap-2 w-full sm:w-auto">
-                 <button @click="viewDetail(g)" class="flex-1 sm:flex-none bg-stone-50 text-stone-600 px-5 py-3 rounded-xl font-bold border border-stone-200 hover:bg-stone-100 transition text-sm">{{ selectedGroup && selectedGroup.id === g.id ? '收合' : '明細' }}</button>
-                <button v-if="g.status === 'OPEN'" @click="submitGroup(g)" class="flex-1 sm:flex-none bg-red-50 text-red-500 px-5 py-3 rounded-xl font-bold border border-red-100 hover:bg-red-100 transition text-sm">結單送出</button>
-                <button v-if="g.status === 'SUBMITTED'" @click="recallGroup(g)" class="flex-1 sm:flex-none bg-yellow-50 text-yellow-600 px-5 py-3 rounded-xl font-bold border border-yellow-100 hover:bg-yellow-100 transition text-sm"><i class="fas fa-undo mr-1"></i>收回</button>
-              </div>
+              <button @click="createGroup" :disabled="loading" class="relative z-10 bg-white text-brand-600 px-8 py-4 rounded-2xl font-black shadow-lg hover:bg-brand-50 active:scale-95 transition whitespace-nowrap">
+                <i class="fas fa-plus mr-2"></i>建立新團
+              </button>
             </div>
 
-            <div v-if="selectedGroup && selectedGroup.id === g.id" class="mt-6 pt-6 border-t border-dashed border-stone-200 animate-slide-down">
-              <div v-if="loadingDetail" class="text-center py-8 text-stone-300"><i class="fas fa-spinner fa-spin text-2xl"></i></div>
-              <div v-else>
-                <div class="flex justify-between items-center mb-4 bg-stone-50 p-4 rounded-xl border border-stone-100">
-                  <span class="font-bold text-stone-600 text-sm">訂單列表 ({{ selectedDetail.list.length }})</span>
-                  <span class="text-xl font-black text-brand-600">總計: ${{ selectedDetail.totalAmount }}</span>
-                </div>
-                <div class="overflow-x-auto rounded-lg border border-stone-100">
-                  <table class="w-full text-left text-sm whitespace-nowrap">
-                    <thead class="text-stone-400 text-[10px] uppercase tracking-wider bg-stone-50 border-b border-stone-100">
-                      <tr><th class="py-3 pl-4">姓名</th><th class="py-3">內容</th><th class="py-3 text-right">金額</th><th class="py-3 pr-4 text-center">已付</th></tr>
-                    </thead>
-                    <tbody class="divide-y divide-stone-50 bg-white">
-                      <tr v-for="order in selectedDetail.list" :key="order.id" class="group hover:bg-stone-50 transition-colors">
-                        <td class="py-4 pl-4 font-bold text-stone-700">{{ order.buyerName }}</td>
-                        <td class="py-4 text-xs text-stone-500 leading-relaxed max-w-[200px] whitespace-normal">
-                          <span v-for="i in order.items" class="inline-block bg-white border border-stone-100 px-2 py-1 rounded-md mr-1 mb-1 shadow-sm">{{ i.name }} <span class="text-brand-600 font-bold">x{{ i.qty }}</span></span>
-                        </td>
-                        <td class="py-4 text-right font-bold text-stone-800">${{ order.totalAmount }}</td>
-                        <td class="py-4 pr-4 text-center"><input type="checkbox" v-model="order.isPaid" @change="togglePaid(order)" class="w-5 h-5 rounded border-stone-300 text-brand-600 focus:ring-brand-500 cursor-pointer transition"></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+            <h3 class="font-bold text-stone-400 mb-4 ml-2 uppercase tracking-widest text-xs">進行中的團購</h3>
+            
+            <div v-if="activeGroups.length === 0" class="text-center py-16 bg-white rounded-[2rem] border-2 border-dashed border-stone-200">
+                <div class="text-stone-300 text-4xl mb-3"><i class="fas fa-clipboard-check"></i></div>
+                <p class="text-stone-400 font-bold">目前沒有進行中的團購</p>
             </div>
-          </div>
+            
+            <div class="space-y-6">
+                <div v-for="g in activeGroups" :key="g.id" class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-stone-100 hover:shadow-md transition-all">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                      <div>
+                        <div class="flex items-center gap-3 mb-1">
+                           <span class="text-xs font-bold text-stone-400 bg-stone-100 px-2 py-1 rounded-lg">{{ formatDate(g.createdAt) }}</span>
+                           <span v-if="g.status === 'OPEN'" class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-lg font-bold border border-green-200"><span class="w-1.5 h-1.5 bg-green-500 rounded-full inline-block mr-1"></span>進行中</span>
+                           <span v-else-if="g.status === 'SUBMITTED'" class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg font-bold border border-yellow-200"><span class="w-1.5 h-1.5 bg-yellow-500 rounded-full inline-block mr-1 animate-pulse"></span>已送出</span>
+                        </div>
+                        <div class="font-black text-4xl text-brand-600 tracking-tighter select-all">{{ g.code }}</div>
+                      </div>
+                      <div class="flex gap-2 w-full sm:w-auto">
+                         <button @click="viewDetail(g)" class="flex-1 sm:flex-none bg-stone-50 text-stone-600 px-5 py-3 rounded-xl font-bold border border-stone-200 hover:bg-stone-100 transition text-sm">{{ selectedGroup && selectedGroup.id === g.id ? '收合' : '明細' }}</button>
+                        <button v-if="g.status === 'OPEN'" @click="submitGroup(g)" class="flex-1 sm:flex-none bg-red-50 text-red-500 px-5 py-3 rounded-xl font-bold border border-red-100 hover:bg-red-100 transition text-sm">結單送出</button>
+                        <button v-if="g.status === 'SUBMITTED'" @click="recallGroup(g)" class="flex-1 sm:flex-none bg-yellow-50 text-yellow-600 px-5 py-3 rounded-xl font-bold border border-yellow-100 hover:bg-yellow-100 transition text-sm"><i class="fas fa-undo mr-1"></i>收回</button>
+                      </div>
+                    </div>
+                    
+                    <div v-if="selectedGroup && selectedGroup.id === g.id" class="mt-6 pt-6 border-t border-dashed border-stone-200 animate-slide-down">
+                      <div v-if="loadingDetail" class="text-center py-8 text-stone-300"><i class="fas fa-spinner fa-spin text-2xl"></i></div>
+                      <div v-else>
+                        <div class="flex justify-between items-center mb-4 bg-stone-50 p-4 rounded-xl border border-stone-100">
+                          <span class="font-bold text-stone-600 text-sm">訂單列表 ({{ selectedDetail.list.length }})</span>
+                          <span class="text-xl font-black text-brand-600">總計: ${{ selectedDetail.totalAmount }}</span>
+                        </div>
+                        <div class="overflow-x-auto rounded-lg border border-stone-100">
+                          <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="text-stone-400 text-[10px] uppercase tracking-wider bg-stone-50 border-b border-stone-100">
+                              <tr><th class="py-3 pl-4">姓名</th><th class="py-3">內容</th><th class="py-3 text-right">金額</th><th class="py-3 pr-4 text-center">已付</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-stone-50 bg-white">
+                              <tr v-for="order in selectedDetail.list" :key="order.id" class="group hover:bg-stone-50 transition-colors">
+                                <td class="py-4 pl-4 font-bold text-stone-700">{{ order.buyerName }}</td>
+                                <td class="py-4 text-xs text-stone-500 leading-relaxed max-w-[200px] whitespace-normal">
+                                  <span v-for="i in order.items" class="inline-block bg-white border border-stone-100 px-2 py-1 rounded-md mr-1 mb-1 shadow-sm">{{ i.name }} <span class="text-brand-600 font-bold">x{{ i.qty }}</span></span>
+                                </td>
+                                <td class="py-4 text-right font-bold text-stone-800">${{ order.totalAmount }}</td>
+                                <td class="py-4 pr-4 text-center"><input type="checkbox" v-model="order.isPaid" @change="togglePaid(order)" class="w-5 h-5 rounded border-stone-300 text-brand-600 focus:ring-brand-500 cursor-pointer transition"></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <div v-if="leaderTab === 'history'" class="animate-slide-down">
+            <div class="flex flex-col sm:flex-row justify-between items-end sm:items-center mb-6 gap-4 bg-white p-4 rounded-2xl shadow-sm border border-stone-100">
+                 <h3 class="font-bold text-stone-800 text-lg flex items-center gap-2"><i class="fas fa-search text-brand-500"></i> 查詢歷史紀錄</h3>
+                 
+                 <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <input type="date" v-model="historyStart" class="flex-1 bg-stone-50 rounded-xl px-3 py-2 text-sm font-bold text-stone-600 border border-stone-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition">
+                    <span class="text-stone-300 font-bold">~</span>
+                    <input type="date" v-model="historyEnd" class="flex-1 bg-stone-50 rounded-xl px-3 py-2 text-sm font-bold text-stone-600 border border-stone-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition">
+                    <button @click="fetchHistoryGroups" class="bg-brand-600 text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-brand-700 transition shadow-md active:scale-95"><i class="fas fa-search"></i></button>
+                 </div>
+            </div>
+            
+            <div v-if="loading" class="text-center py-16"><i class="fas fa-circle-notch fa-spin text-stone-300 text-2xl"></i></div>
+
+            <div v-else-if="historyGroups.length === 0" class="text-center py-20 bg-white rounded-[2rem] border-2 border-dashed border-stone-200">
+                <div class="text-stone-300 text-4xl mb-3"><i class="fas fa-history"></i></div>
+                <p class="text-stone-400 font-bold">此日期範圍內沒有歷史紀錄</p>
+            </div>
+            
+            <div v-else class="space-y-6">
+                <div v-for="g in historyGroups" :key="g.id" class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-stone-100 hover:shadow-md transition-all">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                      <div>
+                        <div class="flex items-center gap-3 mb-1">
+                           <span class="text-xs font-bold text-stone-400 bg-stone-100 px-2 py-1 rounded-lg">{{ formatDate(g.createdAt) }}</span>
+                           <span v-if="g.status === 'CONFIRMED'" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-lg font-bold border border-blue-100"><i class="fas fa-check-circle mr-1"></i>已確認</span>
+                           <span v-else class="text-[10px] bg-stone-100 text-stone-500 px-2 py-1 rounded-lg font-bold">{{ g.status }}</span>
+                        </div>
+                        <div class="font-black text-4xl text-stone-300 tracking-tighter select-all">{{ g.code }}</div>
+                      </div>
+                      <div class="flex gap-2 w-full sm:w-auto">
+                         <button @click="viewDetail(g)" class="flex-1 sm:flex-none bg-stone-50 text-stone-600 px-5 py-3 rounded-xl font-bold border border-stone-200 hover:bg-stone-100 transition text-sm">{{ selectedGroup && selectedGroup.id === g.id ? '收合' : '明細' }}</button>
+                      </div>
+                    </div>
+                    
+                    <div v-if="selectedGroup && selectedGroup.id === g.id" class="mt-6 pt-6 border-t border-dashed border-stone-200 animate-slide-down">
+                      <div v-if="loadingDetail" class="text-center py-8 text-stone-300"><i class="fas fa-spinner fa-spin text-2xl"></i></div>
+                      <div v-else>
+                        <div class="flex justify-between items-center mb-4 bg-stone-50 p-4 rounded-xl border border-stone-100">
+                          <span class="font-bold text-stone-600 text-sm">訂單列表 ({{ selectedDetail.list.length }})</span>
+                          <span class="text-xl font-black text-stone-600">總計: ${{ selectedDetail.totalAmount }}</span>
+                        </div>
+                        <div class="overflow-x-auto rounded-lg border border-stone-100">
+                          <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="text-stone-400 text-[10px] uppercase tracking-wider bg-stone-50 border-b border-stone-100">
+                              <tr><th class="py-3 pl-4">姓名</th><th class="py-3">內容</th><th class="py-3 text-right">金額</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-stone-50 bg-white">
+                              <tr v-for="order in selectedDetail.list" :key="order.id" class="group hover:bg-stone-50 transition-colors">
+                                <td class="py-4 pl-4 font-bold text-stone-700">{{ order.buyerName }}</td>
+                                <td class="py-4 text-xs text-stone-500 leading-relaxed max-w-[200px] whitespace-normal">
+                                  <span v-for="i in order.items" class="inline-block bg-white border border-stone-100 px-2 py-1 rounded-md mr-1 mb-1 shadow-sm">{{ i.name }} <span class="text-stone-600 font-bold">x{{ i.qty }}</span></span>
+                                </td>
+                                <td class="py-4 text-right font-bold text-stone-800">${{ order.totalAmount }}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
       </div>
       
       <div v-if="editingProfile" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
@@ -673,7 +748,12 @@
         const items = ref([]);
         const loginForm = ref({ id: '', pass: '' });
         const user = ref({});
-        const leaderGroups = ref([]);
+        
+        // 團主頁面相關變數
+        const leaderTab = ref('active'); // active | history
+        const activeGroups = ref([]);
+        const historyGroups = ref([]);
+        
         const selectedGroup = ref(null);
         const selectedDetail = ref({ list: [], totalAmount: 0 });
         
@@ -701,7 +781,6 @@
         const adminAccounts = ref([]);
         const editingAccount = ref(null);
         
-        // 新增：團主個人資料編輯
         const editingProfile = ref(null);
 
         const verifyCode = async () => {
@@ -763,7 +842,6 @@
               const docSnap = snap.docs[0];
               const userData = docSnap.data();
               const safeCompanyName = userData.name || userData.companyName || inputId;
-              // 重要：保存 docId 以便後續編輯資料
               user.value = { id: inputId, companyName: safeCompanyName, ...userData, docId: docSnap.id };
               
               if (inputId === 'ADMIN') {
@@ -773,41 +851,61 @@
                 await fetchReviewList();
               } else {
                 currentView.value = 'leader';
-                await fetchLeaderGroups();
+                leaderTab.value = 'active'; // Reset tab
+                await fetchActiveGroups();
               }
             } else { alert("帳號或密碼錯誤"); }
           } catch (e) { alert("資料庫錯誤"); } finally { loading.value = false; }
         };
 
-        const fetchLeaderGroups = async () => {
-          loading.value = true;
-          try {
-            // 先抓取該團主的所有訂單
-            const q = query(collection(db, "groupOrders"), where("companyId", "==", user.value.id));
-            const snap = await getDocs(q);
-            let list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-            // 前端過濾日期範圍 (避免 index 問題)
-            list = list.filter(g => {
-                if(!g.createdAt) return false;
-                const d = new Date(g.createdAt.seconds * 1000).toISOString().split('T')[0];
-                return d >= historyStart.value && d <= historyEnd.value;
-            });
-
-            leaderGroups.value = list.sort((a, b) => {
-                const tA = a.createdAt ? a.createdAt.seconds : 0;
-                const tB = b.createdAt ? b.createdAt.seconds : 0;
-                return tB - tA;
-            });
-          } catch(e) { console.error(e); } finally { loading.value = false; }
+        // 抓取進行中的團購
+        const fetchActiveGroups = async () => {
+            loading.value = true;
+            try {
+                const q = query(collection(db, "groupOrders"), where("companyId", "==", user.value.id));
+                const snap = await getDocs(q);
+                // 過濾出 OPEN 或 SUBMITTED
+                const list = snap.docs
+                    .map(d => ({ id: d.id, ...d.data() }))
+                    .filter(g => g.status === 'OPEN' || g.status === 'SUBMITTED');
+                
+                activeGroups.value = list.sort((a, b) => {
+                    const tA = a.createdAt ? a.createdAt.seconds : 0;
+                    const tB = b.createdAt ? b.createdAt.seconds : 0;
+                    return tB - tA;
+                });
+                selectedGroup.value = null; // 切換 Tab 時清除選取
+            } catch(e) { console.error(e); } finally { loading.value = false; }
         };
 
-        // 開啟編輯個人資料 Modal
+        // 抓取歷史團購 (根據日期)
+        const fetchHistoryGroups = async () => {
+            loading.value = true;
+            try {
+                const q = query(collection(db, "groupOrders"), where("companyId", "==", user.value.id));
+                const snap = await getDocs(q);
+                let list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                // 日期過濾
+                list = list.filter(g => {
+                    if(!g.createdAt) return false;
+                    const d = new Date(g.createdAt.seconds * 1000).toISOString().split('T')[0];
+                    return d >= historyStart.value && d <= historyEnd.value;
+                });
+
+                historyGroups.value = list.sort((a, b) => {
+                    const tA = a.createdAt ? a.createdAt.seconds : 0;
+                    const tB = b.createdAt ? b.createdAt.seconds : 0;
+                    return tB - tA;
+                });
+                selectedGroup.value = null; // 切換 Tab 時清除選取
+            } catch(e) { console.error(e); } finally { loading.value = false; }
+        };
+
         const openProfileModal = () => {
             editingProfile.value = { ...user.value };
         };
 
-        // 儲存個人資料
         const saveProfile = async () => {
             if(!editingProfile.value.leaderName || !editingProfile.value.phone) return alert('請填寫完整資訊');
             loading.value = true;
@@ -821,7 +919,6 @@
                 };
                 
                 await updateDoc(doc(db, "companies", user.value.docId), updateData);
-                // 更新本地 user 狀態
                 user.value = { ...user.value, ...updateData };
                 editingProfile.value = null;
                 alert("個人資料更新成功！");
@@ -859,7 +956,7 @@
               createdAt: serverTimestamp()
             });
             alert(`開團成功！序號：${newCode}`);
-            await fetchLeaderGroups();
+            await fetchActiveGroups(); // 重新抓取 Active 列表
           } finally { loading.value = false; }
         };
 
@@ -868,7 +965,7 @@
             try {
                 await updateDoc(doc(db, "groupOrders", group.id), { status: "SUBMITTED" });
                 alert("已送出給管理員確認！");
-                await fetchLeaderGroups();
+                await fetchActiveGroups();
             } catch(e) { alert("結單失敗：" + e.message); }
         };
 
@@ -877,7 +974,7 @@
             try {
                 await updateDoc(doc(db, "groupOrders", group.id), { status: "OPEN" });
                 alert("已收回！您可以繼續編輯。");
-                await fetchLeaderGroups();
+                await fetchActiveGroups();
             } catch(e) { alert("收回失敗：" + e.message); }
         };
 
@@ -937,7 +1034,6 @@
                 );
                 const orderSnap = await getDocs(qOrders);
                 
-                // 在前端過濾出 "CONFIRMED" 的訂單
                 const confirmedOrders = orderSnap.docs
                     .map(d => ({id: d.id, ...d.data()}))
                     .filter(o => o.status === "CONFIRMED");
@@ -1135,17 +1231,17 @@
 
         return {
           currentView, loading, loadingDetail, submitting, inputCode, sessionInfo, buyerName, note, items, filterCat,
-          loginForm, user, adminData, leaderGroups, selectedGroup, selectedDetail,
+          loginForm, user, adminData, leaderTab, activeGroups, historyGroups, selectedGroup, selectedDetail,
           adminTab,
           adminItems, editingItem, previewImage,
           adminAccounts, editingAccount,
           orderDate, stockStart, stockEnd, labelDate,
-          historyStart, historyEnd, editingProfile, // [UPDATE] 
+          historyStart, historyEnd, editingProfile,
           verifyCode, handleLogin, submitOrder, logout, createGroup, submitGroup, recallGroup, confirmGroup, rejectGroup, formatDate, viewDetail, togglePaid, fetchAdminData,
           fetchAdminItems, openItemModal, handleImageUpload, saveItem, deleteItem,
           fetchAdminAccounts, openAccountModal, saveAccount, deleteAccount,
           fetchOrderDetails, fetchStockList, fetchLabelList, fetchReviewList,
-          openProfileModal, saveProfile, fetchLeaderGroups, // [UPDATE]
+          openProfileModal, saveProfile, fetchActiveGroups, fetchHistoryGroups,
           categories, filteredItems, totalQty, totalAmount,
           toggleGroupExpand
         };
