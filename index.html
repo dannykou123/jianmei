@@ -30,15 +30,6 @@
           },
           boxShadow: {
             'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.05)',
-          },
-          animation: {
-            'slide-down': 'slideDown 0.3s ease-out',
-          },
-          keyframes: {
-            slideDown: {
-              '0%': { opacity: '0', transform: 'translateY(-10px)' },
-              '100%': { opacity: '1', transform: 'translateY(0)' },
-            }
           }
         }
       }
@@ -51,6 +42,10 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
     
+    /* 微動畫 */
+    .animate-enter { animation: enter 0.3s ease-out; }
+    @keyframes enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
     @media print {
       .no-print { display: none !important; }
       @page { size: 62mm auto; margin: 0; }
@@ -66,7 +61,7 @@
   <div id="app" v-cloak>
     
     <div v-if="previewImage" class="fixed inset-0 z-[100] bg-stone-900/90 backdrop-blur-sm flex items-center justify-center p-4 cursor-zoom-out transition-opacity" @click="previewImage = null">
-      <img :src="previewImage" class="max-w-full max-h-[90vh] rounded-xl shadow-2xl border-4 border-white/10">
+      <img :src="previewImage" class="max-w-full max-h-[90vh] rounded-xl shadow-2xl animate-enter border-4 border-white/10">
     </div>
 
     <div v-if="currentView === 'home'" class="flex flex-col items-center justify-center min-h-screen px-6 bg-stone-50 no-print relative overflow-hidden">
@@ -264,7 +259,7 @@
               </div>
             </div>
 
-            <div v-if="selectedGroup && selectedGroup.id === g.id" class="mt-6 pt-6 border-t border-dashed border-stone-200 animate-slide-down">
+            <div v-if="selectedGroup && selectedGroup.id === g.id" class="mt-6 pt-6 border-t border-dashed border-stone-200 animate-enter">
               <div v-if="loadingDetail" class="text-center py-8 text-stone-300"><i class="fas fa-spinner fa-spin text-2xl"></i></div>
               <div v-else>
                 <div class="flex justify-between items-center mb-4 bg-stone-50 p-4 rounded-xl border border-stone-100">
@@ -335,7 +330,7 @@
              <p class="text-stone-400 font-bold text-lg">目前沒有待確認的團購</p>
            </div>
            
-           <div v-for="g in adminData.reviewList" :key="g.id" class="bg-white border-l-8 border-yellow-400 p-8 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-6 animate-slide-down">
+           <div v-for="g in adminData.reviewList" :key="g.id" class="bg-white border-l-8 border-yellow-400 p-8 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-6 animate-enter">
               <div>
                  <div class="text-xs font-bold text-stone-400 mb-2 flex items-center gap-2">
                    <i class="far fa-clock"></i> {{ formatDate(g.createdAt) }}
@@ -509,37 +504,35 @@
                </div>
 
                <div class="divide-y divide-stone-100">
-                 <div v-for="order in group.orders" :key="order.id" class="transition bg-white">
+                 <div v-for="order in group.orders" :class="['p-5 transition flex flex-col md:flex-row items-start md:items-center gap-4', order.status === 'PENDING' ? 'border-l-4 border-yellow-400 bg-yellow-50/10' : 'border-l-4 border-transparent hover:bg-stone-50']">
                    
-                   <div @click="order.expanded = !order.expanded" class="p-5 flex justify-between items-center cursor-pointer hover:bg-stone-50 group select-none">
-                       <div class="flex items-center gap-4">
-                           <div :class="['w-3 h-3 rounded-full shadow-sm ring-2 ring-offset-2 transition-colors', order.status === 'CONFIRMED' ? 'bg-green-500 ring-green-100' : 'bg-yellow-400 ring-yellow-100 animate-pulse']"></div>
-                           <div class="font-black text-stone-700 text-lg group-hover:text-stone-900 transition-colors">{{ order.buyerName }}</div>
-                           <span class="text-[10px] font-bold bg-stone-100 text-stone-400 px-2 py-0.5 rounded-full ml-1">
-                               {{ order.items.reduce((s,i)=>s+(i.qty||0), 0) }} 項
-                           </span>
-                       </div>
-
-                       <div class="flex items-center gap-5">
-                           <div class="font-bold text-stone-800 text-xl tracking-tight">${{ order.totalAmount }}</div>
-                           <div :class="['w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300', order.expanded ? 'bg-brand-50 text-brand-600 rotate-180' : 'bg-stone-50 text-stone-300 group-hover:bg-stone-200']">
-                               <i class="fas fa-chevron-down"></i>
+                   <div class="w-full md:w-1/4 flex items-center gap-3">
+                       <div v-if="order.status === 'CONFIRMED'" class="w-2.5 h-2.5 rounded-full bg-green-500 shadow-sm ring-2 ring-green-100" title="已確認"></div>
+                       <div v-else class="w-2.5 h-2.5 rounded-full bg-yellow-400 shadow-sm ring-2 ring-yellow-100 animate-pulse" title="待確認"></div>
+                       
+                       <div>
+                           <div class="font-black text-stone-800 text-lg leading-none mb-1">{{ order.buyerName }}</div>
+                           <div class="text-[10px] text-stone-400 font-mono">
+                               {{ order.status === 'CONFIRMED' ? 'Confirmed' : 'Pending' }}
                            </div>
                        </div>
                    </div>
 
-                   <div v-if="order.expanded" class="bg-stone-50/50 border-t border-dashed border-stone-100 px-6 pb-6 pt-2 animate-slide-down">
-                       <div class="pl-7 space-y-2">
-                           <div v-for="i in order.items" class="flex justify-between items-center text-sm border-b border-stone-100 border-dashed py-2 last:border-0 hover:bg-white/50 px-2 rounded transition">
-                               <span class="text-stone-600 font-medium">{{ i.name }}</span>
-                               <span class="font-bold text-stone-800">x{{ i.qty }}</span>
-                           </div>
+                   <div class="w-full md:w-2/4">
+                       <div class="text-sm text-stone-600 leading-relaxed font-medium">
+                           <span v-for="(i, idx) in order.items" :key="idx" class="inline-block mr-3">
+                               <span class="text-stone-400">{{ i.name }}</span>
+                               <span class="text-stone-800 font-bold ml-1">x{{ i.qty }}</span>
+                               <span v-if="idx < order.items.length - 1" class="text-stone-300 ml-2">|</span>
+                           </span>
                        </div>
-                       
-                       <div v-if="order.note" class="ml-9 mt-3 flex items-start gap-2 text-xs font-bold text-brand-600 bg-brand-50 p-3 rounded-xl inline-block max-w-full">
-                           <i class="fas fa-comment-dots mt-0.5"></i> 
-                           <span class="leading-relaxed">{{ order.note }}</span>
+                       <div v-if="order.note" class="text-xs text-brand-600 mt-1.5 font-bold flex items-center gap-1">
+                           <i class="fas fa-comment-dots"></i> {{ order.note }}
                        </div>
+                   </div>
+
+                   <div class="w-full md:w-1/4 text-right">
+                       <div class="font-black text-stone-800 text-xl tracking-tight">${{ order.totalAmount }}</div>
                    </div>
 
                  </div>
@@ -788,11 +781,7 @@
             try {
                 const qOrders = query(collection(db, "orders"), where("orderDate", "==", orderDate.value));
                 const orderSnap = await getDocs(qOrders);
-                const allOrders = orderSnap.docs.map(d => ({
-                    id: d.id, 
-                    ...d.data(),
-                    expanded: false // 預設收合
-                }));
+                const allOrders = orderSnap.docs.map(d => ({id: d.id, ...d.data()}));
                 
                 const groupMap = {};
                 allOrders.forEach(o => {
