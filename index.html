@@ -481,6 +481,12 @@
                     </div>
                   </div>
                   <div class="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                    
+                    <button @click="toggleGroupExpand(group)" class="text-xs font-bold text-brand-600 bg-brand-50 hover:bg-brand-100 px-3 py-2 rounded-lg transition flex items-center gap-1 border border-brand-100 shadow-sm">
+                        <i :class="group.allExpanded ? 'fas fa-compress-arrows-alt' : 'fas fa-expand-arrows-alt'"></i>
+                        {{ group.allExpanded ? '全部收合' : '展開明細' }}
+                    </button>
+
                     <button v-if="group.groupOrderId" @click="rejectGroup(group.groupOrderId)" class="text-xs font-bold text-stone-400 hover:text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg transition border border-transparent hover:border-red-100">
                       <i class="fas fa-undo mr-1"></i>整團退回 (重開)
                     </button>
@@ -782,7 +788,8 @@
                         groupOrderId: o.groupOrderId,
                         companyName: o.companyName || '散客', 
                         orders: [], 
-                        total: 0 
+                        total: 0,
+                        allExpanded: false // 預設全部收合
                       };
                   }
                   groupMap[gid].orders.push(o);
@@ -792,6 +799,12 @@
                 });
                 adminData.value.groupList = Object.values(groupMap);
             } finally { loading.value = false; }
+        };
+
+        // 新增：切換整團展開狀態
+        const toggleGroupExpand = (group) => {
+           group.allExpanded = !group.allExpanded;
+           group.orders.forEach(o => o.expanded = group.allExpanded);
         };
 
         const fetchStockList = async () => {
@@ -951,7 +964,7 @@
             try {
                 await deleteDoc(doc(db, "companies", docId));
                 await fetchAdminAccounts();
-            } catch(e) { alert('刪除失敗'); }
+            } catch (e) { alert('刪除失敗'); }
         };
 
         const confirmGroup = async (group) => {
@@ -1003,7 +1016,8 @@
           fetchAdminItems, openItemModal, handleImageUpload, saveItem, deleteItem,
           fetchAdminAccounts, openAccountModal, saveAccount, deleteAccount,
           fetchOrderDetails, fetchStockList, fetchLabelList, fetchReviewList,
-          categories, filteredItems, totalQty, totalAmount
+          categories, filteredItems, totalQty, totalAmount,
+          toggleGroupExpand // 新增的函式
         };
       }
     }).mount('#app');
