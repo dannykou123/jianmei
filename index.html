@@ -220,9 +220,17 @@
         <div class="max-w-4xl mx-auto flex justify-between items-center">
           <div>
             <h2 class="text-xl font-black text-stone-800">{{ user.companyName }}</h2>
-            <p class="text-xs text-stone-400 font-medium mt-0.5">專屬管理後台</p>
+            <p class="text-xs text-stone-400 font-medium mt-0.5 flex items-center gap-2">
+                專屬管理後台
+                <span v-if="user.leaderName" class="bg-stone-100 px-1.5 py-0.5 rounded text-stone-500">{{ user.leaderName }}</span>
+            </p>
           </div>
-          <button @click="logout" class="bg-stone-100 text-stone-500 px-4 py-2 rounded-xl text-xs font-bold hover:bg-stone-200 transition">登出</button>
+          <div class="flex items-center gap-2">
+             <button @click="openProfileModal" class="bg-stone-100 text-stone-600 px-3 py-2 rounded-xl text-xs font-bold hover:bg-brand-50 hover:text-brand-600 transition border border-stone-200">
+                <i class="fas fa-cog mr-1"></i>帳號
+             </button>
+             <button @click="logout" class="bg-stone-800 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-black transition shadow-md">登出</button>
+          </div>
         </div>
       </div>
 
@@ -238,14 +246,25 @@
           </button>
         </div>
 
-        <h3 class="font-bold text-stone-400 mb-4 ml-2 uppercase tracking-widest text-xs">歷史紀錄</h3>
-        
-        <div v-if="leaderGroups.length === 0" class="text-center py-16 bg-white rounded-[2rem] border-2 border-dashed border-stone-200">
-            <div class="text-stone-300 text-4xl mb-3"><i class="fas fa-clipboard-list"></i></div>
-            <p class="text-stone-400 font-bold">目前沒有團購紀錄</p>
+        <div class="flex flex-col sm:flex-row justify-between items-end sm:items-center mb-4 gap-4">
+             <h3 class="font-bold text-stone-400 ml-2 uppercase tracking-widest text-xs whitespace-nowrap">歷史紀錄查詢</h3>
+             
+             <div class="flex items-center gap-2 bg-white p-2 rounded-xl shadow-sm border border-stone-100">
+                <input type="date" v-model="historyStart" class="bg-stone-50 rounded-lg px-2 py-1 text-xs font-bold text-stone-600 border border-stone-200 outline-none focus:border-brand-500">
+                <span class="text-stone-300 text-xs">~</span>
+                <input type="date" v-model="historyEnd" class="bg-stone-50 rounded-lg px-2 py-1 text-xs font-bold text-stone-600 border border-stone-200 outline-none focus:border-brand-500">
+                <button @click="fetchLeaderGroups" class="bg-brand-600 text-white w-8 h-8 rounded-lg flex items-center justify-center hover:bg-brand-700 transition shadow-sm"><i class="fas fa-search text-xs"></i></button>
+             </div>
         </div>
         
-        <div class="space-y-6">
+        <div v-if="loading" class="text-center py-16"><i class="fas fa-circle-notch fa-spin text-stone-300 text-2xl"></i></div>
+
+        <div v-else-if="leaderGroups.length === 0" class="text-center py-16 bg-white rounded-[2rem] border-2 border-dashed border-stone-200">
+            <div class="text-stone-300 text-4xl mb-3"><i class="fas fa-calendar-times"></i></div>
+            <p class="text-stone-400 font-bold">此日期範圍內沒有團購紀錄</p>
+        </div>
+        
+        <div v-else class="space-y-6 animate-slide-down">
           <div v-for="g in leaderGroups" :key="g.id" class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-stone-100 hover:shadow-md transition-all">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
               <div>
@@ -293,6 +312,30 @@
           </div>
         </div>
       </div>
+      
+      <div v-if="editingProfile" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
+          <div class="bg-white w-full max-w-md rounded-[2rem] p-8 shadow-2xl overflow-y-auto max-h-[90vh] border border-white/20">
+             <h3 class="text-xl font-black mb-6 text-stone-800">編輯帳號資訊</h3>
+             <div class="space-y-4">
+                 <div class="bg-stone-50 p-4 rounded-xl border border-stone-100 mb-2">
+                     <span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Account ID</span>
+                     <div class="font-black text-xl text-stone-700 font-mono">{{ editingProfile.id }}</div>
+                 </div>
+                 <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-xs font-bold text-stone-400 ml-1">團主姓名</label><input v-model="editingProfile.leaderName" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700"></div>
+                    <div><label class="text-xs font-bold text-stone-400 ml-1">聯絡電話</label><input v-model="editingProfile.phone" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700"></div>
+                 </div>
+                 <div><label class="text-xs font-bold text-stone-400 ml-1">部門 / 單位</label><input v-model="editingProfile.department" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700"></div>
+                 <div><label class="text-xs font-bold text-stone-400 ml-1">送貨地址</label><input v-model="editingProfile.address" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700"></div>
+                 <div><label class="text-xs font-bold text-stone-400 ml-1">登入密碼</label><input v-model="editingProfile.password" type="text" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700"></div>
+             </div>
+             <div class="flex gap-3 mt-8">
+                 <button @click="editingProfile = null" class="flex-1 py-3 bg-stone-100 text-stone-500 rounded-xl font-bold hover:bg-stone-200 transition">取消</button>
+                 <button @click="saveProfile" class="flex-1 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition">儲存變更</button>
+             </div>
+          </div>
+      </div>
+
     </div>
 
     <div v-else-if="currentView === 'admin'" class="min-h-screen bg-stone-50 pb-20">
@@ -635,8 +678,15 @@
         const selectedDetail = ref({ list: [], totalAmount: 0 });
         
         const todayStr = new Date().toISOString().split('T')[0];
+        // 設定歷史紀錄查詢預設值 (前30天 ~ 今天)
+        const date30DaysAgo = new Date();
+        date30DaysAgo.setDate(date30DaysAgo.getDate() - 30);
+        const startStr = date30DaysAgo.toISOString().split('T')[0];
+        
+        const historyStart = ref(startStr);
+        const historyEnd = ref(todayStr);
+
         const orderDate = ref(todayStr);
-        // [UPDATE] 備貨日期改為範圍
         const stockStart = ref(todayStr);
         const stockEnd = ref(todayStr);
         const labelDate = ref(todayStr);
@@ -650,6 +700,9 @@
         
         const adminAccounts = ref([]);
         const editingAccount = ref(null);
+        
+        // 新增：團主個人資料編輯
+        const editingProfile = ref(null);
 
         const verifyCode = async () => {
           if (!inputCode.value) return;
@@ -707,9 +760,11 @@
             const snap = await getDocs(q);
 
             if (!snap.empty) {
-              const userData = snap.docs[0].data();
+              const docSnap = snap.docs[0];
+              const userData = docSnap.data();
               const safeCompanyName = userData.name || userData.companyName || inputId;
-              user.value = { id: inputId, companyName: safeCompanyName, ...userData };
+              // 重要：保存 docId 以便後續編輯資料
+              user.value = { id: inputId, companyName: safeCompanyName, ...userData, docId: docSnap.id };
               
               if (inputId === 'ADMIN') {
                 currentView.value = 'admin';
@@ -725,16 +780,52 @@
         };
 
         const fetchLeaderGroups = async () => {
+          loading.value = true;
           try {
+            // 先抓取該團主的所有訂單
             const q = query(collection(db, "groupOrders"), where("companyId", "==", user.value.id));
             const snap = await getDocs(q);
-            const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            let list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            // 前端過濾日期範圍 (避免 index 問題)
+            list = list.filter(g => {
+                if(!g.createdAt) return false;
+                const d = new Date(g.createdAt.seconds * 1000).toISOString().split('T')[0];
+                return d >= historyStart.value && d <= historyEnd.value;
+            });
+
             leaderGroups.value = list.sort((a, b) => {
                 const tA = a.createdAt ? a.createdAt.seconds : 0;
                 const tB = b.createdAt ? b.createdAt.seconds : 0;
                 return tB - tA;
             });
-          } catch(e) { console.error(e); }
+          } catch(e) { console.error(e); } finally { loading.value = false; }
+        };
+
+        // 開啟編輯個人資料 Modal
+        const openProfileModal = () => {
+            editingProfile.value = { ...user.value };
+        };
+
+        // 儲存個人資料
+        const saveProfile = async () => {
+            if(!editingProfile.value.leaderName || !editingProfile.value.phone) return alert('請填寫完整資訊');
+            loading.value = true;
+            try {
+                const updateData = {
+                    leaderName: editingProfile.value.leaderName,
+                    phone: editingProfile.value.phone,
+                    department: editingProfile.value.department || '',
+                    address: editingProfile.value.address || '',
+                    password: editingProfile.value.password
+                };
+                
+                await updateDoc(doc(db, "companies", user.value.docId), updateData);
+                // 更新本地 user 狀態
+                user.value = { ...user.value, ...updateData };
+                editingProfile.value = null;
+                alert("個人資料更新成功！");
+            } catch(e) { alert("更新失敗：" + e.message); } finally { loading.value = false; }
         };
 
         const viewDetail = async (group) => {
@@ -839,7 +930,6 @@
             if (!stockStart.value || !stockEnd.value) return;
             loading.value = true;
             try {
-                // [FIX] 改為先抓範圍內所有訂單，再用 JS 過濾 status，避免需要建立複合索引
                 const qOrders = query(
                     collection(db, "orders"), 
                     where("orderDate", ">=", stockStart.value),
@@ -1049,11 +1139,13 @@
           adminTab,
           adminItems, editingItem, previewImage,
           adminAccounts, editingAccount,
-          orderDate, stockStart, stockEnd, labelDate, // [UPDATE]
+          orderDate, stockStart, stockEnd, labelDate,
+          historyStart, historyEnd, editingProfile, // [UPDATE] 
           verifyCode, handleLogin, submitOrder, logout, createGroup, submitGroup, recallGroup, confirmGroup, rejectGroup, formatDate, viewDetail, togglePaid, fetchAdminData,
           fetchAdminItems, openItemModal, handleImageUpload, saveItem, deleteItem,
           fetchAdminAccounts, openAccountModal, saveAccount, deleteAccount,
           fetchOrderDetails, fetchStockList, fetchLabelList, fetchReviewList,
+          openProfileModal, saveProfile, fetchLeaderGroups, // [UPDATE]
           categories, filteredItems, totalQty, totalAmount,
           toggleGroupExpand
         };
