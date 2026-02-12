@@ -51,6 +51,19 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
     
+    /* 手機版漢堡選單動畫 */
+    .mobile-menu-enter-active, .mobile-menu-leave-active {
+      transition: all 0.3s ease;
+    }
+    .mobile-menu-enter-from {
+      opacity: 0;
+      transform: translateX(-100%);
+    }
+    .mobile-menu-leave-to {
+      opacity: 0;
+      transform: translateX(-100%);
+    }
+    
     @media print {
       .no-print { display: none !important; }
       @page { size: 62mm auto; margin: 0; }
@@ -198,7 +211,8 @@
     </div>
 
     <div v-else-if="currentView === 'login'" class="flex flex-col items-center justify-center min-h-screen bg-stone-100 px-6 no-print">
-      <form @submit.prevent="handleLogin" class="bg-white p-10 rounded-[2rem] shadow-2xl w-full max-w-sm border border-white relative overflow-hidden">
+      <!-- 登入表單 -->
+      <form v-if="!showRegister" @submit.prevent="handleLogin" class="bg-white p-10 rounded-[2rem] shadow-2xl w-full max-w-sm border border-white relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-500 to-brand-600"></div>
         <h2 class="text-2xl font-black mb-10 text-center text-stone-800 tracking-tight">後台管理登入</h2>
         <div class="space-y-6">
@@ -213,7 +227,54 @@
           <button type="submit" :disabled="loading" class="w-full bg-stone-800 text-white py-4 rounded-2xl shadow-xl font-black hover:bg-black active:scale-[0.98] transition mt-2">
             {{ loading ? '驗證中...' : '確認登入' }}
           </button>
-          <button type="button" @click="currentView='home'" class="w-full text-center text-stone-400 text-xs mt-6 hover:text-stone-600 transition font-bold">返回首頁</button>
+          <div class="flex items-center gap-2 mt-4">
+            <button type="button" @click="currentView='home'" class="flex-1 text-center text-stone-400 text-xs hover:text-stone-600 transition font-bold">返回首頁</button>
+            <span class="text-stone-300">|</span>
+            <button type="button" @click="showRegister=true" class="flex-1 text-center text-brand-600 text-xs hover:text-brand-700 transition font-bold">註冊新帳號</button>
+          </div>
+        </div>
+      </form>
+      
+      <!-- 註冊表單 -->
+      <form v-else @submit.prevent="handleRegister" class="bg-white p-10 rounded-[2rem] shadow-2xl w-full max-w-md border border-white relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-500 to-green-600"></div>
+        <h2 class="text-2xl font-black mb-6 text-center text-stone-800 tracking-tight">註冊團主帳號</h2>
+        <div class="space-y-4">
+          <div class="group">
+            <label class="text-[10px] font-black text-stone-400 uppercase ml-1 tracking-widest">帳號 ID (登入用)</label>
+            <input v-model="registerForm.id" type="text" placeholder="例如: C001" class="w-full p-3 mt-1 border-2 border-stone-100 bg-stone-50 rounded-xl uppercase focus:border-brand-500 focus:bg-white outline-none transition font-bold" required>
+            <p class="text-[10px] text-stone-400 mt-1 ml-1">* 請使用英文字母和數字，註冊後無法修改</p>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="group">
+              <label class="text-[10px] font-black text-stone-400 ml-1">團主名稱</label>
+              <input v-model="registerForm.leaderName" type="text" placeholder="王小明" class="w-full p-3 mt-1 border-2 border-stone-100 bg-stone-50 rounded-xl focus:border-brand-500 focus:bg-white outline-none transition" required>
+            </div>
+            <div class="group">
+              <label class="text-[10px] font-black text-stone-400 ml-1">聯絡電話</label>
+              <input v-model="registerForm.phone" type="tel" placeholder="09xx-xxx-xxx" class="w-full p-3 mt-1 border-2 border-stone-100 bg-stone-50 rounded-xl focus:border-brand-500 focus:bg-white outline-none transition" required>
+            </div>
+          </div>
+          <div class="group">
+            <label class="text-[10px] font-black text-stone-400 ml-1">公司名稱</label>
+            <input v-model="registerForm.name" type="text" placeholder="台積電" class="w-full p-3 mt-1 border-2 border-stone-100 bg-stone-50 rounded-xl focus:border-brand-500 focus:bg-white outline-none transition" required>
+          </div>
+          <div class="group">
+            <label class="text-[10px] font-black text-stone-400 ml-1">部門</label>
+            <input v-model="registerForm.department" type="text" placeholder="研發部" class="w-full p-3 mt-1 border-2 border-stone-100 bg-stone-50 rounded-xl focus:border-brand-500 focus:bg-white outline-none transition">
+          </div>
+          <div class="group">
+            <label class="text-[10px] font-black text-stone-400 ml-1">交貨地址</label>
+            <input v-model="registerForm.address" type="text" placeholder="請輸入詳細地址" class="w-full p-3 mt-1 border-2 border-stone-100 bg-stone-50 rounded-xl focus:border-brand-500 focus:bg-white outline-none transition" required>
+          </div>
+          <div class="group">
+            <label class="text-[10px] font-black text-stone-400 ml-1">設定密碼</label>
+            <input v-model="registerForm.password" type="password" placeholder="請輸入密碼" class="w-full p-3 mt-1 border-2 border-stone-100 bg-stone-50 rounded-xl focus:border-brand-500 focus:bg-white outline-none transition" required>
+          </div>
+          <button type="submit" :disabled="loading" class="w-full bg-green-600 text-white py-4 rounded-2xl shadow-xl font-black hover:bg-green-700 active:scale-[0.98] transition mt-2">
+            {{ loading ? '註冊中...' : '確認註冊' }}
+          </button>
+          <button type="button" @click="showRegister=false" class="w-full text-center text-stone-400 text-xs mt-4 hover:text-stone-600 transition font-bold">返回登入</button>
         </div>
       </form>
     </div>
@@ -272,69 +333,138 @@
             </div>
             
             <div class="space-y-3">
-                <div v-for="g in activeGroups" :key="g.id" class="bg-white rounded-[1.2rem] p-4 shadow-sm border border-stone-100 hover:shadow-md transition-all">
-                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        
-                        <div class="flex items-center gap-3 flex-1 min-w-0">
-                            <div :class="['w-2.5 h-2.5 rounded-full flex-shrink-0', g.status === 'OPEN' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-yellow-400 animate-pulse']"></div>
-                            <div class="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-4 min-w-0">
-                                <span class="font-black text-lg text-stone-800 truncate">{{ g.groupName }}</span>
-                                <span class="text-xs font-bold text-stone-400 bg-stone-50 px-2.5 py-1 rounded-full border border-stone-100 flex-shrink-0">
-                                    <i class="far fa-calendar-alt mr-1.5 text-brand-500"></i>{{ g.deliveryDate }}
-                                </span>
+                <div v-for="g in activeGroups" :key="g.id" class="bg-white rounded-[1.2rem] shadow-sm border border-stone-100 hover:shadow-md transition-all overflow-hidden">
+                    <!-- 團購標題與操作按鈕 -->
+                    <div class="p-4 bg-stone-50 border-b border-stone-100">
+                        <div class="flex items-center justify-between gap-3">
+                            
+                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                <div :class="['w-2.5 h-2.5 rounded-full flex-shrink-0', g.status === 'OPEN' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-yellow-400 animate-pulse']"></div>
+                                <div class="flex flex-col min-w-0">
+                                    <span class="font-black text-base sm:text-lg text-stone-800 truncate">{{ g.groupName }}</span>
+                                    <span class="text-xs font-bold text-stone-400 bg-white px-2 py-0.5 rounded-full border border-stone-200 inline-flex items-center w-fit mt-1">
+                                        <i class="far fa-calendar-alt mr-1.5 text-brand-500"></i>{{ g.deliveryDate }}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="flex items-center gap-2 flex-wrap lg:flex-nowrap">
-                            <button @click="copyCode(g.code)" class="bg-stone-50 text-stone-500 px-4 py-2.5 rounded-xl text-sm font-black border border-stone-200 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-200 transition flex items-center gap-2">
-                                <span class="font-mono">{{ g.code }}</span>
-                                <i class="far fa-copy"></i>
-                            </button>
-
-                            <div class="h-6 w-px bg-stone-200 hidden lg:block mx-1"></div>
-
-                            <button @click="viewDetail(g)" class="flex-1 lg:flex-none bg-white text-stone-600 px-4 py-2.5 rounded-xl text-sm font-bold border border-stone-200 hover:bg-stone-50 transition">
-                                {{ selectedGroup && selectedGroup.id === g.id ? '收合明細' : '訂單明細' }}
-                            </button>
-                            
-                            <button v-if="g.status === 'OPEN'" @click="openEditModal(g)" class="bg-blue-50 text-blue-600 px-4 py-2.5 rounded-xl text-sm font-bold border border-blue-100 hover:bg-blue-100 transition">
-                                <i class="fas fa-edit mr-1"></i>編輯
-                            </button>
-                            
-                            <button v-if="g.status === 'OPEN'" @click="submitGroup(g)" class="bg-red-50 text-red-500 px-4 py-2.5 rounded-xl text-sm font-bold border border-red-100 hover:bg-red-100 transition">
-                                結單送出
-                            </button>
-                            
-                            <button v-if="g.status === 'SUBMITTED'" @click="recallGroup(g)" class="bg-yellow-50 text-yellow-600 px-4 py-2.5 rounded-xl text-sm font-bold border border-yellow-100 hover:bg-yellow-100 transition">
-                                <i class="fas fa-undo mr-1"></i>收回
-                            </button>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                <!-- 手機版：選單按鈕 -->
+                                <div class="flex lg:hidden items-center gap-2 relative">
+                                    <button @click="g.showMenu = !g.showMenu" class="w-10 h-10 bg-white text-stone-600 rounded-xl border border-stone-200 hover:bg-stone-100 transition flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    
+                                    <!-- 下拉選單 -->
+                                    <div v-if="g.showMenu" @click.stop class="absolute right-0 top-12 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 min-w-[180px] z-50 animate-slide-down">
+                                        <button @click="copyCode(g.code); g.showMenu=false" class="w-full px-4 py-3 text-left hover:bg-stone-50 transition flex items-center gap-3 text-sm font-bold text-stone-600">
+                                            <i class="far fa-copy w-5 text-brand-500"></i>
+                                            <span>複製序號</span>
+                                            <span class="ml-auto text-xs font-mono text-stone-400">{{ g.code }}</span>
+                                        </button>
+                                        
+                                        <button v-if="g.status === 'OPEN'" @click="openEditModal(g); g.showMenu=false" class="w-full px-4 py-3 text-left hover:bg-stone-50 transition flex items-center gap-3 text-sm font-bold text-blue-600">
+                                            <i class="fas fa-edit w-5"></i>
+                                            <span>編輯團購</span>
+                                        </button>
+                                        
+                                        <div v-if="g.status === 'OPEN'" class="border-t border-stone-100 my-1"></div>
+                                        
+<button v-if="g.status === 'OPEN'" @click="submitGroup(g); g.showMenu=false" class="w-full px-4 py-3 text-left hover:bg-green-50 transition flex items-center gap-3 text-sm font-bold text-green-600">
+                                            <i class="fas fa-arrow-right w-5"></i>
+                                            <span>結單送出</span>
+                                        </button>
+                                        
+                                        <button v-if="g.status === 'SUBMITTED'" @click="recallGroup(g); g.showMenu=false" class="w-full px-4 py-3 text-left hover:bg-red-50 transition flex items-center gap-3 text-sm font-bold text-red-600">
+                                            <i class="fas fa-undo w-5"></i>
+                                            <span>收回重開</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- 桌面版：原本的按鈕群組 -->
+                                <div class="hidden lg:flex items-center gap-2">
+                                    <button @click="copyCode(g.code)" class="bg-white text-stone-500 px-3 py-2.5 rounded-xl text-sm font-black border border-stone-200 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-200 transition flex items-center gap-2 shadow-sm">
+                                        <span class="font-mono text-xs">{{ g.code }}</span>
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                    
+                                    <button v-if="g.status === 'OPEN'" @click="openEditModal(g)" class="w-10 h-10 bg-white text-blue-600 rounded-xl text-sm font-bold border border-stone-200 hover:bg-blue-50 transition flex items-center justify-center shadow-sm" title="編輯">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    
+<button v-if="g.status === 'OPEN'" @click="submitGroup(g)" class="bg-green-50 text-green-600 px-4 py-2.5 rounded-xl text-sm font-bold border border-green-100 hover:bg-green-100 transition flex items-center gap-1 shadow-sm">
+                                        <i class="fas fa-arrow-right"></i>
+                                        <span>結單送出</span>
+                                    </button>
+                                    
+                                    <button v-if="g.status === 'SUBMITTED'" @click="recallGroup(g)" class="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-sm font-bold border border-red-100 hover:bg-red-100 transition flex items-center gap-1 shadow-sm">
+                                        <i class="fas fa-undo"></i>
+                                        <span>收回</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
-                    <div v-if="selectedGroup && selectedGroup.id === g.id" class="mt-4 pt-4 border-t border-dashed border-stone-200 animate-slide-down">
-                      <div v-if="loadingDetail" class="text-center py-6 text-stone-300"><i class="fas fa-spinner fa-spin text-xl"></i></div>
-                      <div v-else>
-                        <div class="flex justify-between items-center mb-3 bg-stone-50 p-3 rounded-xl border border-stone-100">
-                          <span class="font-bold text-stone-600 text-xs">目前訂單列表 ({{ selectedDetail.list.length }})</span>
-                          <span class="text-lg font-black text-brand-600">總額: ${{ selectedDetail.totalAmount }}</span>
+                    <!-- 訂單列表（自動載入） -->
+                    <div class="animate-slide-down">
+                      <div v-if="g.detailLoading" class="text-center py-6 text-stone-300">
+                        <i class="fas fa-spinner fa-spin text-xl"></i>
+                      </div>
+                      
+                      <div v-else-if="g.orders && g.orders.length > 0">
+                        <div class="px-4 py-3 bg-brand-50/50 border-y border-brand-100/50">
+                          <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                              <span class="font-bold text-stone-600 text-xs">訂單列表 ({{ g.orders.length }}人)</span>
+                              <button @click="toggleAllOrders(g)" class="text-xs font-bold text-brand-600 hover:text-brand-700 bg-white px-3 py-2 rounded-lg border border-brand-200 hover:bg-brand-50 transition shadow-sm">
+                                <i :class="allOrdersExpanded(g) ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></i>
+                                <span class="ml-1.5">{{ allOrdersExpanded(g) ? '全部收合' : '全部展開' }}</span>
+                              </button>
+                            </div>
+                            <span class="text-lg font-black text-brand-600">總額: ${{ g.totalAmount || 0 }}</span>
+                          </div>
                         </div>
-                        <div class="overflow-x-auto rounded-xl border border-stone-100">
-                          <table class="w-full text-left text-xs whitespace-nowrap">
-                            <thead class="text-stone-400 uppercase tracking-wider bg-stone-50 border-b border-stone-100">
-                              <tr><th class="py-2.5 pl-4">姓名</th><th class="py-2.5">內容</th><th class="py-2.5 text-right">金額</th><th class="py-2.5 pr-4 text-center">已收</th></tr>
-                            </thead>
-                            <tbody class="divide-y divide-stone-50 bg-white">
-                              <tr v-for="order in selectedDetail.list" :key="order.id" class="group hover:bg-stone-50 transition-colors">
-                                <td class="py-3 pl-4 font-bold text-stone-700">{{ order.buyerName }}</td>
-                                <td class="py-3 text-stone-500 leading-relaxed max-w-[250px] whitespace-normal">
-                                  <span v-for="i in order.items" class="inline-block bg-white border border-stone-100 px-1.5 py-0.5 rounded mr-1 mb-1 shadow-sm">{{ i.name }} <span class="text-brand-600 font-bold">x{{ i.qty }}</span></span>
-                                </td>
-                                <td class="py-3 text-right font-bold text-stone-800">${{ order.totalAmount }}</td>
-                                <td class="py-3 pr-4 text-center"><input type="checkbox" v-model="order.isPaid" @change="togglePaid(order)" class="w-4.5 h-4.5 rounded border-stone-300 text-brand-600 focus:ring-brand-500 cursor-pointer transition"></td>
-                              </tr>
-                            </tbody>
-                          </table>
+                        
+                        <div class="divide-y divide-stone-100">
+                          <div v-for="order in g.orders" :key="order.id" class="transition">
+                            
+                            <div @click.stop="order.expanded = !order.expanded" class="p-4 flex justify-between items-center cursor-pointer hover:bg-stone-50 group select-none">
+                                <div class="flex items-center gap-3 flex-1 min-w-0">
+                                    <input type="checkbox" v-model="order.isPaid" @change="togglePaid(order)" @click.stop class="w-4.5 h-4.5 rounded border-stone-300 text-brand-600 focus:ring-brand-500 cursor-pointer transition flex-shrink-0">
+                                    <div class="font-bold text-stone-700 text-base group-hover:text-stone-900 transition-colors truncate">{{ order.buyerName }}</div>
+                                </div>
+
+                                <div class="flex items-center gap-3 flex-shrink-0">
+                                    <div class="font-bold text-stone-800 text-lg tracking-tight">${{ order.totalAmount }}</div>
+                                    <div :class="['w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300', order.expanded ? 'bg-brand-50 text-brand-600 rotate-180' : 'bg-stone-50 text-stone-300 group-hover:bg-stone-200']">
+                                        <i class="fas fa-chevron-down text-xs"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="order.expanded" class="bg-stone-50/50 border-t border-dashed border-stone-100 px-4 pb-4 pt-2 animate-slide-down">
+                                <div class="pl-6 space-y-2">
+                                    <div v-for="i in order.items" class="flex justify-between items-center text-sm border-b border-stone-100 border-dashed py-2 last:border-0 hover:bg-white/50 px-2 rounded transition">
+                                        <span class="text-stone-600 font-medium">{{ i.name }}</span>
+                                        <span class="font-bold text-stone-800">x{{ i.qty }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div v-if="order.note" class="ml-8 mt-3 flex items-start gap-2 text-xs font-bold text-brand-600 bg-brand-50 p-3 rounded-xl inline-block max-w-full">
+                                    <i class="fas fa-comment-dots mt-0.5"></i> 
+                                    <span class="leading-relaxed">{{ order.note }}</span>
+                                </div>
+                            </div>
+
+                          </div>
                         </div>
+                      </div>
+                      
+                      <div v-else class="p-6 text-center text-stone-400 text-sm">
+                        <i class="fas fa-inbox text-2xl mb-2 opacity-30"></i>
+                        <p>目前還沒有人下單</p>
                       </div>
                     </div>
                 </div>
@@ -361,7 +491,7 @@
             
             <div v-else class="space-y-3">
                 <div v-for="g in historyGroups" :key="g.id" class="bg-white rounded-[1.2rem] p-4 shadow-sm border border-stone-100 hover:shadow-md transition-all">
-                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div class="flex items-center justify-between gap-3">
                         
                         <div class="flex items-center gap-3 flex-1 min-w-0">
                             <div class="w-2.5 h-2.5 rounded-full flex-shrink-0"
@@ -373,40 +503,62 @@
                                  }">
                             </div>
                             
-                            <div class="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-4 min-w-0">
-                                <span class="font-black text-lg text-stone-800 truncate">{{ g.groupName }}</span>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-bold text-stone-400 bg-stone-50 px-2.5 py-1 rounded-full border border-stone-100 flex-shrink-0">
+                            <div class="flex flex-col min-w-0">
+                                <span class="font-black text-base sm:text-lg text-stone-800 truncate">{{ g.groupName }}</span>
+                                <div class="flex items-center gap-2 flex-wrap mt-1">
+                                    <span class="text-xs font-bold text-stone-400 bg-stone-50 px-2 py-0.5 rounded-full border border-stone-100 flex-shrink-0">
                                         <i class="far fa-calendar-alt mr-1.5 text-stone-400"></i>{{ g.deliveryDate }}
                                     </span>
                                     
-                                    <span v-if="g.status === 'OPEN'" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100 flex-shrink-0">
+                                    <span v-if="g.status === 'OPEN'" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 flex-shrink-0">
                                         開團中
                                     </span>
-                                    <span v-else-if="g.status === 'SUBMITTED'" class="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-100 flex-shrink-0">
+                                    <span v-else-if="g.status === 'SUBMITTED'" class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 flex-shrink-0">
                                         已送出
                                     </span>
-                                    <span v-else-if="g.status === 'CONFIRMED'" class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100 flex-shrink-0">
+                                    <span v-else-if="g.status === 'CONFIRMED'" class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 flex-shrink-0">
                                         已確認
                                     </span>
-                                    <span v-else class="text-[10px] font-bold text-stone-400 border border-stone-200 px-2 py-0.5 rounded-full">
+                                    <span v-else class="text-[10px] font-bold text-stone-400 border border-stone-200 px-1.5 py-0.5 rounded-full">
                                         {{ g.status }}
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-2 flex-wrap lg:flex-nowrap">
-                            <button @click="copyCode(g.code)" class="bg-stone-50 text-stone-500 px-4 py-2.5 rounded-xl text-sm font-black border border-stone-200 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-200 transition flex items-center gap-2">
-                                <span class="font-mono">{{ g.code }}</span>
-                                <i class="far fa-copy"></i>
-                            </button>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <!-- 手機版：選單按鈕 + 收放鍵 -->
+                            <div class="flex lg:hidden items-center gap-2 relative">
+                                <button @click="g.showMenu = !g.showMenu" class="w-10 h-10 bg-stone-50 text-stone-600 rounded-xl border border-stone-200 hover:bg-stone-100 transition flex items-center justify-center">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                
+                                <button @click="viewDetail(g)" :class="['w-10 h-10 rounded-xl text-sm font-bold border transition flex items-center justify-center', selectedGroup && selectedGroup.id === g.id ? 'bg-brand-50 text-brand-600 border-brand-200':'bg-white text-stone-600 border-stone-200 hover:bg-stone-50']">
+                                    <i :class="selectedGroup && selectedGroup.id === g.id ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></i>
+                                </button>
+                                
+                                <!-- 下拉選單 -->
+                                <div v-if="g.showMenu" @click.stop class="absolute right-0 top-12 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 min-w-[180px] z-50 animate-slide-down">
+                                    <button @click="copyCode(g.code); g.showMenu=false" class="w-full px-4 py-3 text-left hover:bg-stone-50 transition flex items-center gap-3 text-sm font-bold text-stone-600">
+                                        <i class="far fa-copy w-5 text-brand-500"></i>
+                                        <span>複製序號</span>
+                                        <span class="ml-auto text-xs font-mono text-stone-400">{{ g.code }}</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- 桌面版：原本的按鈕群組 -->
+                            <div class="hidden lg:flex items-center gap-2">
+                                <button @click="copyCode(g.code)" class="bg-stone-50 text-stone-500 px-3 py-2.5 rounded-xl text-sm font-black border border-stone-200 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-200 transition flex items-center gap-2">
+                                    <span class="font-mono text-xs">{{ g.code }}</span>
+                                    <i class="far fa-copy"></i>
+                                </button>
 
-                            <div class="h-6 w-px bg-stone-200 hidden lg:block mx-1"></div>
-
-                            <button @click="viewDetail(g)" class="flex-1 lg:flex-none bg-white text-stone-600 px-4 py-2.5 rounded-xl text-sm font-bold border border-stone-200 hover:bg-stone-50 transition">
-                                {{ selectedGroup && selectedGroup.id === g.id ? '收合明細' : '訂單明細' }}
-                            </button>
+                                <button @click="viewDetail(g)" :class="['text-sm font-bold border transition flex items-center gap-1 px-3 py-2.5 rounded-xl', selectedGroup && selectedGroup.id === g.id ? 'bg-brand-50 text-brand-600 border-brand-200':'bg-white text-stone-600 border-stone-200 hover:bg-stone-50']">
+                                    <i :class="selectedGroup && selectedGroup.id === g.id ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></i>
+                                    <span>{{ selectedGroup && selectedGroup.id === g.id ? '收合' : '明細' }}</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
@@ -417,24 +569,39 @@
                           <span class="font-bold text-stone-600 text-xs">歷史訂單列表 ({{ selectedDetail.list.length }})</span>
                           <span class="text-lg font-black text-brand-600">總額: ${{ selectedDetail.totalAmount }}</span>
                         </div>
-                        <div class="overflow-x-auto rounded-xl border border-stone-100">
-                          <table class="w-full text-left text-xs whitespace-nowrap">
-                            <thead class="text-stone-400 uppercase tracking-wider bg-stone-50 border-b border-stone-100">
-                              <tr><th class="py-2.5 pl-4">姓名</th><th class="py-2.5">內容</th><th class="py-2.5 text-right">金額</th><th class="py-2.5 pr-4 text-center">已收</th></tr>
-                            </thead>
-                            <tbody class="divide-y divide-stone-50 bg-white">
-                              <tr v-for="order in selectedDetail.list" :key="order.id" class="group hover:bg-stone-50 transition-colors">
-                                <td class="py-3 pl-4 font-bold text-stone-700">{{ order.buyerName }}</td>
-                                <td class="py-3 text-stone-500 leading-relaxed max-w-[250px] whitespace-normal">
-                                  <span v-for="i in order.items" class="inline-block bg-white border border-stone-100 px-1.5 py-0.5 rounded mr-1 mb-1 shadow-sm">{{ i.name }} <span class="text-brand-600 font-bold">x{{ i.qty }}</span></span>
-                                </td>
-                                <td class="py-3 text-right font-bold text-stone-800">${{ order.totalAmount }}</td>
-                                <td class="py-3 pr-4 text-center">
-                                    <input type="checkbox" :checked="order.isPaid" disabled class="w-4.5 h-4.5 rounded border-stone-300 text-brand-600 focus:ring-0 cursor-not-allowed opacity-50 bg-stone-100">
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
+                        
+                        <div class="bg-white rounded-xl border border-stone-100 overflow-hidden divide-y divide-stone-100">
+                          <div v-for="order in selectedDetail.list" :key="order.id" class="transition">
+                            
+                            <div @click="order.expanded = !order.expanded" class="p-4 flex justify-between items-center cursor-pointer hover:bg-stone-50 group select-none">
+                                <div class="flex items-center gap-3 flex-1 min-w-0">
+                                    <input type="checkbox" :checked="order.isPaid" disabled @click.stop class="w-4.5 h-4.5 rounded border-stone-300 text-brand-600 focus:ring-0 cursor-not-allowed opacity-50 bg-stone-100 flex-shrink-0">
+                                    <div class="font-bold text-stone-700 text-base group-hover:text-stone-900 transition-colors truncate">{{ order.buyerName }}</div>
+                                </div>
+
+                                <div class="flex items-center gap-3 flex-shrink-0">
+                                    <div class="font-bold text-stone-800 text-lg tracking-tight">${{ order.totalAmount }}</div>
+                                    <div :class="['w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300', order.expanded ? 'bg-brand-50 text-brand-600 rotate-180' : 'bg-stone-50 text-stone-300 group-hover:bg-stone-200']">
+                                        <i class="fas fa-chevron-down text-xs"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="order.expanded" class="bg-stone-50/50 border-t border-dashed border-stone-100 px-4 pb-4 pt-2 animate-slide-down">
+                                <div class="pl-6 space-y-2">
+                                    <div v-for="i in order.items" class="flex justify-between items-center text-sm border-b border-stone-100 border-dashed py-2 last:border-0 hover:bg-white/50 px-2 rounded transition">
+                                        <span class="text-stone-600 font-medium">{{ i.name }}</span>
+                                        <span class="font-bold text-stone-800">x{{ i.qty }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div v-if="order.note" class="ml-8 mt-3 flex items-start gap-2 text-xs font-bold text-brand-600 bg-brand-50 p-3 rounded-xl inline-block max-w-full">
+                                    <i class="fas fa-comment-dots mt-0.5"></i> 
+                                    <span class="leading-relaxed">{{ order.note }}</span>
+                                </div>
+                            </div>
+
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -499,33 +666,107 @@
 
     <div v-else-if="currentView === 'admin'" class="min-h-screen bg-stone-50 pb-20">
       
-      <div class="bg-white/90 backdrop-blur-md px-6 py-4 shadow-sm sticky top-0 z-50 border-b border-stone-200 no-print">
-        <div class="max-w-7xl mx-auto flex flex-col xl:flex-row justify-between items-center gap-4">
-          <div class="flex flex-col md:flex-row items-center gap-6 w-full xl:w-auto">
-            <div class="flex items-center gap-4">
-               <h1 class="font-black text-xl text-stone-800 flex items-center gap-2">
-                 <span class="w-10 h-10 bg-gradient-to-br from-brand-600 to-brand-500 text-white rounded-xl flex items-center justify-center text-lg shadow-lg shadow-brand-500/30"><i class="fas fa-chart-pie"></i></span>
-                 管理後台
+      <!-- 手機版導航欄 -->
+      <div class="bg-white/90 backdrop-blur-md px-4 py-3 shadow-sm sticky top-0 z-50 border-b border-stone-200 no-print">
+        <div class="max-w-7xl mx-auto">
+          <div class="flex items-center justify-between">
+            <!-- Logo & 標題 -->
+            <div class="flex items-center gap-3">
+               <button @click="showAdminMenu = !showAdminMenu" class="lg:hidden w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center text-stone-600 hover:bg-stone-200 active:scale-95 transition">
+                 <i class="fas fa-bars"></i>
+               </button>
+               <h1 class="font-black text-lg lg:text-xl text-stone-800 flex items-center gap-2">
+                 <span class="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-brand-600 to-brand-500 text-white rounded-xl flex items-center justify-center text-base lg:text-lg shadow-lg shadow-brand-500/30"><i class="fas fa-chart-pie"></i></span>
+                 <span class="hidden sm:inline">管理後台</span>
                </h1>
             </div>
-            <div class="hidden md:block w-px h-8 bg-stone-300"></div>
-            <div class="flex gap-2 overflow-x-auto w-full md:w-auto hide-scroll pb-1">
-               <button @click="adminTab='accounts'; fetchAdminAccounts()" :class="['px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap border', adminTab=='accounts'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">👥 帳號管理</button>
-               <button @click="adminTab='items'; fetchAdminItems()" :class="['px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap border', adminTab=='items'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">📦 產品管理</button>
+            
+            <!-- 桌面版導航 -->
+            <div class="hidden lg:flex items-center gap-2">
+               <button @click="adminTab='accounts'; fetchAdminAccounts()" :class="['px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap border', adminTab=='accounts'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
+                 <i class="fas fa-users mr-1"></i>帳號管理
+               </button>
+               <button @click="adminTab='items'; fetchAdminItems()" :class="['px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap border', adminTab=='items'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
+                 <i class="fas fa-box mr-1"></i>產品管理
+               </button>
+               <button @click="adminTab='review'; fetchReviewList()" :class="['px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap border', adminTab=='review'?'bg-red-500 text-white border-red-500 shadow-md shadow-red-500/30':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
+                 <i class="fas fa-clock"></i>待審核 <span v-if="adminData.reviewList.length > 0" class="bg-white text-red-500 text-[10px] px-1.5 rounded-md font-black shadow-sm">{{ adminData.reviewList.length }}</span>
+               </button>
+               <button @click="adminTab='details'; fetchOrderDetails()" :class="['px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap border', adminTab=='details'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
+                 <i class="fas fa-file-alt mr-1"></i>訂單
+               </button>
+               <button @click="adminTab='stock'; fetchStockList()" :class="['px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap border', adminTab=='stock'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
+                 <i class="fas fa-chart-bar mr-1"></i>備貨
+               </button>
+               <button @click="adminTab='labels'; fetchLabelList()" :class="['px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap border', adminTab=='labels'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
+                 <i class="fas fa-tags mr-1"></i>標籤
+               </button>
+               <div class="w-px h-8 bg-stone-300 mx-1"></div>
+               <button @click="logout" class="bg-stone-100 text-stone-500 px-3 py-2.5 rounded-xl text-sm font-bold hover:bg-stone-200">
+                 <i class="fas fa-sign-out-alt"></i>
+               </button>
             </div>
-          </div>
-          <div class="flex gap-2 overflow-x-auto w-full xl:w-auto pb-1 md:pb-0 hide-scroll border-t md:border-t-0 border-stone-100 pt-3 md:pt-0">
-             <button @click="adminTab='review'; fetchReviewList()" :class="['px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap border', adminTab=='review'?'bg-red-500 text-white border-red-500 shadow-md shadow-red-500/30':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
-               待審核 <span v-if="adminData.reviewList.length > 0" class="bg-white text-red-500 text-[10px] px-1.5 rounded-md font-black shadow-sm">{{ adminData.reviewList.length }}</span>
-             </button>
-             <button @click="adminTab='details'; fetchOrderDetails()" :class="['px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap border', adminTab=='details'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">📝 訂單</button>
-             <button @click="adminTab='stock'; fetchStockList()" :class="['px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap border', adminTab=='stock'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">📊 備貨</button>
-             <button @click="adminTab='labels'; fetchLabelList()" :class="['px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap border', adminTab=='labels'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">🏷️ 標籤</button>
-             <div class="w-px h-8 bg-stone-300 mx-1 hidden md:block"></div>
-             <button @click="logout" class="bg-stone-100 text-stone-500 px-3 py-2.5 rounded-xl text-sm font-bold hover:bg-stone-200 ml-2"><i class="fas fa-sign-out-alt"></i></button>
+            
+            <!-- 手機版右側按鈕 -->
+            <div class="flex lg:hidden items-center gap-2">
+               <button v-if="adminData.reviewList.length > 0" @click="adminTab = adminTab === 'review' ? 'details' : 'review'; adminTab === 'review' ? fetchReviewList() : fetchOrderDetails(); showAdminMenu=false" class="relative w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-100 active:scale-95 transition border border-red-200">
+                 <i class="fas fa-bell"></i>
+                 <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black">{{ adminData.reviewList.length }}</span>
+               </button>
+               <button @click="logout" class="w-10 h-10 bg-stone-100 text-stone-500 rounded-xl flex items-center justify-center hover:bg-stone-200 active:scale-95 transition">
+                 <i class="fas fa-sign-out-alt"></i>
+               </button>
+            </div>
           </div>
         </div>
       </div>
+      
+      <!-- 手機版側邊選單 -->
+      <transition name="mobile-menu">
+        <div v-if="showAdminMenu" @click="showAdminMenu = false" class="lg:hidden fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-40 no-print">
+          <div @click.stop class="bg-white w-72 h-full shadow-2xl p-6 overflow-y-auto">
+            <div class="flex items-center justify-between mb-8">
+              <h2 class="font-black text-xl text-stone-800">功能選單</h2>
+              <button @click="showAdminMenu = false" class="w-8 h-8 bg-stone-100 rounded-lg flex items-center justify-center text-stone-400 hover:bg-stone-200">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <div class="space-y-2">
+              <button @click="adminTab='accounts'; fetchAdminAccounts(); showAdminMenu=false" :class="['w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-bold transition-all', adminTab=='accounts'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-stone-50']">
+                <i class="fas fa-users w-5"></i>
+                <span>帳號管理</span>
+              </button>
+              
+              <button @click="adminTab='items'; fetchAdminItems(); showAdminMenu=false" :class="['w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-bold transition-all', adminTab=='items'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-stone-50']">
+                <i class="fas fa-box w-5"></i>
+                <span>產品管理</span>
+              </button>
+              
+              <button @click="adminTab='review'; fetchReviewList(); showAdminMenu=false" :class="['w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-bold transition-all relative', adminTab=='review'?'bg-red-500 text-white shadow-md':'text-stone-600 hover:bg-stone-50']">
+                <i class="fas fa-clock w-5"></i>
+                <span>待審核</span>
+                <span v-if="adminData.reviewList.length > 0" :class="['ml-auto text-xs px-2 py-1 rounded-full font-black', adminTab=='review'?'bg-white text-red-500':'bg-red-100 text-red-600']">{{ adminData.reviewList.length }}</span>
+              </button>
+              
+              <button @click="adminTab='details'; fetchOrderDetails(); showAdminMenu=false" :class="['w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-bold transition-all', adminTab=='details'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-stone-50']">
+                <i class="fas fa-file-alt w-5"></i>
+                <span>訂單總覽</span>
+              </button>
+              
+              <button @click="adminTab='stock'; fetchStockList(); showAdminMenu=false" :class="['w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-bold transition-all', adminTab=='stock'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-stone-50']">
+                <i class="fas fa-chart-bar w-5"></i>
+                <span>備貨清單</span>
+              </button>
+              
+              <button @click="adminTab='labels'; fetchLabelList(); showAdminMenu=false" :class="['w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-bold transition-all', adminTab=='labels'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-stone-50']">
+                <i class="fas fa-tags w-5"></i>
+                <span>標籤列印</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
 
       <div v-if="loading" class="text-center py-32 text-brand-400 no-print"><i class="fas fa-circle-notch fa-spin text-4xl"></i></div>
       
@@ -548,7 +789,7 @@
                    等待確認中...
                  </div>
               </div>
-              <button @click="confirmGroup(g)" class="w-full md:w-auto bg-stone-800 text-white px-8 py-4 rounded-xl font-bold shadow-xl hover:bg-black active:scale-95 transition flex items-center justify-center gap-2">
+              <button @click="confirmGroup(g)" class="w-full md:w-auto bg-green-600 text-white px-8 py-4 rounded-xl font-bold shadow-xl hover:bg-green-700 active:scale-95 transition flex items-center justify-center gap-2">
                  <span>確認接收</span> <i class="fas fa-check"></i>
               </button>
            </div>
@@ -618,10 +859,18 @@
                 <h2 class="text-2xl font-black text-stone-800">團主帳號管理</h2>
                 <button @click="openAccountModal()" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-brand-700 transition shadow-lg shadow-brand-500/20"><i class="fas fa-user-plus mr-1"></i> 新增帳號</button>
                 </div>
-                <div class="overflow-x-auto rounded-xl border border-stone-100">
+                <!-- 桌面版：表格 -->
+                <div class="hidden lg:block overflow-x-auto rounded-xl border border-stone-100">
                 <table class="w-full text-left whitespace-nowrap">
                     <thead class="text-stone-400 text-xs uppercase bg-stone-50 border-b border-stone-100">
-                    <tr><th class="py-4 px-4">ID</th><th class="py-4">團主名稱</th><th class="py-4">公司</th><th class="py-4">部門</th><th class="py-4">電話</th><th class="py-4 pr-4 text-right">操作</th></tr>
+                    <tr>
+                        <th class="py-4 px-4">ID</th>
+                        <th class="py-4">團主名稱</th>
+                        <th class="py-4">公司</th>
+                        <th class="py-4">部門</th>
+                        <th class="py-4">電話</th>
+                        <th class="py-4 pr-4 text-right">操作</th>
+                    </tr>
                     </thead>
                     <tbody class="divide-y divide-stone-50">
                     <tr v-for="acc in adminAccounts" :key="acc.docId" class="hover:bg-stone-50 transition">
@@ -631,12 +880,44 @@
                         <td class="py-4 text-stone-500 text-sm">{{ acc.department || '-' }}</td>
                         <td class="py-4 text-stone-500 text-sm font-mono">{{ acc.phone || '-' }}</td>
                         <td class="py-4 pr-4 text-right">
-                        <button @click="openAccountModal(acc)" class="text-stone-400 hover:text-brand-600 p-2 transition hover:bg-brand-50 rounded-lg"><i class="fas fa-edit"></i></button>
-                        <button v-if="acc.id !== 'ADMIN'" @click="deleteAccount(acc.docId)" class="text-stone-400 hover:text-red-500 p-2 transition hover:bg-red-50 rounded-lg"><i class="fas fa-trash"></i></button>
+                        <div class="flex items-center justify-end gap-1">
+                            <button @click="openAccountModal(acc)" class="text-stone-400 hover:text-brand-600 p-2 transition hover:bg-brand-50 rounded-lg" title="編輯"><i class="fas fa-edit"></i></button>
+                            <button v-if="acc.id !== 'ADMIN'" @click="deleteAccount(acc.docId)" class="text-stone-400 hover:text-red-500 p-2 transition hover:bg-red-50 rounded-lg" title="刪除"><i class="fas fa-trash"></i></button>
+                        </div>
                         </td>
                     </tr>
                     </tbody>
                 </table>
+                </div>
+                
+                <!-- 手機版：卡片 -->
+                <div class="lg:hidden space-y-3">
+                    <div v-for="acc in adminAccounts" :key="acc.docId" class="bg-stone-50 rounded-xl p-4 border border-stone-100 hover:shadow-md transition">
+                        <div class="flex items-start justify-between gap-3 mb-3">
+                            <div class="flex-1 min-w-0">
+                                <div class="font-black text-lg text-brand-600 truncate mb-1">{{ acc.leaderName || '-' }}</div>
+                                <div class="text-xs font-bold text-stone-400 bg-stone-200 px-2 py-0.5 rounded inline-block font-mono">{{ acc.id }}</div>
+                            </div>
+                            <div class="flex items-center gap-1 flex-shrink-0">
+                                <button @click="openAccountModal(acc)" class="w-9 h-9 bg-white text-brand-600 rounded-lg flex items-center justify-center hover:bg-brand-50 transition border border-stone-200 shadow-sm" title="編輯">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button v-if="acc.id !== 'ADMIN'" @click="deleteAccount(acc.docId)" class="w-9 h-9 bg-white text-red-500 rounded-lg flex items-center justify-center hover:bg-red-50 transition border border-stone-200 shadow-sm" title="刪除">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5 text-sm">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-building w-4 text-stone-400 text-xs"></i>
+                                <span class="font-bold text-stone-700 truncate">{{ acc.name }}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-sitemap w-4 text-stone-400 text-xs"></i>
+                                <span class="text-stone-500 truncate">{{ acc.department || '-' }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -671,30 +952,36 @@
            <div v-if="adminData.groupList.length === 0" class="text-center py-20 text-stone-300">該日期無訂單</div>
            
            <div v-for="group in adminData.groupList" class="bg-white rounded-[1.5rem] shadow-soft border border-stone-200 overflow-hidden mb-8">
-               <div class="bg-stone-50 p-6 border-b border-stone-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-white border border-stone-200 flex items-center justify-center text-stone-400 font-bold shadow-sm"><i class="fas fa-building text-lg"></i></div>
-                    <div>
-                      <h3 class="font-black text-xl text-stone-800 tracking-tight">{{ group.companyName }}</h3>
-                      <div class="text-xs text-stone-400 font-mono mt-0.5 flex items-center gap-2">
-                          <span>{{ orderDate }}</span>
-                          <span v-if="group.groupOrderId" class="bg-stone-200 px-1.5 rounded text-[10px]">#{{group.groupOrderId.substring(0,6)}}</span>
+               <div class="bg-stone-50 p-4 sm:p-6 border-b border-stone-200">
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                      <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white border border-stone-200 flex items-center justify-center text-stone-400 font-bold shadow-sm flex-shrink-0">
+                        <i class="fas fa-building text-base sm:text-lg"></i>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <h3 class="font-black text-lg sm:text-xl text-stone-800 tracking-tight truncate">{{ group.companyName }}</h3>
+                        <div class="text-xs text-stone-400 font-mono mt-0.5 flex items-center gap-2 flex-wrap">
+                            <span>{{ orderDate }}</span>
+                            <span v-if="group.groupOrderId" class="bg-stone-200 px-1.5 rounded text-[10px]">#{{group.groupOrderId.substring(0,6)}}</span>
+                        </div>
+                      </div>
+                      
+                      <div class="flex items-center gap-2 flex-shrink-0">
+                        <button @click="toggleGroupExpand(group)" class="text-xs font-bold text-brand-600 bg-brand-50 hover:bg-brand-100 px-3 py-2 rounded-lg transition flex items-center gap-1 border border-brand-100 shadow-sm">
+                            <i :class="group.allExpanded ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></i>
+                            <span class="hidden sm:inline">{{ group.allExpanded ? '全部收合' : '展開明細' }}</span>
+                        </button>
+
+                        <button v-if="group.groupOrderId" @click="rejectGroup(group.groupOrderId)" class="w-9 h-9 sm:w-auto sm:h-auto sm:px-3 sm:py-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition border border-red-100 hover:border-red-200 flex items-center justify-center gap-1 shadow-sm" title="整團退回">
+                          <i class="fas fa-undo"></i>
+                          <span class="hidden sm:inline">退回</span>
+                        </button>
                       </div>
                     </div>
-                  </div>
-                  <div class="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
                     
-                    <button @click="toggleGroupExpand(group)" class="text-xs font-bold text-brand-600 bg-brand-50 hover:bg-brand-100 px-3 py-2 rounded-lg transition flex items-center gap-1 border border-brand-100 shadow-sm">
-                        <i :class="group.allExpanded ? 'fas fa-compress-arrows-alt' : 'fas fa-expand-arrows-alt'"></i>
-                        {{ group.allExpanded ? '全部收合' : '展開明細' }}
-                    </button>
-
-                    <button v-if="group.groupOrderId" @click="rejectGroup(group.groupOrderId)" class="text-xs font-bold text-stone-400 hover:text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg transition border border-transparent hover:border-red-100">
-                      <i class="fas fa-undo mr-1"></i>整團退回 (重開)
-                    </button>
-                    <div class="text-right">
-                      <div class="text-[10px] text-stone-400 font-bold uppercase tracking-widest mb-0.5">Total Amount</div>
-                      <div class="font-black text-3xl text-brand-600 tracking-tighter">${{ group.total }}</div>
+                    <div class="text-right flex-shrink-0">
+                      <div class="text-[10px] text-stone-400 font-bold uppercase tracking-widest mb-0.5">Total</div>
+                      <div class="font-black text-2xl sm:text-3xl text-brand-600 tracking-tighter">${{ group.total }}</div>
                     </div>
                   </div>
                </div>
@@ -833,6 +1120,18 @@
         const sessionInfo = ref({});
         const items = ref([]);
         const loginForm = ref({ id: '', pass: '' });
+        const showRegister = ref(false);
+        const registerForm = ref({
+          id: '',
+          leaderName: '',
+          phone: '',
+          name: '',
+          department: '',
+          address: '',
+          password: ''
+        });
+        
+        const showAdminMenu = ref(false); // 管理員漢堡選單狀態
 
 		// 1. 讀取使用者資訊
         const savedUser = sessionStorage.getItem('app_user');
@@ -945,6 +1244,56 @@
           } catch(e) { alert("送出失敗"); } finally { submitting.value = false; }
         };
 
+        const handleRegister = async () => {
+          if (!registerForm.value.id || !registerForm.value.password || !registerForm.value.leaderName || !registerForm.value.phone || !registerForm.value.name || !registerForm.value.address) {
+            return alert('請填寫所有必填欄位');
+          }
+          
+          loading.value = true;
+          try {
+            const newId = registerForm.value.id.toUpperCase().trim();
+            
+            // 檢查 ID 是否已存在
+            const checkQ = query(collection(db, "companies"), where("id", "==", newId));
+            const checkSnap = await getDocs(checkQ);
+            
+            if (!checkSnap.empty) {
+              alert('此帳號 ID 已被使用，請選擇其他 ID');
+              return;
+            }
+            
+            // 不允許使用 ADMIN 作為 ID
+            if (newId === 'ADMIN') {
+              alert('此 ID 為系統保留，請選擇其他 ID');
+              return;
+            }
+            
+            // 建立新帳號
+            await addDoc(collection(db, "companies"), {
+              id: newId,
+              leaderName: registerForm.value.leaderName.trim(),
+              phone: registerForm.value.phone.trim(),
+              name: registerForm.value.name.trim(),
+              department: registerForm.value.department.trim(),
+              address: registerForm.value.address.trim(),
+              password: registerForm.value.password.trim(),
+              createdAt: new Date()
+            });
+            
+            alert('✅ 註冊成功！請使用您的帳號登入');
+            
+            // 清空表單並返回登入頁面
+            registerForm.value = { id: '', leaderName: '', phone: '', name: '', department: '', address: '', password: '' };
+            showRegister.value = false;
+            
+          } catch (e) {
+            console.error(e);
+            alert('註冊失敗：' + e.message);
+          } finally {
+            loading.value = false;
+          }
+        };
+
         const handleLogin = async () => {
           if (!loginForm.value.id || !loginForm.value.pass) return alert('請輸入帳密');
           loading.value = true;
@@ -1015,6 +1364,12 @@
                     const tB = b.createdAt ? b.createdAt.seconds : 0;
                     return tB - tA;
                 });
+                
+                // 自動載入每個團購的訂單明細
+                for (const group of activeGroups.value) {
+                    await loadGroupDetail(group);
+                }
+                
                 selectedGroup.value = null; // 切換 Tab 時清除選取
             } catch(e) { console.error(e); } finally { loading.value = false; }
         };
@@ -1178,6 +1533,26 @@
                  console.error('複製失敗', err);
              });
         };
+        
+        // 載入團購明細（新版）
+        const loadGroupDetail = async (group) => {
+          if (group.detailLoaded) return; // 已經載入過就不重複載入
+          
+          group.detailLoading = true;
+          try {
+            const q = query(collection(db, "orders"), where("groupOrderId", "==", group.id));
+            const snap = await getDocs(q);
+            const orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data(), expanded: false }));
+            
+            group.orders = orders;
+            group.totalAmount = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+            group.detailLoaded = true;
+          } catch (e) { 
+            console.error(e); 
+          } finally { 
+            group.detailLoading = false; 
+          }
+        };
 
         const viewDetail = async (group) => {
           if (selectedGroup.value && selectedGroup.value.id === group.id) { selectedGroup.value = null; return; }
@@ -1193,6 +1568,21 @@
 
         const togglePaid = async (order) => {
           try { await updateDoc(doc(db, "orders", order.id), { isPaid: order.isPaid }); } catch(e) {}
+        };
+        
+        // 切換某個團購的所有訂單展開/收合
+        const toggleAllOrders = (group) => {
+          if (!group.orders || group.orders.length === 0) return;
+          const allExpanded = group.orders.every(order => order.expanded);
+          group.orders.forEach(order => {
+            order.expanded = !allExpanded;
+          });
+        };
+        
+        // 檢查某個團購的所有訂單是否都已展開
+        const allOrdersExpanded = (group) => {
+          if (!group.orders || group.orders.length === 0) return false;
+          return group.orders.every(order => order.expanded);
         };
 
         // 已廢棄舊的 createGroup，改用 saveGroup
@@ -1422,11 +1812,24 @@
         };
 
         const deleteAccount = async (docId) => {
-            if (!confirm('確定要刪除此帳號嗎？')) return;
+            // 先找到這個帳號的資料
+            const account = adminAccounts.value.find(acc => acc.docId === docId);
+            if (!account) return;
+            
+            const inputId = prompt(`⚠️ 警告：刪除帳號無法復原！\n\n請輸入帳號 ID "${account.id}" 以確認刪除：`);
+            
+            if (!inputId) return; // 使用者取消
+            
+            if (inputId.trim().toUpperCase() !== account.id.toUpperCase()) {
+                alert('❌ 輸入的 ID 不正確，刪除已取消。');
+                return;
+            }
+            
             try {
                 await deleteDoc(doc(db, "companies", docId));
                 await fetchAdminAccounts();
-            } catch(e) { alert('刪除失敗'); }
+                alert('✅ 帳號已刪除');
+            } catch(e) { alert('刪除失敗：' + e.message); }
         };
 
         const confirmGroup = async (group) => {
@@ -1481,19 +1884,19 @@
 
         return {
           currentView, loading, loadingDetail, submitting, inputCode, sessionInfo, buyerName, note, items, filterCat,
-          loginForm, user, adminData, leaderTab, activeGroups, historyGroups, selectedGroup, selectedDetail,
-          adminTab,
+          loginForm, showRegister, registerForm, user, adminData, leaderTab, activeGroups, historyGroups, selectedGroup, selectedDetail,
+          adminTab, showAdminMenu,
           adminItems, editingItem, previewImage,
           adminAccounts, editingAccount,
           orderDate, stockStart, stockEnd, labelDate,
           historyStart, historyEnd, editingProfile,
           showGroupModal, groupForm, isEditingGroup,
-          verifyCode, handleLogin, submitOrder, logout, createGroup, submitGroup, recallGroup, confirmGroup, rejectGroup, formatDate, viewDetail, togglePaid, fetchAdminData,
+          verifyCode, handleLogin, handleRegister, submitOrder, logout, createGroup, submitGroup, recallGroup, confirmGroup, rejectGroup, formatDate, viewDetail, loadGroupDetail, togglePaid, toggleAllOrders, allOrdersExpanded, fetchAdminData,
           fetchAdminItems, openItemModal, handleImageUpload, saveItem, deleteItem,
           fetchAdminAccounts, openAccountModal, saveAccount, deleteAccount,
           fetchOrderDetails, fetchStockList, fetchLabelList, fetchReviewList,
           openProfileModal, saveProfile, fetchActiveGroups, fetchHistoryGroups,
-          openCreateModal, openEditModal, saveGroup, copyCode, // [UPDATE] copyCode added
+          openCreateModal, openEditModal, saveGroup, copyCode,
           categories, filteredItems, totalQty, totalAmount,
           toggleGroupExpand
         };
