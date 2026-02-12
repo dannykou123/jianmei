@@ -110,8 +110,10 @@
       <div class="absolute bottom-[-10%] left-[-10%] w-80 h-80 bg-stone-200 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
 
       <div class="relative bg-white/80 backdrop-blur-xl p-10 rounded-[2.5rem] shadow-soft w-full max-w-md border border-white/50">
-        <div class="mb-6 inline-flex items-center justify-center w-20 h-20 rounded-full bg-brand-50 text-brand-600 text-3xl shadow-inner">
-          <i class="fas fa-utensils"></i>
+        <div class="mb-6 flex items-center justify-center">
+          <div class="w-20 h-20 rounded-full bg-brand-50 text-brand-600 text-3xl shadow-inner flex items-center justify-center">
+            <i class="fas fa-utensils"></i>
+          </div>
         </div>
         
         <!-- 顯示團主資訊 -->
@@ -467,10 +469,8 @@
           <button type="submit" :disabled="loading" class="w-full bg-stone-800 text-white py-4 rounded-2xl shadow-xl font-black hover:bg-black active:scale-[0.98] transition mt-2">
             {{ loading ? '驗證中...' : '確認登入' }}
           </button>
-          <div class="flex items-center gap-2 mt-4">
-            <button type="button" @click="currentView='home'" class="flex-1 text-center text-stone-400 text-xs hover:text-stone-600 transition font-bold">返回首頁</button>
-            <span class="text-stone-300">|</span>
-            <button type="button" @click="showRegister=true" class="flex-1 text-center text-brand-600 text-xs hover:text-brand-700 transition font-bold">註冊新帳號</button>
+          <div class="mt-4 text-center">
+            <button type="button" @click="showRegister=true" class="text-brand-600 text-sm hover:text-brand-700 transition font-bold">註冊新帳號</button>
           </div>
         </div>
       </form>
