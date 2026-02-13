@@ -1494,8 +1494,20 @@
         };
         
 		// ===== URL 參數檢測：判斷是否為團主專屬頁面 =====
-        const urlParams = new URLSearchParams(window.location.search);
-        const leaderCode = urlParams.get('leader'); // 例如：?leader=C001
+        // 支持两种方式：1. ?leader=C001  2. #/order/C001
+        let leaderCodeValue = null;
+        
+        // 先检查 hash 路由
+        const hashMatch = window.location.hash.match(/#\/?order\/([A-Z0-9]+)/i);
+        if (hashMatch) {
+          leaderCodeValue = hashMatch[1].toUpperCase();
+        } else {
+          // 否则检查 URL 参数
+          const urlParams = new URLSearchParams(window.location.search);
+          leaderCodeValue = urlParams.get('leader');
+        }
+        
+        const leaderCode = leaderCodeValue; // 例如：?leader=C001 或 #/order/C001
         
         // ===== 訂購人系統變數 =====
         const buyer = ref(null); // 訂購人登入資訊
@@ -2079,9 +2091,10 @@
           // 處理 #/management 路由
           if (hash === '#/management' || hash === '#management') {
             if (!user.value || user.value.id !== 'ADMIN') {
-              // 如果未登入或不是管理員，顯示登入頁
+              // 如果未登入或不是管理員，清除 hash 並顯示登入頁
+              window.location.hash = '';
               currentView.value = 'login';
-              showAlert('請先登入管理員帳號', 'error');
+              // 不顯示錯誤提示，因為可能是登出後的正常情況
             } else {
               currentView.value = 'admin';
               adminTab.value = 'details';
@@ -2091,13 +2104,8 @@
           // 處理 #/order/XXX 路由
           const orderMatch = hash.match(/#\/?order\/([A-Z0-9]+)/i);
           if (orderMatch) {
-            const companyCode = orderMatch[1].toUpperCase();
-            // 設置 URL 參數並重新載入頁面
-            const params = new URLSearchParams(window.location.search);
-            params.set('leader', companyCode);
-            const newUrl = window.location.pathname + '?' + params.toString();
-            window.location.href = newUrl;
-            return; // 停止後續執行，等待頁面重新載入
+            // Hash 路由已经在初始化时处理，这里不需要额外操作
+            // leaderCode 已经被设置，页面会显示对应的登录/订购界面
           }
           
           // 訂購人登入狀態初始化
@@ -2781,8 +2789,11 @@
             // 2. 清除 Vue 內的變數 (雙重保險)
             user.value = null;
             currentView.value = 'home';
+            
+            // 3. 清除 URL hash，避免重新觸發路由檢查
+            window.location.hash = '';
 
-            // 3. 重新整理頁面，讓系統回到最乾淨的初始狀態
+            // 4. 重新整理頁面，讓系統回到最乾淨的初始狀態
             location.reload(); 
         };
         const formatDate = (ts) => ts ? new Date(ts.seconds*1000).toLocaleDateString() : '剛剛';
