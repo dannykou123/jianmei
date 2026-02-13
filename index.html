@@ -597,12 +597,6 @@
                                     
                                     <!-- 下拉選單 -->
                                     <div v-if="g.showMenu" @click.stop class="absolute right-0 top-12 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 min-w-[180px] z-50 animate-slide-down">
-                                        <button @click="copyCode(g.code); g.showMenu=false" class="w-full px-4 py-3 text-left hover:bg-stone-50 transition flex items-center gap-3 text-sm font-bold text-stone-600">
-                                            <i class="far fa-copy w-5 text-brand-500"></i>
-                                            <span>複製序號</span>
-                                            <span class="ml-auto text-xs font-mono text-stone-400">{{ g.code }}</span>
-                                        </button>
-                                        
                                         <button v-if="g.status === 'OPEN'" @click="openEditModal(g); g.showMenu=false" class="w-full px-4 py-3 text-left hover:bg-stone-50 transition flex items-center gap-3 text-sm font-bold text-blue-600">
                                             <i class="fas fa-edit w-5"></i>
                                             <span>編輯團購</span>
@@ -624,11 +618,6 @@
                                 
                                 <!-- 桌面版：原本的按鈕群組 -->
                                 <div class="hidden lg:flex items-center gap-2">
-                                    <button @click="copyCode(g.code)" class="bg-white text-stone-500 px-3 py-2.5 rounded-xl text-sm font-black border border-stone-200 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-200 transition flex items-center gap-2 shadow-sm">
-                                        <span class="font-mono text-xs">{{ g.code }}</span>
-                                        <i class="far fa-copy"></i>
-                                    </button>
-                                    
                                     <button v-if="g.status === 'OPEN'" @click="openEditModal(g)" class="w-10 h-10 bg-white text-blue-600 rounded-xl text-sm font-bold border border-stone-200 hover:bg-blue-50 transition flex items-center justify-center shadow-sm" title="編輯">
                                         <i class="fas fa-edit"></i>
                                     </button>
@@ -803,23 +792,11 @@
                                     <i :class="selectedGroup && selectedGroup.id === g.id ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></i>
                                 </button>
                                 
-                                <!-- 下拉選單 -->
-                                <div v-if="g.showMenu" @click.stop class="absolute right-0 top-12 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 min-w-[180px] z-50 animate-slide-down">
-                                    <button @click="copyCode(g.code); g.showMenu=false" class="w-full px-4 py-3 text-left hover:bg-stone-50 transition flex items-center gap-3 text-sm font-bold text-stone-600">
-                                        <i class="far fa-copy w-5 text-brand-500"></i>
-                                        <span>複製序號</span>
-                                        <span class="ml-auto text-xs font-mono text-stone-400">{{ g.code }}</span>
-                                    </button>
-                                </div>
+                                <!-- 下拉選單已移除 -->
                             </div>
                             
                             <!-- 桌面版：原本的按鈕群組 -->
                             <div class="hidden lg:flex items-center gap-2">
-                                <button @click="copyCode(g.code)" class="bg-stone-50 text-stone-500 px-3 py-2.5 rounded-xl text-sm font-black border border-stone-200 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-200 transition flex items-center gap-2">
-                                    <span class="font-mono text-xs">{{ g.code }}</span>
-                                    <i class="far fa-copy"></i>
-                                </button>
-
                                 <button @click="viewDetail(g)" :class="['text-sm font-bold border transition flex items-center gap-1 px-3 py-2.5 rounded-xl', selectedGroup && selectedGroup.id === g.id ? 'bg-brand-50 text-brand-600 border-brand-200':'bg-white text-stone-600 border-stone-200 hover:bg-stone-50']">
                                     <i :class="selectedGroup && selectedGroup.id === g.id ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></i>
                                     <span>{{ selectedGroup && selectedGroup.id === g.id ? '收合' : '明細' }}</span>
@@ -900,42 +877,6 @@
           </div>
       </div>
 
-      <div v-if="editingOrder" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
-          <div class="bg-white w-full max-w-2xl rounded-[2rem] p-8 shadow-2xl overflow-y-auto max-h-[90vh] border border-white/20">
-             <h3 class="text-xl font-black mb-6 text-stone-800">編輯訂單</h3>
-             <div class="space-y-4">
-                 <div>
-                    <label class="text-xs font-bold text-stone-400 ml-1">訂購人</label>
-                    <input v-model="editingOrder.buyerName" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700" required>
-                 </div>
-                 <div>
-                    <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">訂購項目</label>
-                    <div class="space-y-2 max-h-60 overflow-y-auto border border-stone-100 rounded-xl p-3 bg-stone-50">
-                        <div v-for="(item, idx) in editingOrder.items" :key="idx" class="flex items-center gap-2 bg-white p-2 rounded-lg">
-                            <span class="flex-1 text-sm font-bold text-stone-700">{{ item.name }}</span>
-                            <input type="number" v-model.number="item.qty" min="0" class="w-20 p-2 border border-stone-200 rounded-lg text-center font-bold focus:border-brand-500 outline-none" @input="recalculateOrderTotal">
-                            <span class="text-xs text-stone-400 w-16 text-right">${{ item.price * item.qty }}</span>
-                        </div>
-                    </div>
-                 </div>
-                 <div>
-                    <label class="text-xs font-bold text-stone-400 ml-1">備註</label>
-                    <textarea v-model="editingOrder.note" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition" rows="3" placeholder="特殊需求或備註..."></textarea>
-                 </div>
-                 <div class="bg-brand-50 p-4 rounded-xl border border-brand-100">
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold text-stone-600">訂單總額</span>
-                        <span class="text-2xl font-black text-brand-600">${{ editingOrder.totalAmount }}</span>
-                    </div>
-                 </div>
-             </div>
-             <div class="flex gap-3 mt-8">
-                 <button @click="editingOrder = null" class="flex-1 py-3 bg-stone-100 text-stone-500 rounded-xl font-bold hover:bg-stone-200 transition">取消</button>
-                 <button @click="saveEditedOrder" class="flex-1 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition">儲存變更</button>
-             </div>
-          </div>
-      </div>
-      
       <div v-if="showGroupModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
           <div class="bg-white w-full max-w-md rounded-[2rem] p-8 shadow-2xl overflow-y-auto max-h-[90vh] border border-white/20">
              <h3 class="text-xl font-black mb-6 text-stone-800">{{ isEditingGroup ? '編輯團購資訊' : '建立新團購' }}</h3>
@@ -1317,6 +1258,18 @@
                            <i class="fas fa-comment-dots mt-0.5"></i> 
                            <span class="leading-relaxed">{{ order.note }}</span>
                        </div>
+                       
+                       <!-- 編輯和刪除按鈕 -->
+                       <div class="ml-9 mt-4 flex items-center gap-3">
+                           <button @click.stop="openEditOrderModal(order, group)" class="px-4 py-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center gap-2 border border-amber-200 hover:border-amber-500 shadow-sm hover:shadow-md font-bold text-xs" title="編輯此訂單">
+                               <i class="fas fa-edit"></i>
+                               <span>編輯訂單</span>
+                           </button>
+                           <button @click.stop="deleteOrder(order, group)" class="px-4 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center gap-2 border border-red-200 hover:border-red-500 shadow-sm hover:shadow-md font-bold text-xs" title="刪除此訂單">
+                               <i class="fas fa-trash"></i>
+                               <span>刪除訂單</span>
+                           </button>
+                       </div>
                    </div>
 
                  </div>
@@ -1442,6 +1395,43 @@
               確定
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 編輯訂單對話框 (全域) -->
+    <div v-if="editingOrder" @click="editingOrder = null" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
+      <div @click.stop class="bg-white w-full max-w-2xl rounded-[2rem] p-8 shadow-2xl overflow-y-auto max-h-[90vh] border border-white/20">
+        <h3 class="text-xl font-black mb-6 text-stone-800">編輯訂單</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs font-bold text-stone-400 ml-1">訂購人</label>
+            <input v-model="editingOrder.buyerName" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700" required>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">訂購項目</label>
+            <div class="space-y-2 max-h-60 overflow-y-auto border border-stone-100 rounded-xl p-3 bg-stone-50">
+              <div v-for="(item, idx) in editingOrder.items" :key="idx" class="flex items-center gap-2 bg-white p-2 rounded-lg">
+                <span class="flex-1 text-sm font-bold text-stone-700">{{ item.name }}</span>
+                <input type="number" v-model="item.qty" min="0" step="1" class="w-20 p-2 border border-stone-200 rounded-lg text-center font-bold focus:border-brand-500 outline-none" @input="recalculateOrderTotal">
+                <span class="text-xs text-stone-400 w-16 text-right">${{ item.price * item.qty }}</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-stone-400 ml-1">備註</label>
+            <textarea v-model="editingOrder.note" class="w-full p-3 bg-stone-50 border-2 border-stone-100 rounded-xl focus:border-brand-500 outline-none transition" rows="3" placeholder="特殊需求或備註..."></textarea>
+          </div>
+          <div class="bg-brand-50 p-4 rounded-xl border border-brand-100">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-stone-600">訂單總額</span>
+              <span class="text-2xl font-black text-brand-600">${{ editingOrder.totalAmount }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-3 mt-8">
+          <button @click="editingOrder = null" class="flex-1 py-3 bg-stone-100 text-stone-500 rounded-xl font-bold hover:bg-stone-200 transition">取消</button>
+          <button @click="saveEditedOrder" class="flex-1 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition">儲存變更</button>
         </div>
       </div>
     </div>
@@ -2083,6 +2073,39 @@
         };
 		
 		onMounted(async () => {
+          // 檢查 URL 路由
+          const path = window.location.pathname;
+          
+          // 處理 /management 路由
+          if (path.includes('/management')) {
+            if (!user.value || user.value.id !== 'ADMIN') {
+              // 如果未登入或不是管理員，顯示登入頁
+              currentView.value = 'login';
+              showAlert('請先登入管理員帳號', 'error');
+            } else {
+              currentView.value = 'admin';
+              adminTab.value = 'details';
+            }
+          }
+          
+          // 處理 /order/XXX 路由
+          const orderMatch = path.match(/\/order\/([A-Z0-9]+)/i);
+          if (orderMatch) {
+            const companyCode = orderMatch[1];
+            // 載入團購資訊
+            try {
+              const params = new URLSearchParams(window.location.search);
+              params.set('leader', companyCode);
+              const newUrl = window.location.pathname + '?' + params.toString();
+              window.history.replaceState({}, '', newUrl);
+              
+              // 觸發原有的 leader 參數處理邏輯
+              await fetchCompanyInfo();
+            } catch(e) {
+              console.error('載入團購資訊失敗:', e);
+            }
+          }
+          
           // 訂購人登入狀態初始化
           if (buyer.value && currentView.value === 'buyer') {
             await fetchBuyerGroups();
@@ -2287,15 +2310,6 @@
                 loading.value = false; 
             }
         };
-
-        // 複製序號功能
-        const copyCode = (code) => {
-             navigator.clipboard.writeText(code).then(() => {
-                 showAlert("已複製團購序號！", 'success');
-             }).catch(err => {
-                 console.error('複製失敗', err);
-             });
-        };
         
         // 載入團購明細（新版）
         const loadGroupDetail = async (group) => {
@@ -2347,18 +2361,37 @@
               group.totalAmount = group.orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
             }
             showAlert('訂單已刪除', 'success');
+            
+            // 如果在管理後台，重新載入訂單總覽
+            if (currentView.value === 'admin' && adminTab.value === 'details') {
+              await fetchOrderDetails();
+            }
           } catch(e) {
             console.error(e);
             showAlert('刪除失敗：' + e.message, 'error');
           }
         };
         
-        const openEditOrderModal = (order, group) => {
+        const openEditOrderModal = async (order, group) => {
+          // 如果 items 尚未加載，先加載
+          if (items.value.length === 0) {
+            await fetchItems();
+          }
+          
+          // 建立所有產品的列表，並填入已訂購的數量
+          const allItems = items.value.map(item => {
+            const orderedItem = order.items.find(i => i.name === item.name || i.docId === item.docId);
+            return {
+              ...JSON.parse(JSON.stringify(item)),
+              qty: orderedItem ? orderedItem.qty : 0
+            };
+          });
+          
           editingOrder.value = {
             id: order.id,
             buyerName: order.buyerName,
             note: order.note || '',
-            items: JSON.parse(JSON.stringify(order.items)), // 深拷貝避免直接修改原數據
+            items: allItems,
             totalAmount: order.totalAmount
           };
           editingOrderGroup.value = group;
@@ -2367,7 +2400,8 @@
         const recalculateOrderTotal = () => {
           if (!editingOrder.value) return;
           editingOrder.value.totalAmount = editingOrder.value.items.reduce((sum, item) => {
-            return sum + (item.price * (item.qty || 0));
+            const qty = parseInt(item.qty) || 0;
+            return sum + (item.price * qty);
           }, 0);
         };
         
@@ -2375,8 +2409,13 @@
           if (!editingOrder.value || !editingOrderGroup.value) return;
           
           try {
-            // 過濾掉數量為0的項目
-            const validItems = editingOrder.value.items.filter(item => item.qty > 0);
+            // 過濾掉數量為0的項目，並確保數量為整數
+            const validItems = editingOrder.value.items
+              .map(item => ({
+                ...item,
+                qty: parseInt(item.qty) || 0
+              }))
+              .filter(item => item.qty > 0);
             
             if (validItems.length === 0) {
               showAlert('請至少保留一個項目', 'error');
@@ -2406,6 +2445,11 @@
             showAlert('訂單已更新', 'success');
             editingOrder.value = null;
             editingOrderGroup.value = null;
+            
+            // 如果在管理後台，重新載入訂單總覽
+            if (currentView.value === 'admin' && adminTab.value === 'details') {
+              await fetchOrderDetails();
+            }
           } catch(e) {
             console.error(e);
             showAlert('更新失敗：' + e.message, 'error');
@@ -2444,6 +2488,15 @@
         const createGroup = () => {}; 
 
         const submitGroup = async (group) => {
+            // 檢查交貨日期是否已過
+            if (group.deliveryDate) {
+                const today = new Date().toISOString().split('T')[0];
+                if (group.deliveryDate < today) {
+                    showAlert('交貨日期已過，無法送單！請修改交貨日期。', 'error');
+                    return;
+                }
+            }
+            
             const confirmed = await showConfirm(`確定要結單嗎？\n送出後同事將無法再下單，並會通知管理員備貨。`);
             if(!confirmed) return;
             try {
@@ -2783,7 +2836,7 @@
           fetchAdminAccounts, openAccountModal, saveAccount, deleteAccount,
           fetchOrderDetails, fetchStockList, fetchLabelList, fetchReviewList,
           openProfileModal, saveProfile, fetchActiveGroups, fetchHistoryGroups,
-          openCreateModal, openEditModal, saveGroup, copyCode,
+          openCreateModal, openEditModal, saveGroup,
           handleBuyerLogin, handleBuyerRegister, buyerLogout, fetchBuyerGroups, fetchBuyerOrders, startOrder, editBuyerOrder, saveBuyerProfile,
           editingBuyerProfile, buyerProfileForm,
           categories, filteredItems, totalQty, totalAmount,
