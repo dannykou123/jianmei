@@ -2091,19 +2091,13 @@
           // 處理 #/order/XXX 路由
           const orderMatch = hash.match(/#\/?order\/([A-Z0-9]+)/i);
           if (orderMatch) {
-            const companyCode = orderMatch[1];
-            // 載入團購資訊
-            try {
-              const params = new URLSearchParams(window.location.search);
-              params.set('leader', companyCode);
-              const newUrl = window.location.pathname + '?' + params.toString();
-              window.history.replaceState({}, '', newUrl);
-              
-              // 觸發原有的 leader 參數處理邏輯
-              await fetchCompanyInfo();
-            } catch(e) {
-              console.error('載入團購資訊失敗:', e);
-            }
+            const companyCode = orderMatch[1].toUpperCase();
+            // 設置 URL 參數並重新載入頁面
+            const params = new URLSearchParams(window.location.search);
+            params.set('leader', companyCode);
+            const newUrl = window.location.pathname + '?' + params.toString();
+            window.location.href = newUrl;
+            return; // 停止後續執行，等待頁面重新載入
           }
           
           // 訂購人登入狀態初始化
