@@ -2073,11 +2073,11 @@
         };
 		
 		onMounted(async () => {
-          // 檢查 URL 路由
-          const path = window.location.pathname;
+          // 檢查 URL Hash 路由
+          const hash = window.location.hash;
           
-          // 處理 /management 路由
-          if (path.includes('/management')) {
+          // 處理 #/management 路由
+          if (hash === '#/management' || hash === '#management') {
             if (!user.value || user.value.id !== 'ADMIN') {
               // 如果未登入或不是管理員，顯示登入頁
               currentView.value = 'login';
@@ -2088,8 +2088,8 @@
             }
           }
           
-          // 處理 /order/XXX 路由
-          const orderMatch = path.match(/\/order\/([A-Z0-9]+)/i);
+          // 處理 #/order/XXX 路由
+          const orderMatch = hash.match(/#\/?order\/([A-Z0-9]+)/i);
           if (orderMatch) {
             const companyCode = orderMatch[1];
             // 載入團購資訊
