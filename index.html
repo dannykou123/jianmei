@@ -487,13 +487,13 @@
                 <input type="date" v-model="detailsEnd" class="px-2 py-1.5 border border-stone-200 rounded-lg text-sm text-stone-700 outline-none bg-white">
               </div>
               <div class="flex items-center gap-2">
-                <button @click="(() => { const tzDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' })); const dateStr = tzDate.toISOString().slice(0,10); detailsStart = dateStr; detailsEnd = dateStr; })()" :class="['px-3 py-1 rounded-lg text-sm font-bold transition', (() => { const tzDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' })); const dateStr = tzDate.toISOString().slice(0,10); return detailsStart === dateStr && detailsEnd === dateStr; })() ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
-                <button @click="(() => { const tzDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' })); tzDate.setDate(tzDate.getDate()+1); const dateStr = tzDate.toISOString().slice(0,10); detailsStart = dateStr; detailsEnd = dateStr; })()" :class="['px-3 py-1 rounded-lg text-sm font-bold transition', (() => { const tzDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' })); tzDate.setDate(tzDate.getDate()+1); const dateStr = tzDate.toISOString().slice(0,10); return detailsStart === dateStr && detailsEnd === dateStr; })() ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
+                <button @click="setTodayFilter" :class="['px-3 py-1 rounded-lg text-sm font-bold transition', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
+                <button @click="setTomorrowFilter" :class="['px-3 py-1 rounded-lg text-sm font-bold transition', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
               </div>
               <div v-if="detailsStart && detailsEnd" class="flex items-center gap-2 ml-auto">
                 <button @click="printAllFilteredStock" :disabled="loading" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-boxes"></i>總備貨單</button>
                 <button @click="printAllFilteredLabels" :disabled="loading" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-shipping-fast"></i>總出貨單</button>
-                <button @click="detailsStart='';detailsEnd='';detailsKeyword='';detailsStatus='all'" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition"><i class="fas fa-undo"></i>清除篩選</button>
+                <button @click="clearDetailsFilter" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition"><i class="fas fa-undo"></i>清除篩選</button>
               </div>
             </div>
             <!-- 篩選列 + 分頁 -->
@@ -1653,7 +1653,38 @@
           return sortedDetailsList.value.slice(start, start + detailsPageSize.value);
         });
         // 篩選/排序改變時重置頁碼
-        watch([detailsSort, detailsStatus, detailsKeyword, detailsPageSize, detailsStart, detailsEnd], () => { detailsPage.value = 1; });
+        watch([detailsSort, detailsStatus, detailsKeyword, detailsStart, detailsEnd], () => { detailsPage.value = 1; });
+
+        const getTaiwanDateStr = (offsetDays = 0) => {
+          const tzDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+          if (offsetDays) tzDate.setDate(tzDate.getDate() + offsetDays);
+          return tzDate.toISOString().slice(0, 10);
+        };
+
+        const isTodayFilter = computed(() => {
+          const d = getTaiwanDateStr(0);
+          return detailsStart.value === d && detailsEnd.value === d;
+        });
+        const isTomorrowFilter = computed(() => {
+          const d = getTaiwanDateStr(1);
+          return detailsStart.value === d && detailsEnd.value === d;
+        });
+        const setTodayFilter = () => {
+          const d = getTaiwanDateStr(0);
+          detailsStart.value = d;
+          detailsEnd.value = d;
+        };
+        const setTomorrowFilter = () => {
+          const d = getTaiwanDateStr(1);
+          detailsStart.value = d;
+          detailsEnd.value = d;
+        };
+        const clearDetailsFilter = () => {
+          detailsStart.value = '';
+          detailsEnd.value = '';
+          detailsKeyword.value = '';
+          detailsStatus.value = 'all';
+        };
 
         // 獲取帳號列表
         const fetchAdminAccounts = async () => {
@@ -2618,10 +2649,7 @@
           }
         });
 
-        // 監聽訂單篩選條件變化
-        watch([detailsSort, detailsStatus, detailsKeyword, detailsPageSize], () => {
-          detailsPage.value = 1;
-        });
+        // 監聽訂單篩選條件變化（detailsPageSize 不重置頁碼以避免迴圈）
 
         const sortByField = (field) => {
           if (detailsSort.value === field + '-desc') {
@@ -2935,6 +2963,11 @@
           printAllFilteredLabels,
           printAllFilteredStock,
           sortByField,
+          isTodayFilter,
+          isTomorrowFilter,
+          setTodayFilter,
+          setTomorrowFilter,
+          clearDetailsFilter,
           reviewSort,
           stockStart,
           stockEnd,
