@@ -479,9 +479,10 @@
                 <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
                 <input type="date" v-model="detailsEnd" class="px-2 py-1.5 border border-stone-200 rounded-lg text-sm text-stone-700 outline-none bg-white">
               </div>
-              <div class="flex items-center gap-2 ml-auto">
+              <div v-if="detailsStart && detailsEnd" class="flex items-center gap-2 ml-auto">
                 <button @click="printAllFilteredStock" :disabled="loading" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-boxes"></i>總備貨單</button>
                 <button @click="printAllFilteredLabels" :disabled="loading" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-shipping-fast"></i>總出貨單</button>
+                <button @click="detailsStart='';detailsEnd='';detailsKeyword='';detailsStatus='all'" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition"><i class="fas fa-times"></i>清除篩選</button>
               </div>
             </div>
             <!-- 篩選列 + 分頁 -->
