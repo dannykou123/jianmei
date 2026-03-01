@@ -153,12 +153,6 @@
                <button @click="adminTab='details'; fetchOrderDetails()" :class="['px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border', adminTab=='details'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
                  <i class="fas fa-file-alt mr-1"></i>訂單管理
                </button>
-               <button @click="adminTab='stock'" :class="['px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border', adminTab=='stock'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
-                 <i class="fas fa-chart-bar mr-1"></i>備貨單
-               </button>
-               <button @click="adminTab='labels'" :class="['px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border', adminTab=='labels'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
-                 <i class="fas fa-print mr-1"></i>出貨單
-               </button>
                <div class="w-px h-6 bg-stone-300 mx-1"></div>
                <button @click="logout" class="bg-stone-100 text-stone-500 px-3 py-2 rounded-xl text-xs font-bold hover:bg-stone-200">
                  <i class="fas fa-sign-out-alt"></i>
@@ -461,7 +455,12 @@
 
         <!-- 訂單詳情 -->
         <div v-if="adminTab === 'details'" class="space-y-4">
-          <h2 class="text-2xl font-black text-stone-800 mb-6">訂單管理</h2>
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-black text-stone-800">訂單管理</h2>
+            <button @click="openCreateOrderModal" class="inline-flex items-center gap-2 px-4 py-2 bg-stone-800 text-white rounded-xl text-sm font-bold hover:bg-black transition">
+              <i class="fas fa-plus"></i>新增訂單
+            </button>
+          </div>
 
           <div v-if="loading" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
           <div v-else-if="adminData.detailsList.length === 0" class="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-stone-200">
@@ -838,6 +837,118 @@
                   </div>
                 </div>
 
+              </div>
+            </div>
+          </div>
+
+          <!-- 新增訂單 Modal -->
+          <div v-if="showCreateOrderModal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 animate-fade-in" @click.self="showCreateOrderModal = false">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col animate-zoom-in">
+              <!-- Header -->
+              <div class="flex items-center justify-between px-6 pt-5 pb-4">
+                <h3 class="text-xl font-black text-stone-900">新增訂單</h3>
+                <button @click="showCreateOrderModal = false" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition"><i class="fas fa-times text-sm"></i></button>
+              </div>
+              <!-- Tabs -->
+              <div class="flex border-b border-stone-100 px-6">
+                <button @click="createOrderTab = 'info'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', createOrderTab === 'info' ? 'border-stone-800 text-stone-800' : 'border-transparent text-stone-400 hover:text-stone-600']">基本資訊</button>
+                <button @click="createOrderTab = 'orders'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', createOrderTab === 'orders' ? 'border-stone-800 text-stone-800' : 'border-transparent text-stone-400 hover:text-stone-600']">
+                  訂購明細<span v-if="createOrderCustomers.length > 0" class="ml-1 bg-stone-800 text-white text-[10px] px-1.5 rounded-full">{{ createOrderCustomers.length }}</span>
+                </button>
+              </div>
+              <!-- Body -->
+              <div class="flex-1 overflow-y-auto px-6 py-5">
+                <!-- 基本資訊 -->
+                  <div v-if="createOrderTab === 'info'" class="space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="text-xs font-bold text-stone-400 mb-1 block">公司名稱 *</label>
+                        <input v-model="createOrderForm.companyName" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                      </div>
+                      <div>
+                        <label class="text-xs font-bold text-stone-400 mb-1 block">聯絡人 *</label>
+                        <input v-model="createOrderForm.contactName" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                      </div>
+                      <div>
+                        <label class="text-xs font-bold text-stone-400 mb-1 block">聯絡電話</label>
+                        <input v-model="createOrderForm.contactPhone" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                      </div>
+                      <div>
+                        <label class="text-xs font-bold text-stone-400 mb-1 block">配送時間</label>
+                        <input v-model="createOrderForm.deliveryTime" type="datetime-local" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                      </div>
+                    </div>
+                    <div>
+                      <label class="text-xs font-bold text-stone-400 mb-1 block">配送地址</label>
+                      <input v-model="createOrderForm.address" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                    </div>
+                  </div>
+                <!-- 訂購明細 -->
+                <div v-if="createOrderTab === 'orders'">
+                  <div class="flex items-center justify-between mb-4">
+                    <span class="text-sm font-bold text-stone-500">共 {{ createOrderCustomers.length }} 位訂購人</span>
+                    <button v-if="!addingCreateCustomer" @click="addingCreateCustomer = true" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-800 text-white rounded-lg text-xs font-bold hover:bg-stone-900 transition"><i class="fas fa-plus"></i>新增訂購人</button>
+                  </div>
+                  <!-- 新增訂購人表單 -->
+                  <div v-if="addingCreateCustomer" class="mb-4 p-4 bg-stone-50 rounded-xl border border-stone-200 space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="text-xs font-bold text-stone-400 mb-1 block">訂購人 *</label>
+                        <input v-model="newCreateCustomerData.customerName" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                      </div>
+                      <div>
+                        <label class="text-xs font-bold text-stone-400 mb-1 block">單位</label>
+                        <input v-model="newCreateCustomerData.customerUnit" type="text" placeholder="部門、公司..." class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                      </div>
+                    </div>
+                    <div>
+                      <label class="text-xs font-bold text-stone-400 mb-2 block">訂購項目</label>
+                      <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                        <div v-for="(item, iidx) in newCreateCustomerData.items" :key="iidx" class="flex items-center gap-1.5">
+                          <span class="flex-1 text-sm text-stone-700 truncate">{{ item.itemName }}</span>
+                          <div class="flex items-center border border-stone-200 rounded-lg overflow-hidden bg-white">
+                            <button type="button" @click="item.qty = Math.max(0, (item.qty || 0) - 1)" class="w-7 h-7 flex items-center justify-center text-stone-500 hover:bg-stone-100 text-base leading-none">−</button>
+                            <span class="w-7 text-center text-sm font-medium text-stone-800 select-none">{{ item.qty || 0 }}</span>
+                            <button type="button" @click="item.qty = (item.qty || 0) + 1" class="w-7 h-7 flex items-center justify-center text-stone-500 hover:bg-stone-100 text-base leading-none">+</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="text-xs font-bold text-stone-400 mb-1 block">備註</label>
+                      <input v-model="newCreateCustomerData.note" type="text" placeholder="不要辣、備品..." class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                    </div>
+                    <div class="flex gap-2">
+                      <button @click="confirmAddCreateCustomer" class="px-3 py-1.5 bg-stone-800 text-white rounded-lg text-xs font-bold hover:bg-stone-900 transition">新增</button>
+                      <button @click="addingCreateCustomer = false" class="px-3 py-1.5 bg-white border border-stone-200 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-100 transition">取消</button>
+                    </div>
+                  </div>
+                  <!-- 訂購人清單 -->
+                  <div v-if="createOrderCustomers.length === 0 && !addingCreateCustomer" class="text-center py-10 text-stone-400 text-sm">尚未新增訂購人</div>
+                  <div class="space-y-2">
+                    <div v-for="(customer, cidx) in createOrderCustomers" :key="cidx" class="rounded-xl border border-stone-100 overflow-hidden">
+                      <div class="flex items-center justify-between px-4 py-3 bg-stone-50 border-b border-stone-100">
+                        <div class="flex items-center gap-2">
+                          <span class="font-bold text-stone-800 text-sm">{{ customer.customerName }}</span>
+                          <span v-if="customer.customerUnit" class="text-xs text-stone-400 bg-stone-200 px-2 py-0.5 rounded-md">{{ customer.customerUnit }}</span>
+                        </div>
+                        <button @click="createOrderCustomers.splice(cidx, 1)" class="px-3 py-1 bg-stone-100 text-stone-700 rounded-lg border border-stone-200 text-xs font-bold hover:bg-stone-200 transition">刪除</button>
+                      </div>
+                      <div class="px-4 py-2">
+                        <div v-for="(item, iidx) in customer.items.filter(i => i.qty > 0)" :key="iidx" class="flex justify-between items-center py-1.5 border-b border-stone-50 last:border-b-0">
+                          <span class="text-sm text-stone-600">{{ item.itemName }}</span>
+                          <span class="text-sm font-semibold text-stone-700">× {{ item.qty }}</span>
+                        </div>
+                        <div v-if="customer.note" class="mt-2 mb-1 text-xs text-stone-400"><i class="fas fa-comment-dots mr-1"></i>{{ customer.note }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Footer -->
+              <div class="flex gap-2 px-6 py-4 border-t border-stone-100">
+                <button @click="saveCreateGroupOrder" :disabled="loading" class="flex-1 py-2.5 bg-stone-800 text-white rounded-xl text-sm font-bold hover:bg-black transition disabled:opacity-50"><i class="fas fa-save mr-1.5"></i>建立訂單</button>
+                <button @click="showCreateOrderModal = false" class="px-5 py-2.5 bg-stone-100 text-stone-600 rounded-xl text-sm font-bold hover:bg-stone-200 transition">取消</button>
               </div>
             </div>
           </div>
@@ -1248,6 +1359,75 @@
         const editingNewCustomerOrder = ref(false);
         const newCustomerOrderData = ref({ customerName: '', customerUnit: '', note: '', items: [{ itemName: '', qty: null }] });
 
+        // 新增訂單 Modal
+        const showCreateOrderModal = ref(false);
+        const createOrderTab = ref('info');
+        const createOrderForm = ref({ companyName: '', contactName: '', contactPhone: '', address: '', deliveryTime: '' });
+        const createOrderCustomers = ref([]);
+        const addingCreateCustomer = ref(false);
+        const newCreateCustomerData = ref({ customerName: '', customerUnit: '', note: '', items: [] });
+
+        const openCreateOrderModal = async () => {
+          if (adminData.value.itemsList.length === 0) await fetchAdminItems();
+          createOrderForm.value = { companyName: '', contactName: '', contactPhone: '', address: '', deliveryTime: '', status: 'pending' };
+          createOrderCustomers.value = [];
+          addingCreateCustomer.value = false;
+          createOrderTab.value = 'info';
+          newCreateCustomerData.value = { customerName: '', customerUnit: '', note: '', items: adminData.value.itemsList.map(i => ({ itemName: i.name, qty: 0 })) };
+          showCreateOrderModal.value = true;
+        };
+
+        const confirmAddCreateCustomer = () => {
+          const data = newCreateCustomerData.value;
+          const validItems = data.items.filter(i => i.qty > 0);
+          if (!data.customerName) { showAlert('請填寫訂購人', 'error'); return; }
+          createOrderCustomers.value.push({
+            customerName: data.customerName,
+            customerUnit: data.customerUnit || '',
+            note: data.note || '',
+            items: validItems
+          });
+          newCreateCustomerData.value = { customerName: '', customerUnit: '', note: '', items: adminData.value.itemsList.map(i => ({ itemName: i.name, qty: 0 })) };
+          addingCreateCustomer.value = false;
+        };
+
+        const saveCreateGroupOrder = async () => {
+          const f = createOrderForm.value;
+          if (!f.companyName || !f.contactName) { showAlert('請填寫公司名稱和聯絡人', 'error'); return; }
+          loading.value = true;
+          try {
+            const groupData = {
+              companyName: f.companyName,
+              contactName: f.contactName,
+              contactPhone: f.contactPhone || '',
+              address: f.address || '',
+              status: 'approved',
+              createdAt: new Date(),
+              updatedAt: new Date().toISOString(),
+              updatedBy: user.value.id,
+              approvedAt: new Date().toISOString(),
+              approvedBy: user.value.id
+            };
+            if (f.deliveryTime) groupData.deliveryTime = new Date(f.deliveryTime);
+            const groupRef = await addDoc(collection(db, 'GroupOrders'), groupData);
+            for (const customer of createOrderCustomers.value) {
+              await addDoc(collection(db, 'Orders'), {
+                groupOrderId: groupRef.id,
+                customerName: customer.customerName,
+                customerUnit: customer.customerUnit || '',
+                note: customer.note || '',
+                items: customer.items,
+                createdAt: new Date()
+              });
+            }
+            showAlert('訂單建立成功', 'success');
+            showCreateOrderModal.value = false;
+            await fetchOrderDetails();
+          } catch (e) {
+            showAlert('建立失敗：' + e.message, 'error');
+          } finally { loading.value = false; }
+        };
+
         const openDetailModal = async (order, tab = 'info') => {
           detailModalOrder.value = order;
           detailModalTab.value = tab;
@@ -1437,7 +1617,7 @@
         const detailsSort = ref('deliveryTime-desc');
         const detailsKeyword = ref('');
         const detailsPage = ref(1);
-        const detailsPageSize = ref(10);
+        const detailsPageSize = ref(parseInt(localStorage.getItem('detailsPageSize') || '10'));
         const detailsStart = ref('');
         const detailsEnd = ref('');
         const statusEditOrder = ref(null);
@@ -2650,6 +2830,9 @@
         });
 
         // 監聽訂單篩選條件變化（detailsPageSize 不重置頁碼以避免迴圈）
+        watch(detailsPageSize, (val) => {
+          localStorage.setItem('detailsPageSize', val);
+        });
 
         const sortByField = (field) => {
           if (detailsSort.value === field + '-desc') {
@@ -3016,6 +3199,15 @@
           printSingleCustomerLabel,
           addNewCustomerOrderInline,
           saveNewCustomerOrder,
+          showCreateOrderModal,
+          createOrderTab,
+          createOrderForm,
+          createOrderCustomers,
+          addingCreateCustomer,
+          newCreateCustomerData,
+          openCreateOrderModal,
+          confirmAddCreateCustomer,
+          saveCreateGroupOrder,
           showAlert,
           handleLogin,
           logout,
