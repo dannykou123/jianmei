@@ -397,7 +397,7 @@
                       </div>
                       <div class="flex items-start gap-2">
                         <i class="fas fa-truck w-4 text-stone-400 mt-0.5"></i>
-                        <span class="break-all">配送：{{ g.deliveryTime ? new Date(g.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-' }}</span>
+                        <span class="break-all">配送：{{ g.deliveryTime ? new Date(g.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
                       </div>
                       <div class="flex items-start gap-2">
                         <i class="fas fa-calendar-plus w-4 text-stone-400 mt-0.5"></i>
@@ -542,30 +542,81 @@
                 <span class="text-xs md:text-base font-bold text-stone-400 mt-1 md:mt-2">{{ detailsPendingCount }}筆</span>
               </div>
             </div>
-            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-3 sm:px-4 py-3 flex flex-wrap items-center gap-2">
-              <!-- 日期輸入：手機版同一列，sm+ 解構成直接子元素 -->
-              <div class="flex items-center gap-2 w-full sm:w-auto sm:contents">
-                <div class="flex items-center gap-1.5 flex-1 sm:flex-none">
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-3 sm:px-4 py-3">
+
+              <!-- ========== 手機版(<md) ========== -->
+              <div class="flex flex-col gap-2 md:hidden">
+                <!-- 日期 -->
+                <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-1.5 flex-1">
+                    <label class="text-xs font-bold text-stone-400 whitespace-nowrap">開始</label>
+                    <input type="date" v-model="detailsStart" class="flex-1 min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
+                  </div>
+                  <div class="flex items-center gap-1.5 flex-1">
+                    <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
+                    <input type="date" v-model="detailsEnd" class="flex-1 min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
+                  </div>
+                </div>
+                <!-- 快速篩選 -->
+                <div class="flex items-center gap-1.5">
+                  <button @click="setYesterdayFilter" :class="['flex-1 px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日訂單</button>
+                  <button @click="setTodayFilter" :class="['flex-1 px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
+                  <button @click="setTomorrowFilter" :class="['flex-1 px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
+                </div>
+                <!-- 匯出/清除 -->
+                <div v-if="detailsStart && detailsEnd" class="flex items-center gap-1.5">
+                  <button @click="printAllFilteredStock" :disabled="loading" class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-boxes"></i>總備貨單</button>
+                  <button @click="printAllFilteredLabels" :disabled="loading" class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-shipping-fast"></i>總出貨單</button>
+                  <button @click="clearDetailsFilter" class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition whitespace-nowrap"><i class="fas fa-undo"></i>清除篩選</button>
+                </div>
+              </div>
+
+              <!-- ========== 平板版(md, <lg) ========== -->
+              <div class="hidden md:flex lg:hidden flex-col gap-2">
+                <!-- 第一列：日期左 + 總備貨/出貨/清除篩選靠右 -->
+                <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <label class="text-xs font-bold text-stone-400 whitespace-nowrap">開始</label>
+                    <input type="date" v-model="detailsStart" class="min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
+                  </div>
+                  <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
+                    <input type="date" v-model="detailsEnd" class="min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
+                  </div>
+                  <div class="flex items-center gap-1.5 ml-auto flex-shrink-0">
+                    <button @click="printAllFilteredStock" :disabled="loading" class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-boxes"></i>總備貨單</button>
+                    <button @click="printAllFilteredLabels" :disabled="loading" class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-shipping-fast"></i>總出貨單</button>
+                    <button @click="clearDetailsFilter" class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition whitespace-nowrap"><i class="fas fa-undo"></i>清除篩選</button>
+                  </div>
+                </div>
+                <!-- 第二列：昨日/今日/明日訂單 -->
+                <div class="flex items-center gap-1.5">
+                  <button @click="setYesterdayFilter" :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日訂單</button>
+                  <button @click="setTodayFilter" :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
+                  <button @click="setTomorrowFilter" :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
+                </div>
+              </div>
+
+              <!-- ========== 桌面版(lg+) ========== -->
+              <div class="hidden lg:flex items-center gap-2">
+                <div class="flex items-center gap-1.5">
                   <label class="text-xs font-bold text-stone-400 whitespace-nowrap">開始</label>
-                  <input type="date" v-model="detailsStart" class="flex-1 sm:flex-none min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
+                  <input type="date" v-model="detailsStart" class="min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
                 </div>
-                <div class="flex items-center gap-1.5 flex-1 sm:flex-none">
+                <div class="flex items-center gap-1.5">
                   <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
-                  <input type="date" v-model="detailsEnd" class="flex-1 sm:flex-none min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
+                  <input type="date" v-model="detailsEnd" class="min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
+                </div>
+                <button @click="setYesterdayFilter" :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日訂單</button>
+                <button @click="setTodayFilter" :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
+                <button @click="setTomorrowFilter" :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
+                <div v-if="detailsStart && detailsEnd" class="flex items-center gap-1.5 ml-auto">
+                  <button @click="printAllFilteredStock" :disabled="loading" class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-boxes"></i>總備貨單</button>
+                  <button @click="printAllFilteredLabels" :disabled="loading" class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-shipping-fast"></i>總出貨單</button>
+                  <button @click="clearDetailsFilter" class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition whitespace-nowrap"><i class="fas fa-undo"></i>清除篩選</button>
                 </div>
               </div>
-              <!-- 快速篩選按鈕：手機滿版，sm+ 自然寬度 -->
-              <div class="flex items-center gap-1.5 w-full sm:w-auto">
-                <button @click="setYesterdayFilter" :class="['flex-1 sm:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日訂單</button>
-                <button @click="setTodayFilter" :class="['flex-1 sm:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
-                <button @click="setTomorrowFilter" :class="['flex-1 sm:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
-              </div>
-              <!-- 匯出/清除按鈕：手機滿版，sm+ 靠右（空間不足自動換行至第二列，仍靠右） -->
-              <div v-if="detailsStart && detailsEnd" class="flex items-center gap-1.5 w-full sm:w-auto sm:ml-auto">
-                <button @click="printAllFilteredStock" :disabled="loading" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-boxes"></i>總備貨單</button>
-                <button @click="printAllFilteredLabels" :disabled="loading" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-shipping-fast"></i>總出貨單</button>
-                <button @click="clearDetailsFilter" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition whitespace-nowrap"><i class="fas fa-undo"></i>清除篩選</button>
-              </div>
+
             </div>
             <!-- 篩選列 + 搜尋 -->
             <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-4 py-3 flex flex-col gap-3">
@@ -617,15 +668,15 @@
                       配送時間
                       <i :class="['fas ml-1', detailsSort.startsWith('deliveryTime') ? (detailsSort.endsWith('asc') ? 'fa-sort-up text-stone-700' : 'fa-sort-down text-stone-700') : 'fa-sort text-stone-300']"></i>
                     </th>
-                    <th class="px-4 py-3 text-left cursor-pointer select-none hover:text-stone-600 transition" @click="sortByField('companyName')">
+                    <th class="md:hidden lg:table-cell px-4 py-3 text-left cursor-pointer select-none hover:text-stone-600 transition" @click="sortByField('companyName')">
                       公司名稱
                       <i :class="['fas ml-1', detailsSort.startsWith('companyName') ? (detailsSort.endsWith('asc') ? 'fa-sort-up text-stone-700' : 'fa-sort-down text-stone-700') : 'fa-sort text-stone-300']"></i>
                     </th>
-                    <th class="hidden sm:table-cell px-4 py-3 text-left">聯絡人</th>
-                    <th class="hidden sm:table-cell px-4 py-3 text-left">連絡電話</th>
-                    <th class="hidden sm:table-cell px-4 py-3 text-left">來源</th>
-                    <th class="hidden sm:table-cell px-4 py-3 text-right">總金額</th>
-                    <th class="hidden sm:table-cell px-4 py-3 text-center">操作</th>
+                    <th class="hidden md:table-cell px-4 py-3 text-left">聯絡人</th>
+                    <th class="hidden md:table-cell px-4 py-3 text-left">連絡電話</th>
+                    <th class="hidden lg:table-cell px-4 py-3 text-left">來源</th>
+                    <th class="hidden lg:table-cell px-4 py-3 text-right">總金額</th>
+                    <th class="hidden md:table-cell px-4 py-3 text-center">操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -640,17 +691,18 @@
                       </button>
                     </td>
                     <td class="px-4 py-3 text-stone-500 whitespace-nowrap">
-                      <span class="hidden sm:inline">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-' }}</span>
-                      <span class="sm:hidden">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-' }}</span>
+                      <span class="hidden lg:inline">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
+                      <span class="hidden md:inline lg:hidden">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
+                      <span class="md:hidden">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
                     </td>
-                    <td class="px-4 py-3 font-bold text-stone-800 whitespace-nowrap">{{ order.companyName }}</td>
-                    <td class="hidden sm:table-cell px-4 py-3 text-stone-600 whitespace-nowrap">{{ order.contactName }}</td>
-                    <td class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.contactPhone || '-' }}</td>
-                    <td class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.resource || '-' }}</td>
-                    <td class="hidden sm:table-cell px-4 py-3 text-right font-bold text-red-800 whitespace-nowrap">
+                    <td class="md:hidden lg:table-cell px-4 py-3 font-bold text-stone-800 whitespace-nowrap">{{ order.companyName }}</td>
+                    <td class="hidden md:table-cell px-4 py-3 text-stone-600 whitespace-nowrap">{{ order.contactName }}</td>
+                    <td class="hidden md:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.contactPhone || '-' }}</td>
+                    <td class="hidden lg:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.resource || '-' }}</td>
+                    <td class="hidden lg:table-cell px-4 py-3 text-right font-bold text-red-800 whitespace-nowrap">
                       {{ groupTotalAmountMap[order.id] > 0 ? '$' + groupTotalAmountMap[order.id].toLocaleString() : '-' }}
                     </td>
-                    <td class="hidden sm:table-cell px-4 py-3 text-center whitespace-nowrap">
+                    <td class="hidden md:table-cell px-4 py-3 text-center whitespace-nowrap">
                       <div class="flex gap-2 justify-center">
                         <button @click="printSingleStock(order)" :disabled="printingSingleId === order.id" class="px-3 py-1 bg-stone-100 text-stone-500 rounded-lg hover:bg-stone-200 transition text-xs font-bold" title="列印備料單">備貨單</button>
                         <button @click="printSingleLabel(order)" :disabled="printingSingleId === order.id" class="px-3 py-1 bg-stone-100 text-stone-500 rounded-lg hover:bg-stone-200 transition text-xs font-bold" title="列印出貨單">出貨單</button>
@@ -659,7 +711,7 @@
                     </td>
                   </tr>
                   <!-- 手機版操作列：橫跨全部欄位，桌面版隱藏 -->
-                  <tr class="sm:hidden border-b border-stone-100">
+                  <tr class="md:hidden border-b border-stone-100">
                     <td colspan="4" class="px-3 pb-2.5 pt-0">
                       <div class="flex gap-2">
                         <button @click="printSingleStock(order)" :disabled="printingSingleId === order.id" class="flex-1 py-1.5 bg-stone-100 text-stone-500 rounded-lg hover:bg-stone-200 transition text-xs font-bold text-center disabled:opacity-40">
@@ -759,7 +811,7 @@
                         </div>
                         <div>
                           <p class="text-xs text-stone-400 font-medium mb-0.5">配送時間</p>
-                          <p class="text-sm font-semibold text-stone-800">{{ detailModalOrder.deliveryTime ? new Date(detailModalOrder.deliveryTime.seconds * 1000).toLocaleString('zh-TW') : '-' }}</p>
+                          <p class="text-sm font-semibold text-stone-800">{{ detailModalOrder.deliveryTime ? new Date(detailModalOrder.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</p>
                         </div>
                       </div>
                       <div v-if="detailModalOrder.address" class="py-3">
@@ -1184,7 +1236,7 @@
                 <div class="flex-1 min-w-0">
                   <p class="font-black text-stone-800 truncate">{{ group.companyName }}</p>
                   <div class="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
-                    <span class="text-xs text-stone-500"><i class="fas fa-truck mr-1"></i>{{ group.deliveryTime ? new Date(group.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-' }}</span>
+                    <span class="text-xs text-stone-500"><i class="fas fa-truck mr-1"></i>{{ group.deliveryTime ? new Date(group.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
                     <span class="text-xs text-stone-500"><i class="fas fa-user mr-1"></i>{{ group.contactName }}<span v-if="group.contactPhone"> {{ group.contactPhone }}</span></span>
                   </div>
                 </div>
