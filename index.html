@@ -141,12 +141,6 @@
             
             <!-- 桌面版導航 -->
             <div class="hidden md:flex items-center gap-1">
-               <button v-if="user && user.role === 'admin'" @click="adminTab='accounts'; fetchAdminAccounts()" :class="['px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border', adminTab=='accounts'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
-                 <i class="fas fa-users mr-1"></i>帳號管理
-               </button>
-               <button @click="adminTab='items'; fetchAdminItems()" :class="['px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border', adminTab=='items'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
-                 <i class="fas fa-box mr-1"></i>產品管理
-               </button>
                <button @click="adminTab='review'; fetchReviewList()" :class="['px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 whitespace-nowrap border', adminTab=='review'?'bg-red-500 text-white border-red-500 shadow-md shadow-red-500/30':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
                  <i class="fas fa-clock"></i>待審核 <span v-if="adminData.reviewList.length > 0" class="bg-white text-red-500 text-[10px] px-1.5 rounded-md font-black shadow-sm">{{ adminData.reviewList.length }}</span>
                </button>
@@ -154,6 +148,24 @@
                  <i class="fas fa-file-alt mr-1"></i>訂單管理
                </button>
                <div class="w-px h-6 bg-stone-300 mx-1"></div>
+               <!-- 設定齒輪下拉選單 -->
+               <div class="relative">
+                 <div v-if="showSettingsMenu" class="fixed inset-0 z-40" @click="showSettingsMenu = false"></div>
+                 <button @click="showSettingsMenu = !showSettingsMenu" :class="['px-3 py-2 rounded-xl text-xs font-bold transition-all border', (adminTab=='accounts'||adminTab=='items'||adminTab=='contacts') ? 'bg-stone-800 text-white border-stone-800 shadow-md' : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
+                   <i class="fas fa-cog"></i>
+                 </button>
+                 <div v-if="showSettingsMenu" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-stone-100 py-2 z-50 animate-slide-down">
+                   <button v-if="user && user.role === 'admin'" @click="adminTab='accounts'; fetchAdminAccounts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3 rounded-lg mx-0', adminTab=='accounts' ? 'bg-stone-100 text-stone-800' : 'text-stone-600 hover:bg-stone-50']">
+                     <i class="fas fa-users w-4"></i>帳號管理
+                   </button>
+                   <button @click="adminTab='items'; fetchAdminItems(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='items' ? 'bg-stone-100 text-stone-800' : 'text-stone-600 hover:bg-stone-50']">
+                     <i class="fas fa-box w-4"></i>產品管理
+                   </button>
+                   <button @click="adminTab='contacts'; fetchFrequentContacts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='contacts' ? 'bg-stone-100 text-stone-800' : 'text-stone-600 hover:bg-stone-50']">
+                     <i class="fas fa-address-book w-4"></i>常用聯絡人
+                   </button>
+                 </div>
+               </div>
                <button @click="logout" class="bg-stone-100 text-stone-500 px-3 py-2 rounded-xl text-xs font-bold hover:bg-stone-200">
                  <i class="fas fa-sign-out-alt"></i>
                </button>
@@ -184,24 +196,24 @@
               </button>
             </div>
             <div class="space-y-2">
-              <button v-if="user && user.role === 'admin'" @click="adminTab='accounts'; fetchAdminAccounts(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3', adminTab=='accounts'?'bg-stone-800 text-white':'text-stone-600 hover:bg-stone-50']">
-                <i class="fas fa-users w-5"></i><span>帳號管理</span>
-              </button>
-              <button @click="adminTab='items'; fetchAdminItems(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3', adminTab=='items'?'bg-stone-800 text-white':'text-stone-600 hover:bg-stone-50']">
-                <i class="fas fa-box w-5"></i><span>產品管理</span>
-              </button>
               <button @click="adminTab='review'; fetchReviewList(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3', adminTab=='review'?'bg-red-500 text-white':'text-stone-600 hover:bg-stone-50']">
                 <i class="fas fa-clock w-5"></i><span>待審核 <span v-if="adminData.reviewList.length>0" class="text-xs">({{adminData.reviewList.length}})</span></span>
               </button>
               <button @click="adminTab='details'; fetchOrderDetails(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3', adminTab=='details'?'bg-stone-800 text-white':'text-stone-600 hover:bg-stone-50']">
                 <i class="fas fa-file-alt w-5"></i><span>訂單管理</span>
               </button>
-              <button @click="adminTab='stock'; showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3', adminTab=='stock'?'bg-stone-800 text-white':'text-stone-600 hover:bg-stone-50']">
-                <i class="fas fa-chart-bar w-5"></i><span>備貨統計</span>
-              </button>
-              <button @click="adminTab='labels'; showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3', adminTab=='labels'?'bg-stone-800 text-white':'text-stone-600 hover:bg-stone-50']">
-                <i class="fas fa-print w-5"></i><span>出貨單</span>
-              </button>
+              <div class="border-t border-stone-100 pt-2 mt-2">
+                <p class="text-[10px] font-black text-stone-400 uppercase tracking-widest px-4 mb-2">設定</p>
+                <button v-if="user && user.role === 'admin'" @click="adminTab='accounts'; fetchAdminAccounts(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3', adminTab=='accounts'?'bg-stone-800 text-white':'text-stone-600 hover:bg-stone-50']">
+                  <i class="fas fa-users w-5"></i><span>帳號管理</span>
+                </button>
+                <button @click="adminTab='items'; fetchAdminItems(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3', adminTab=='items'?'bg-stone-800 text-white':'text-stone-600 hover:bg-stone-50']">
+                  <i class="fas fa-box w-5"></i><span>產品管理</span>
+                </button>
+                <button @click="adminTab='contacts'; fetchFrequentContacts(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3', adminTab=='contacts'?'bg-stone-800 text-white':'text-stone-600 hover:bg-stone-50']">
+                  <i class="fas fa-address-book w-5"></i><span>常用聯絡人</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -259,6 +271,55 @@
                   <i class="fas fa-edit mr-1"></i>編輯
                 </button>
                 <button @click="deleteAccount(account)" class="flex-1 bg-red-50 text-red-800 py-2 rounded-xl font-bold hover:bg-red-100 transition text-sm">
+                  <i class="fas fa-trash mr-1"></i>刪除
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 常用聯絡人管理 -->
+        <div v-if="adminTab === 'contacts'" class="space-y-4">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-black text-stone-800">常用聯絡人管理</h2>
+            <button @click="openAddContactModal" class="bg-brand-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-brand-700 transition shadow-lg flex items-center gap-2">
+              <i class="fas fa-plus"></i>新增聯絡人
+            </button>
+          </div>
+
+          <div v-if="loading" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
+
+          <div v-else-if="frequentContacts.length === 0" class="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-stone-200">
+            <i class="fas fa-address-book text-6xl mb-4 text-stone-300"></i>
+            <p class="font-bold text-stone-400">尚無常用聯絡人</p>
+          </div>
+
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div v-for="contact in frequentContacts" :key="contact.id" class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 hover:shadow-md transition">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center text-white font-black text-lg flex-shrink-0">
+                  {{ contact.companyName ? contact.companyName.charAt(0) : '?' }}
+                </div>
+                <div class="min-w-0">
+                  <h3 class="font-black text-stone-800 truncate">{{ contact.companyName }}</h3>
+                  <p class="text-xs text-stone-500">{{ contact.contactName }}</p>
+                </div>
+              </div>
+              <div class="space-y-2 mb-4 text-sm">
+                <div v-if="contact.contactPhone" class="flex items-center gap-2 text-stone-600">
+                  <i class="fas fa-phone w-4 text-stone-400"></i>
+                  <span>{{ contact.contactPhone }}</span>
+                </div>
+                <div v-if="contact.address" class="flex items-start gap-2 text-stone-600">
+                  <i class="fas fa-map-marker-alt w-4 text-stone-400 mt-0.5"></i>
+                  <span class="line-clamp-2">{{ contact.address }}</span>
+                </div>
+              </div>
+              <div class="flex gap-2 pt-4 border-t border-stone-100">
+                <button @click="editContact(contact)" class="flex-1 bg-blue-50 text-blue-600 py-2 rounded-xl font-bold hover:bg-blue-100 transition text-sm">
+                  <i class="fas fa-edit mr-1"></i>編輯
+                </button>
+                <button @click="deleteContact(contact)" class="flex-1 bg-red-50 text-red-800 py-2 rounded-xl font-bold hover:bg-red-100 transition text-sm">
                   <i class="fas fa-trash mr-1"></i>刪除
                 </button>
               </div>
@@ -469,12 +530,23 @@
           </div>
           <div v-else>
             <!-- 日期範圍 + 批次列印 -->
-            <div class="flex items-center gap-4 mb-2">
-              <span class="text-base font-bold text-stone-500">總金額：
-                <span class="text-2xl font-black text-red-700">
-                  <span style="color:#b91c1c;">${{ sortedDetailsList.reduce((sum, order) => sum + (groupTotalAmountMap[order.id] || 0), 0).toLocaleString() }}</span>
-                </span>
-              </span>
+            <!-- Dashboard 總金額區塊 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+              <div class="bg-white rounded-2xl shadow-sm border border-stone-100 p-5 flex flex-col items-center">
+                <span class="text-xs font-bold text-stone-400 mb-1">全部金額 (不含已拒絕)</span>
+                <span class="text-2xl font-black text-red-700">${{ detailsDashboardTotal.toLocaleString() }}</span>
+                <span class="text-base font-bold text-stone-400 mt-2">訂單數：{{ detailsOrderCount }}</span>
+              </div>
+              <div class="bg-white rounded-2xl shadow-sm border border-stone-100 p-5 flex flex-col items-center">
+                <span class="text-xs font-bold text-stone-400 mb-1">已接單金額</span>
+                <span class="text-2xl font-black text-green-700">${{ detailsApprovedTotal.toLocaleString() }}</span>
+                <span class="text-base font-bold text-stone-400 mt-2">訂單數：{{ detailsApprovedCount }}</span>
+              </div>
+              <div class="bg-white rounded-2xl shadow-sm border border-stone-100 p-5 flex flex-col items-center">
+                <span class="text-xs font-bold text-stone-400 mb-1">待審核金額</span>
+                <span class="text-2xl font-black text-amber-700">${{ detailsPendingTotal.toLocaleString() }}</span>
+                <span class="text-base font-bold text-stone-400 mt-2">訂單數：{{ detailsPendingCount }}</span>
+              </div>
             </div>
             <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-4 py-3 flex flex-wrap items-center gap-3">
               <div class="flex items-center gap-2">
@@ -486,6 +558,7 @@
                 <input type="date" v-model="detailsEnd" class="px-2 py-1.5 border border-stone-200 rounded-lg text-sm text-stone-700 outline-none bg-white">
               </div>
               <div class="flex items-center gap-2">
+                <button @click="setYesterdayFilter" :class="['px-3 py-1 rounded-lg text-sm font-bold transition', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日訂單</button>
                 <button @click="setTodayFilter" :class="['px-3 py-1 rounded-lg text-sm font-bold transition', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
                 <button @click="setTomorrowFilter" :class="['px-3 py-1 rounded-lg text-sm font-bold transition', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
               </div>
@@ -538,6 +611,7 @@
                     </th>
                     <th class="px-4 py-3 text-left">聯絡人</th>
                     <th class="px-4 py-3 text-left">連絡電話</th>
+                     <th class="px-4 py-3 text-left">來源</th>
                     <th class="px-4 py-3 text-right">總金額</th>
                     <th class="px-4 py-3 text-center">操作</th>
                   </tr>
@@ -553,6 +627,7 @@
                     <td class="px-4 py-3 font-bold text-stone-800 whitespace-nowrap">{{ order.companyName }}</td>
                     <td class="px-4 py-3 text-stone-600 whitespace-nowrap">{{ order.contactName }}</td>
                     <td class="px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.contactPhone || '-' }}</td>
+                     <td class="px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.resource || '-' }}</td>
                     <td class="px-4 py-3 text-right font-bold text-red-800 whitespace-nowrap">
                       {{ groupTotalAmountMap[order.id] > 0 ? '$' + groupTotalAmountMap[order.id].toLocaleString() : '-' }}
                     </td>
@@ -861,6 +936,15 @@
                 <!-- 基本資訊 -->
                   <div v-if="createOrderTab === 'info'" class="space-y-3">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div class="sm:col-span-2">
+                        <label class="text-xs font-bold text-stone-400 mb-1 block">常用聯絡人</label>
+                        <button type="button" @click="showContactPicker = true" class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm bg-stone-50 hover:bg-stone-100 transition text-left flex items-center justify-between gap-2">
+                          <span :class="selectedContactId ? 'text-stone-800 font-bold' : 'text-stone-400'">
+                            {{ selectedContactId ? (frequentContacts.find(c => c.id === selectedContactId) ? frequentContacts.find(c => c.id === selectedContactId).companyName + ' / ' + frequentContacts.find(c => c.id === selectedContactId).contactName : '請選擇') : '點擊選擇常用聯絡人...' }}
+                          </span>
+                          <i class="fas fa-address-book text-stone-400 flex-shrink-0"></i>
+                        </button>
+                      </div>
                       <div>
                         <label class="text-xs font-bold text-stone-400 mb-1 block">公司名稱 *</label>
                         <input v-model="createOrderForm.companyName" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
@@ -877,6 +961,23 @@
                         <label class="text-xs font-bold text-stone-400 mb-1 block">配送時間</label>
                         <input v-model="createOrderForm.deliveryTime" type="datetime-local" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
                       </div>
+                       <div>
+                         <label class="text-xs font-bold text-stone-400 mb-1 block">來源</label>
+                         <div class="flex gap-4 py-2">
+                           <label class="inline-flex items-center gap-2">
+                             <input type="radio" v-model="createOrderForm.resource" value="Line" class="accent-brand-600">
+                             <span>Line</span>
+                           </label>
+                           <label class="inline-flex items-center gap-2">
+                             <input type="radio" v-model="createOrderForm.resource" value="電話" class="accent-brand-600">
+                             <span>電話</span>
+                           </label>
+                           <label class="inline-flex items-center gap-2">
+                             <input type="radio" v-model="createOrderForm.resource" value="傳真" class="accent-brand-600">
+                             <span>傳真</span>
+                           </label>
+                         </div>
+                       </div>
                     </div>
                     <div>
                       <label class="text-xs font-bold text-stone-400 mb-1 block">配送地址</label>
@@ -1277,6 +1378,69 @@
       </div>
     </div>
 
+    <!-- 常用聯絡人選擇 Picker -->
+    <div v-if="showContactPicker" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4 animate-fade-in" @click.self="showContactPicker = false">
+      <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl flex flex-col max-h-[80vh] animate-zoom-in">
+        <div class="flex items-center justify-between px-6 pt-5 pb-3 border-b border-stone-100">
+          <h3 class="text-lg font-black text-stone-900">選擇常用聯絡人</h3>
+          <button @click="showContactPicker = false" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition"><i class="fas fa-times text-sm"></i></button>
+        </div>
+        <div class="px-4 py-3 border-b border-stone-100">
+          <div class="relative">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-sm"></i>
+            <input v-model="contactPickerKeyword" type="text" placeholder="搜尋公司名稱、聯絡人..." class="w-full pl-9 pr-3 py-2 border border-stone-200 rounded-lg text-sm outline-none text-stone-700">
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto px-3 py-2">
+          <div v-if="frequentContacts.length === 0" class="text-center py-10 text-stone-400 text-sm">尚無常用聯絡人</div>
+          <div v-else-if="filteredContactPicker.length === 0" class="text-center py-10 text-stone-400 text-sm">找不到符合的聯絡人</div>
+          <button v-for="contact in filteredContactPicker" :key="contact.id"
+            @click="pickContact(contact)"
+            :class="['w-full text-left px-4 py-3 rounded-xl transition mb-1 flex items-center gap-3', selectedContactId === contact.id ? 'bg-stone-800 text-white' : 'hover:bg-stone-50 text-stone-700']">
+            <div :class="['w-10 h-10 rounded-lg flex items-center justify-center font-black text-base flex-shrink-0', selectedContactId === contact.id ? 'bg-white/20 text-white' : 'bg-brand-100 text-brand-700']">
+              {{ contact.companyName ? contact.companyName.charAt(0) : '?' }}
+            </div>
+            <div class="min-w-0">
+              <p class="font-bold text-sm truncate">{{ contact.companyName }}</p>
+              <p :class="['text-xs truncate', selectedContactId === contact.id ? 'text-stone-300' : 'text-stone-400']">{{ contact.contactName }}<span v-if="contact.contactPhone"> · {{ contact.contactPhone }}</span></p>
+            </div>
+            <i v-if="selectedContactId === contact.id" class="fas fa-check ml-auto flex-shrink-0"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 常用聯絡人 Modal -->
+    <div v-if="showContactModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
+      <div class="bg-white w-full max-w-lg rounded-[2rem] p-8 shadow-2xl max-h-[90vh] overflow-y-auto border border-white/20 animate-zoom-in">
+        <h3 class="text-xl font-black mb-6 text-stone-800">{{ editingContact.id ? '編輯聯絡人' : '新增聯絡人' }}</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">公司名稱 <span class="text-red-500">*</span></label>
+            <input v-model="contactForm.companyName" type="text" placeholder="例如：健美科技有限公司" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">聯絡人 <span class="text-red-500">*</span></label>
+            <input v-model="contactForm.contactName" type="text" placeholder="例如：王小明" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">連絡電話</label>
+            <input v-model="contactForm.contactPhone" type="tel" placeholder="0912-345-678" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">配送地址</label>
+            <input v-model="contactForm.address" type="text" placeholder="台北市中正區XX路XX號" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+          </div>
+        </div>
+        <div class="flex gap-3 mt-8">
+          <button @click="closeContactModal" class="flex-1 py-3 bg-stone-100 text-stone-500 rounded-xl font-bold hover:bg-stone-200 transition">取消</button>
+          <button @click="saveContact" :disabled="loading" class="flex-1 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition disabled:opacity-50">
+            {{ editingContact.id ? '更新資料' : '確認新增' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 自訂提示對話框 -->
     <div v-if="customAlert.show" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-fade-in">
       <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative border border-white overflow-hidden animate-zoom-in">
@@ -1369,10 +1533,12 @@
 
         const openCreateOrderModal = async () => {
           if (adminData.value.itemsList.length === 0) await fetchAdminItems();
+          if (frequentContacts.value.length === 0) await fetchFrequentContacts();
           createOrderForm.value = { companyName: '', contactName: '', contactPhone: '', address: '', deliveryTime: '', status: 'pending' };
           createOrderCustomers.value = [];
           addingCreateCustomer.value = false;
           createOrderTab.value = 'info';
+          selectedContactId.value = '';
           newCreateCustomerData.value = { customerName: '', customerUnit: '', note: '', items: adminData.value.itemsList.map(i => ({ itemName: i.name, qty: 0 })) };
           showCreateOrderModal.value = true;
         };
@@ -1592,6 +1758,16 @@
         
         // 帳號管理
         const showAccountModal = ref(false);
+        const showSettingsMenu = ref(false);
+
+        // 常用聯絡人
+        const frequentContacts = ref([]);
+        const showContactModal = ref(false);
+        const editingContact = ref({});
+        const contactForm = ref({ companyName: '', contactName: '', contactPhone: '', address: '' });
+        const selectedContactId = ref('');
+        const showContactPicker = ref(false);
+        const contactPickerKeyword = ref('');
         const editingAccount = ref({});
         const accountForm = ref({
           accountId: '',
@@ -1811,6 +1987,8 @@
               return t !== null && t >= startMs && t <= endMs;
             });
           }
+          // 排除已拒絕訂單
+          list = list.filter(o => o.status !== 'rejected');
           const [field, order] = detailsSort.value.split('-');
           return list.sort((a, b) => {
             let valA, valB;
@@ -1825,6 +2003,30 @@
             else return valA < valB ? 1 : valA > valB ? -1 : 0;
           });
         });
+
+        // Dashboard 金額計算
+        const detailsApprovedTotal = computed(() =>
+          sortedDetailsList.value.filter(o => o.status === 'approved')
+            .reduce((sum, o) => sum + (groupTotalAmountMap.value[o.id] || 0), 0)
+        );
+        const detailsPendingTotal = computed(() =>
+          sortedDetailsList.value.filter(o => o.status === 'pending')
+            .reduce((sum, o) => sum + (groupTotalAmountMap.value[o.id] || 0), 0)
+        );
+        const detailsDashboardTotal = computed(() =>
+          sortedDetailsList.value.filter(o => o.status !== 'rejected')
+            .reduce((sum, o) => sum + (groupTotalAmountMap.value[o.id] || 0), 0)
+        );
+        // 訂單數統計
+        const detailsOrderCount = computed(() =>
+           sortedDetailsList.value.filter(o => o.status !== 'rejected').length
+        );
+        const detailsApprovedCount = computed(() =>
+           sortedDetailsList.value.filter(o => o.status === 'approved').length
+        );
+        const detailsPendingCount = computed(() =>
+           sortedDetailsList.value.filter(o => o.status === 'pending').length
+        );
 
         // 分頁後的訂單列表
         const totalDetailsPages = computed(() => Math.max(1, Math.ceil(sortedDetailsList.value.length / detailsPageSize.value)));
@@ -1859,11 +2061,100 @@
           detailsStart.value = d;
           detailsEnd.value = d;
         };
+        const setYesterdayFilter = () => {
+          const d = getTaiwanDateStr(-1);
+          detailsStart.value = d;
+          detailsEnd.value = d;
+        };
         const clearDetailsFilter = () => {
           detailsStart.value = '';
           detailsEnd.value = '';
           detailsKeyword.value = '';
           detailsStatus.value = 'all';
+        };
+
+        const filteredContactPicker = computed(() => {
+          const kw = contactPickerKeyword.value.trim().toLowerCase();
+          if (!kw) return frequentContacts.value;
+          return frequentContacts.value.filter(c =>
+            (c.companyName || '').toLowerCase().includes(kw) ||
+            (c.contactName || '').toLowerCase().includes(kw) ||
+            (c.contactPhone || '').toLowerCase().includes(kw)
+          );
+        });
+
+        // 常用聯絡人 CRUD
+        const fetchFrequentContacts = async () => {
+          try {
+            const snapshot = await getDocs(query(collection(db, 'FrequentContacts'), orderBy('companyName', 'asc')));
+            frequentContacts.value = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          } catch (e) {
+            try {
+              const snapshot2 = await getDocs(collection(db, 'FrequentContacts'));
+              frequentContacts.value = snapshot2.docs.map(d => ({ id: d.id, ...d.data() }));
+            } catch (e2) { console.error('獲取常用聯絡人錯誤:', e2); }
+          }
+        };
+        const openAddContactModal = () => {
+          editingContact.value = {};
+          contactForm.value = { companyName: '', contactName: '', contactPhone: '', address: '' };
+          showContactModal.value = true;
+        };
+        const editContact = (contact) => {
+          editingContact.value = { ...contact };
+          contactForm.value = { companyName: contact.companyName || '', contactName: contact.contactName || '', contactPhone: contact.contactPhone || '', address: contact.address || '' };
+          showContactModal.value = true;
+        };
+        const closeContactModal = () => {
+          showContactModal.value = false;
+          editingContact.value = {};
+          contactForm.value = { companyName: '', contactName: '', contactPhone: '', address: '' };
+        };
+        const saveContact = async () => {
+          if (!contactForm.value.companyName || !contactForm.value.contactName) { showAlert('請填寫公司名稱和聯絡人', 'error'); return; }
+          loading.value = true;
+          try {
+            const data = { companyName: contactForm.value.companyName, contactName: contactForm.value.contactName, contactPhone: contactForm.value.contactPhone || '', address: contactForm.value.address || '', updatedAt: new Date().toISOString() };
+            if (editingContact.value.id) {
+              await updateDoc(doc(db, 'FrequentContacts', editingContact.value.id), data);
+              showAlert('聯絡人已更新', 'success');
+            } else {
+              data.createdAt = new Date().toISOString();
+              await addDoc(collection(db, 'FrequentContacts'), data);
+              showAlert('聯絡人已新增', 'success');
+            }
+            closeContactModal();
+            await fetchFrequentContacts();
+          } catch (e) { showAlert('儲存失敗：' + e.message, 'error'); }
+          finally { loading.value = false; }
+        };
+        const deleteContact = async (contact) => {
+          if (!confirm(`確定要刪除「${contact.companyName}」嗎？`)) return;
+          loading.value = true;
+          try {
+            await deleteDoc(doc(db, 'FrequentContacts', contact.id));
+            showAlert('已刪除', 'success');
+            await fetchFrequentContacts();
+          } catch (e) { showAlert('刪除失敗：' + e.message, 'error'); }
+          finally { loading.value = false; }
+        };
+        const fillContactInfo = () => {
+          const found = frequentContacts.value.find(c => c.id === selectedContactId.value);
+          if (found) {
+            createOrderForm.value.companyName = found.companyName;
+            createOrderForm.value.contactName = found.contactName;
+            createOrderForm.value.contactPhone = found.contactPhone || '';
+            createOrderForm.value.address = found.address || '';
+          }
+        };
+        const pickContact = (contact) => {
+          selectedContactId.value = contact.id;
+          createOrderForm.value.companyName = contact.companyName;
+          createOrderForm.value.contactName = contact.contactName;
+          createOrderForm.value.contactPhone = contact.contactPhone || '';
+          createOrderForm.value.address = contact.address || '';
+          showContactPicker.value = false;
+          contactPickerKeyword.value = '';
         };
 
         // 獲取帳號列表
@@ -2019,8 +2310,10 @@
                 sessionStorage.setItem('user', JSON.stringify(user.value));
                 sessionStorage.setItem('currentView', 'admin');
                 showAlert('登入成功！', 'success');
-                // 載入帳號列表
-                fetchAdminAccounts();
+                await fetchAdminAccounts();
+                await fetchReviewList();
+                adminTab.value = adminData.value.reviewList.length > 0 ? 'review' : 'details';
+                sessionStorage.setItem('adminTab', adminTab.value);
               } else {
                 // 如果不是硬編碼密碼，再查詢 Firebase
                 try {
@@ -2035,8 +2328,10 @@
                       sessionStorage.setItem('user', JSON.stringify(user.value));
                       sessionStorage.setItem('currentView', 'admin');
                       showAlert('登入成功！', 'success');
-                      // 載入帳號列表
-                      fetchAdminAccounts();
+                      await fetchAdminAccounts();
+                      await fetchReviewList();
+                      adminTab.value = adminData.value.reviewList.length > 0 ? 'review' : 'details';
+                      sessionStorage.setItem('adminTab', adminTab.value);
                     } else {
                       showAlert('密碼錯誤', 'error');
                     }
@@ -2061,11 +2356,21 @@
                   currentView.value = 'admin';
                   sessionStorage.setItem('user', JSON.stringify(user.value));
                   sessionStorage.setItem('currentView', 'admin');
-                  adminTab.value = user.value.role === 'admin' ? 'accounts' : 'details';
-                  sessionStorage.setItem('adminTab', adminTab.value);
                   showAlert('登入成功！', 'success');
-                  if (user.value.role === 'admin') fetchAdminAccounts();
-                  else fetchOrderDetails();
+                  if (user.value.role === 'admin') {
+                    await fetchAdminAccounts();
+                    await fetchReviewList();
+                    if (adminData.value.reviewList.length > 0) {
+                      adminTab.value = 'review';
+                    } else {
+                      adminTab.value = 'details';
+                    }
+                    sessionStorage.setItem('adminTab', adminTab.value);
+                  } else {
+                    adminTab.value = 'details';
+                    sessionStorage.setItem('adminTab', adminTab.value);
+                    fetchOrderDetails();
+                  }
                 } else {
                   showAlert('帳號或密碼錯誤', 'error');
                 }
@@ -3159,8 +3464,25 @@
           labelEnd,
           customAlert,
           showAccountModal,
+          showSettingsMenu,
           editingAccount,
           accountForm,
+          frequentContacts,
+          showContactModal,
+          editingContact,
+          contactForm,
+          selectedContactId,
+          showContactPicker,
+          contactPickerKeyword,
+          filteredContactPicker,
+          fetchFrequentContacts,
+          openAddContactModal,
+          editContact,
+          closeContactModal,
+          saveContact,
+          deleteContact,
+          fillContactInfo,
+          pickContact,
           showItemModal,
           editingItem,
           itemForm,
@@ -3260,6 +3582,14 @@
           getSingleLabelInfo,
           printSingleLabel,
           printSingleStock,
+          detailsApprovedTotal,
+          detailsPendingTotal,
+          detailsDashboardTotal,
+          detailsOrderCount,
+          detailsApprovedCount,
+          detailsPendingCount,
+          getTaiwanDateStr,
+          setYesterdayFilter,
           window
         };
       }
