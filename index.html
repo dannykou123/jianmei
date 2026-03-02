@@ -129,29 +129,26 @@
       <div class="bg-white/90 backdrop-blur-md px-4 py-3 shadow-sm sticky top-0 z-50 border-b border-stone-200 no-print">
         <div class="max-w-7xl mx-auto">
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-               <button @click="showAdminMenu = !showAdminMenu" class="md:hidden w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center text-stone-600 hover:bg-stone-200 active:scale-95 transition">
-                 <i class="fas fa-bars"></i>
-               </button>
-               <h1 class="font-black text-base md:text-lg text-stone-900 flex items-center gap-2 whitespace-nowrap">
+            <div class="flex items-center gap-2">
+               <h1 class="font-black text-base text-stone-900 flex items-center gap-2 whitespace-nowrap">
                  <span class="w-8 h-8 bg-gradient-to-br from-brand-600 to-brand-500 text-white rounded-xl flex items-center justify-center text-base shadow-lg shadow-brand-500/30"><i class="fas fa-chart-pie"></i></span>
-                 <span class="hidden sm:inline">管理後台</span>
+                 <span>管理後台</span>
                </h1>
             </div>
             
-            <!-- 桌面版導航 -->
-            <div class="hidden md:flex items-center gap-1">
-               <button @click="adminTab='review'; fetchReviewList()" :class="['px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 whitespace-nowrap border', adminTab=='review'?'bg-red-500 text-white border-red-500 shadow-md shadow-red-500/30':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
-                 <i class="fas fa-clock"></i>待審核 <span v-if="adminData.reviewList.length > 0" class="bg-white text-red-500 text-[10px] px-1.5 rounded-md font-black shadow-sm">{{ adminData.reviewList.length }}</span>
+            <!-- 導航按鈕（手機與桌面共用） -->
+            <div class="flex items-center gap-1">
+               <button @click="adminTab='review'; fetchReviewList()" :class="['px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 whitespace-nowrap border', adminTab=='review'?'bg-red-500 text-white border-red-500 shadow-md shadow-red-500/30':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
+                 <i class="hidden sm:inline fas fa-clock"></i><span>待審核</span><span v-if="adminData.reviewList.length > 0" class="bg-white text-red-500 text-[10px] px-1.5 rounded-md font-black shadow-sm">{{ adminData.reviewList.length }}</span>
                </button>
-               <button @click="adminTab='details'; fetchOrderDetails()" :class="['px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border', adminTab=='details'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
-                 <i class="fas fa-file-alt mr-1"></i>訂單管理
+               <button @click="adminTab='details'; fetchOrderDetails()" :class="['px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap border', adminTab=='details'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
+                 <i class="hidden sm:inline fas fa-file-alt mr-1"></i>訂單管理
                </button>
-               <div class="w-px h-6 bg-stone-300 mx-1"></div>
+               <div class="w-px h-5 bg-stone-300 mx-0.5"></div>
                <!-- 設定齒輪下拉選單 -->
                <div class="relative">
                  <div v-if="showSettingsMenu" class="fixed inset-0 z-40" @click="showSettingsMenu = false"></div>
-                 <button @click="showSettingsMenu = !showSettingsMenu" :class="['px-3 py-2 rounded-xl text-xs font-bold transition-all border', (adminTab=='accounts'||adminTab=='items'||adminTab=='contacts') ? 'bg-stone-800 text-white border-stone-800 shadow-md' : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
+                 <button @click="showSettingsMenu = !showSettingsMenu" :class="['px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all border', (adminTab=='accounts'||adminTab=='items'||adminTab=='contacts') ? 'bg-stone-800 text-white border-stone-800 shadow-md' : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
                    <i class="fas fa-cog"></i>
                  </button>
                  <div v-if="showSettingsMenu" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-stone-100 py-2 z-50 animate-slide-down">
@@ -166,18 +163,7 @@
                    </button>
                  </div>
                </div>
-               <button @click="logout" class="bg-stone-100 text-stone-500 px-3 py-2 rounded-xl text-xs font-bold hover:bg-stone-200">
-                 <i class="fas fa-sign-out-alt"></i>
-               </button>
-            </div>
-            
-            <!-- 手機版右側按鈕 -->
-            <div class="flex md:hidden items-center gap-2">
-               <button v-if="adminData.reviewList.length > 0" @click="adminTab = adminTab === 'review' ? 'details' : 'review'; adminTab === 'review' ? fetchReviewList() : fetchOrderDetails(); showAdminMenu=false" class="relative w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-100 active:scale-95 transition border border-red-200">
-                 <i class="fas fa-bell"></i>
-                 <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black">{{ adminData.reviewList.length }}</span>
-               </button>
-               <button @click="logout" class="w-10 h-10 bg-stone-100 text-stone-500 rounded-xl flex items-center justify-center hover:bg-stone-200 active:scale-95 transition">
+               <button @click="logout" class="bg-stone-100 text-stone-500 px-2.5 py-1.5 rounded-xl text-xs font-bold hover:bg-stone-200 border border-stone-200">
                  <i class="fas fa-sign-out-alt"></i>
                </button>
             </div>
@@ -556,29 +542,29 @@
                 <span class="text-xs md:text-base font-bold text-stone-400 mt-1 md:mt-2">{{ detailsPendingCount }}筆</span>
               </div>
             </div>
-            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-4 py-3 flex flex-wrap items-center gap-2 sm:gap-3">
-              <!-- 日期輸入：手機版同一列，桌面版維持原有 flex-wrap 行為 -->
-              <div class="flex items-center gap-3 w-full sm:w-auto sm:contents">
-                <div class="flex items-center gap-2">
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-3 sm:px-4 py-3 flex flex-wrap items-center gap-2">
+              <!-- 日期輸入：手機版同一列，sm+ 解構成直接子元素 -->
+              <div class="flex items-center gap-2 w-full sm:w-auto sm:contents">
+                <div class="flex items-center gap-1.5 flex-1 sm:flex-none">
                   <label class="text-xs font-bold text-stone-400 whitespace-nowrap">開始</label>
-                  <input type="date" v-model="detailsStart" class="px-2 py-1.5 border border-stone-200 rounded-lg text-sm text-stone-700 outline-none bg-white">
+                  <input type="date" v-model="detailsStart" class="flex-1 sm:flex-none min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 flex-1 sm:flex-none">
                   <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
-                  <input type="date" v-model="detailsEnd" class="px-2 py-1.5 border border-stone-200 rounded-lg text-sm text-stone-700 outline-none bg-white">
+                  <input type="date" v-model="detailsEnd" class="flex-1 sm:flex-none min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
                 </div>
               </div>
-              <!-- 快速篩選按鈕：手機版滿版對齊，桌面版維持原有行為 -->
-              <div class="flex items-center gap-2 w-full sm:w-auto">
-                <button @click="setYesterdayFilter" :class="['flex-1 sm:flex-none px-3 py-1 rounded-lg text-sm font-bold transition', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日訂單</button>
-                <button @click="setTodayFilter" :class="['flex-1 sm:flex-none px-3 py-1 rounded-lg text-sm font-bold transition', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
-                <button @click="setTomorrowFilter" :class="['flex-1 sm:flex-none px-3 py-1 rounded-lg text-sm font-bold transition', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
+              <!-- 快速篩選按鈕：手機滿版，sm+ 自然寬度 -->
+              <div class="flex items-center gap-1.5 w-full sm:w-auto">
+                <button @click="setYesterdayFilter" :class="['flex-1 sm:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日訂單</button>
+                <button @click="setTodayFilter" :class="['flex-1 sm:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
+                <button @click="setTomorrowFilter" :class="['flex-1 sm:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
               </div>
-              <!-- 匯出/清除按鈕：手機版滿版對齊，桌面版靠右 -->
-              <div v-if="detailsStart && detailsEnd" class="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
-                <button @click="printAllFilteredStock" :disabled="loading" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-boxes"></i>總備貨單</button>
-                <button @click="printAllFilteredLabels" :disabled="loading" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-shipping-fast"></i>總出貨單</button>
-                <button @click="clearDetailsFilter" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition"><i class="fas fa-undo"></i>清除篩選</button>
+              <!-- 匯出/清除按鈕：手機滿版，sm+ 靠右（空間不足自動換行至第二列，仍靠右） -->
+              <div v-if="detailsStart && detailsEnd" class="flex items-center gap-1.5 w-full sm:w-auto sm:ml-auto">
+                <button @click="printAllFilteredStock" :disabled="loading" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-boxes"></i>總備貨單</button>
+                <button @click="printAllFilteredLabels" :disabled="loading" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-shipping-fast"></i>總出貨單</button>
+                <button @click="clearDetailsFilter" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition whitespace-nowrap"><i class="fas fa-undo"></i>清除篩選</button>
               </div>
             </div>
             <!-- 篩選列 + 搜尋 -->
