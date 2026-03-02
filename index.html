@@ -397,7 +397,7 @@
                       </div>
                       <div class="flex items-start gap-2">
                         <i class="fas fa-truck w-4 text-stone-400 mt-0.5"></i>
-                        <span class="break-all">配送：{{ g.deliveryTime ? new Date(g.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
+                        <span class="break-all">配送：{{ g.deliveryTime ? new Date(g.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-' }}</span>
                       </div>
                       <div class="flex items-start gap-2">
                         <i class="fas fa-calendar-plus w-4 text-stone-400 mt-0.5"></i>
@@ -527,7 +527,7 @@
             <!-- Dashboard 總金額區塊 -->
             <div class="grid grid-cols-3 gap-2 md:gap-4 mb-2">
               <div class="bg-white rounded-2xl shadow-sm border border-stone-100 p-3 md:p-5 flex flex-col items-center">
-                <span class="text-[10px] md:text-xs font-bold text-stone-400 mb-1 text-center leading-tight">全部金額<span class="hidden sm:inline"> (不含已拒絕)</span></span>
+                <span class="text-[10px] md:text-xs font-bold text-stone-400 mb-1 text-center leading-tight">全部金額<span class="hidden sm:inline"> (不含已拒絕/已過期)</span></span>
                 <span class="text-base md:text-2xl font-black text-red-700">${{ detailsDashboardTotal.toLocaleString() }}</span>
                 <span class="text-xs md:text-base font-bold text-stone-400 mt-1 md:mt-2">{{ detailsOrderCount }}筆</span>
               </div>
@@ -542,123 +542,65 @@
                 <span class="text-xs md:text-base font-bold text-stone-400 mt-1 md:mt-2">{{ detailsPendingCount }}筆</span>
               </div>
             </div>
-            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-3 sm:px-4 py-3">
-
-              <!-- ========== 手機版(<md) ========== -->
-              <div class="flex flex-col gap-2 md:hidden">
-                <!-- 日期 -->
-                <div class="flex items-center gap-2">
-                  <div class="flex items-center gap-1.5 flex-1">
-                    <label class="text-xs font-bold text-stone-400 whitespace-nowrap">開始</label>
-                    <input type="date" v-model="detailsStart" class="flex-1 min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
-                  </div>
-                  <div class="flex items-center gap-1.5 flex-1">
-                    <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
-                    <input type="date" v-model="detailsEnd" class="flex-1 min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
-                  </div>
-                </div>
-                <!-- 快速篩選 -->
-                <div class="flex items-center gap-1.5">
-                  <button @click="setYesterdayFilter" :class="['flex-1 px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日訂單</button>
-                  <button @click="setTodayFilter" :class="['flex-1 px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
-                  <button @click="setTomorrowFilter" :class="['flex-1 px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
-                </div>
-                <!-- 匯出/清除 -->
-                <div v-if="detailsStart && detailsEnd" class="flex items-center gap-1.5">
-                  <button @click="printAllFilteredStock" :disabled="loading" class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-boxes"></i>總備貨單</button>
-                  <button @click="printAllFilteredLabels" :disabled="loading" class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-shipping-fast"></i>總出貨單</button>
-                  <button @click="clearDetailsFilter" class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition whitespace-nowrap"><i class="fas fa-undo"></i>清除篩選</button>
-                </div>
-              </div>
-
-              <!-- ========== 平板版(md, <lg) ========== -->
-              <div class="hidden md:flex lg:hidden flex-col gap-2">
-                <!-- 第一列：日期左 + 總備貨/出貨/清除篩選靠右 -->
-                <div class="flex items-center gap-2">
-                  <div class="flex items-center gap-1.5 flex-shrink-0">
-                    <label class="text-xs font-bold text-stone-400 whitespace-nowrap">開始</label>
-                    <input type="date" v-model="detailsStart" class="min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
-                  </div>
-                  <div class="flex items-center gap-1.5 flex-shrink-0">
-                    <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
-                    <input type="date" v-model="detailsEnd" class="min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
-                  </div>
-                  <div class="flex items-center gap-1.5 ml-auto flex-shrink-0">
-                    <button @click="printAllFilteredStock" :disabled="loading" class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-boxes"></i>總備貨單</button>
-                    <button @click="printAllFilteredLabels" :disabled="loading" class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-shipping-fast"></i>總出貨單</button>
-                    <button @click="clearDetailsFilter" class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition whitespace-nowrap"><i class="fas fa-undo"></i>清除篩選</button>
-                  </div>
-                </div>
-                <!-- 第二列：昨日/今日/明日訂單 -->
-                <div class="flex items-center gap-1.5">
-                  <button @click="setYesterdayFilter" :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日訂單</button>
-                  <button @click="setTodayFilter" :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
-                  <button @click="setTomorrowFilter" :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
-                </div>
-              </div>
-
-              <!-- ========== 桌面版(lg+) ========== -->
-              <div class="hidden lg:flex items-center gap-2">
-                <div class="flex items-center gap-1.5">
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-3 sm:px-4 py-3 flex flex-wrap items-center gap-2">
+              <!-- 日期輸入：手機版同一列，sm+ 解構成直接子元素 -->
+              <div class="flex items-center gap-2 w-full sm:w-auto sm:contents">
+                <div class="flex items-center gap-1.5 flex-1 sm:flex-none">
                   <label class="text-xs font-bold text-stone-400 whitespace-nowrap">開始</label>
-                  <input type="date" v-model="detailsStart" class="min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
+                  <input type="date" v-model="detailsStart" class="flex-1 sm:flex-none min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
                 </div>
-                <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-1.5 flex-1 sm:flex-none">
                   <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
-                  <input type="date" v-model="detailsEnd" class="min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
-                </div>
-                <button @click="setYesterdayFilter" :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日訂單</button>
-                <button @click="setTodayFilter" :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
-                <button @click="setTomorrowFilter" :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
-                <div v-if="detailsStart && detailsEnd" class="flex items-center gap-1.5 ml-auto">
-                  <button @click="printAllFilteredStock" :disabled="loading" class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-boxes"></i>總備貨單</button>
-                  <button @click="printAllFilteredLabels" :disabled="loading" class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-shipping-fast"></i>總出貨單</button>
-                  <button @click="clearDetailsFilter" class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition whitespace-nowrap"><i class="fas fa-undo"></i>清除篩選</button>
+                  <input type="date" v-model="detailsEnd" class="flex-1 sm:flex-none min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
                 </div>
               </div>
-
+              <!-- 快速篩選按鈕：手機滿版，sm+ 自然寬度 -->
+              <div class="flex items-center gap-1.5 w-full sm:w-auto">
+                <button @click="setYesterdayFilter" :class="['flex-1 sm:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日訂單</button>
+                <button @click="setTodayFilter" :class="['flex-1 sm:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
+                <button @click="setTomorrowFilter" :class="['flex-1 sm:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
+              </div>
+              <!-- 匯出/清除按鈕：手機滿版，sm+ 靠右（空間不足自動換行至第二列，仍靠右） -->
+              <div v-if="detailsStart && detailsEnd" class="flex items-center gap-1.5 w-full sm:w-auto sm:ml-auto">
+                <button @click="printAllFilteredStock" :disabled="loading" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-boxes"></i>總備貨單</button>
+                <button @click="printAllFilteredLabels" :disabled="loading" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-shipping-fast"></i>總出貨單</button>
+                <button @click="clearDetailsFilter" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition whitespace-nowrap"><i class="fas fa-undo"></i>清除篩選</button>
+              </div>
             </div>
-            <!-- 篩選列 + 搜尋 -->
-            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-4 py-3 flex flex-col gap-3">
-              <!-- 狀態篩選 + 每頁筆數 -->
-              <div class="flex items-center gap-2 flex-wrap">
+            <!-- 篩選 + 表格：一體卡片 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-100">
+              <!-- Row 1: 狀態按鈕 + 搜尋欄 + 每頁筆數 -->
+              <div class="flex items-center gap-2 px-4 pt-3 pb-2">
                 <div class="flex rounded-lg border border-stone-200 overflow-hidden flex-shrink-0">
-                  <button @click="detailsStatus = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', detailsStatus === 'all' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50', 'w-auto']">全部</button>
-                  <button @click="detailsStatus = 'approved'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'approved' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50', 'w-auto']">已接單</button>
-                  <button @click="detailsStatus = 'pending'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'pending' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50', 'w-auto']">待審核</button>
-                  <button @click="detailsStatus = 'rejected'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'rejected' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50', 'w-auto']">已拒絕</button>
-                  <button @click="detailsStatus = 'expired'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'expired' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50', 'w-auto']">已過期</button>
+                  <button @click="detailsStatus = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', detailsStatus === 'all' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">全部</button>
+                  <button @click="detailsStatus = 'approved'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'approved' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已接單</button>
+                  <button @click="detailsStatus = 'pending'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'pending' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">待審核</button>
+                  <button @click="detailsStatus = 'rejected'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'rejected' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已拒絕</button>
+                  <button @click="detailsStatus = 'expired'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'expired' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已過期</button>
                 </div>
-                <div class="flex items-center gap-2 ml-auto">
-                  <div class="relative w-64">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-xs"></i>
-                    <input type="text" v-model="detailsKeyword" placeholder="公司名稱、聯絡人、電話..." class="w-full pl-8 pr-3 py-1.5 border border-stone-200 rounded-lg text-sm outline-none text-stone-700">
-                  </div>
-                  <select v-model.number="detailsPageSize" class="px-2 py-1.5 border border-stone-200 rounded-lg text-xs font-bold text-stone-700 bg-white outline-none">
-                    <option :value="10">10筆</option>
-                    <option :value="20">20筆</option>
-                    <option :value="50">50筆</option>
-                    <option :value="100">100筆</option>
-                  </select>
-
+                <div class="relative flex-1 min-w-0">
+                  <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-xs"></i>
+                  <input type="text" v-model="detailsKeyword" placeholder="公司名稱、聯絡人、電話..." class="w-full pl-8 pr-3 py-1.5 border border-stone-200 rounded-lg text-sm outline-none text-stone-700">
                 </div>
-              <!-- 分頁控制 -->
-            </div>
-            <!-- 表格 -->
-            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-x-auto">
-              <!-- 分頁控制列移到 table 最上方 -->
-              <div class="flex items-center justify-between px-4 pt-4">
-                <div class="flex items-center gap-3">
-                  <span class="text-xs text-stone-400 font-bold">第 {{ detailsPage }} / {{ totalDetailsPages }} 頁</span>
-                  <span class="text-xs font-bold text-stone-400">共 {{ sortedDetailsList.length }} 筆</span>
-                </div>
+                <select v-model.number="detailsPageSize" class="px-2 py-1.5 border border-stone-200 rounded-lg text-xs font-bold text-stone-700 bg-white outline-none flex-shrink-0">
+                  <option :value="10">10筆</option>
+                  <option :value="20">20筆</option>
+                  <option :value="50">50筆</option>
+                  <option :value="100">100筆</option>
+                </select>
+              </div>
+              <!-- Row 2: 頁碼資訊 + 分頁按鈕 -->
+              <div class="flex items-center justify-between px-4 pb-3">
+                <span class="text-xs text-stone-400 font-bold">第 {{ detailsPage }} / {{ totalDetailsPages }} 頁　共 {{ sortedDetailsList.length }} 筆</span>
                 <div class="flex items-center gap-1">
-                  <button @click="detailsPage = 1" :disabled="detailsPage === 1" class="w-8 h-8 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold flex items-center justify-center">«</button>
-                  <button @click="detailsPage--" :disabled="detailsPage === 1" class="w-8 h-8 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold flex items-center justify-center">‹</button>
-                  <button @click="detailsPage++" :disabled="detailsPage === totalDetailsPages" class="w-8 h-8 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold flex items-center justify-center">›</button>
-                  <button @click="detailsPage = totalDetailsPages" :disabled="detailsPage === totalDetailsPages" class="w-8 h-8 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold flex items-center justify-center">»</button>
+                  <button @click="detailsPage = 1" :disabled="detailsPage === 1" class="w-7 h-7 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center">«</button>
+                  <button @click="detailsPage--" :disabled="detailsPage === 1" class="w-7 h-7 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center">‹</button>
+                  <button @click="detailsPage++" :disabled="detailsPage === totalDetailsPages" class="w-7 h-7 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center">›</button>
+                  <button @click="detailsPage = totalDetailsPages" :disabled="detailsPage === totalDetailsPages" class="w-7 h-7 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center">»</button>
                 </div>
               </div>
+              <!-- 表格 -->
+              <div class="overflow-x-auto border-t border-stone-100">
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b border-stone-100 text-xs font-black text-stone-400 uppercase tracking-wider">
@@ -668,15 +610,15 @@
                       配送時間
                       <i :class="['fas ml-1', detailsSort.startsWith('deliveryTime') ? (detailsSort.endsWith('asc') ? 'fa-sort-up text-stone-700' : 'fa-sort-down text-stone-700') : 'fa-sort text-stone-300']"></i>
                     </th>
-                    <th class="md:hidden lg:table-cell px-4 py-3 text-left cursor-pointer select-none hover:text-stone-600 transition" @click="sortByField('companyName')">
+                    <th class="px-4 py-3 text-left cursor-pointer select-none hover:text-stone-600 transition" @click="sortByField('companyName')">
                       公司名稱
                       <i :class="['fas ml-1', detailsSort.startsWith('companyName') ? (detailsSort.endsWith('asc') ? 'fa-sort-up text-stone-700' : 'fa-sort-down text-stone-700') : 'fa-sort text-stone-300']"></i>
                     </th>
-                    <th class="hidden md:table-cell px-4 py-3 text-left">聯絡人</th>
-                    <th class="hidden md:table-cell px-4 py-3 text-left">連絡電話</th>
-                    <th class="hidden lg:table-cell px-4 py-3 text-left">來源</th>
-                    <th class="hidden lg:table-cell px-4 py-3 text-right">總金額</th>
-                    <th class="hidden md:table-cell px-4 py-3 text-center">操作</th>
+                    <th class="hidden sm:table-cell px-4 py-3 text-left">聯絡人</th>
+                    <th class="hidden sm:table-cell px-4 py-3 text-left">連絡電話</th>
+                    <th class="hidden sm:table-cell px-4 py-3 text-left">來源</th>
+                    <th class="hidden sm:table-cell px-4 py-3 text-right">總金額</th>
+                    <th class="hidden sm:table-cell px-4 py-3 text-center">操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -686,23 +628,22 @@
                       <input type="checkbox" :checked="selectedOrderIds.includes(order.id)" @change="toggleOrderSelection(order.id)" class="w-4 h-4 accent-stone-800">
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap">
-                      <button @click="statusEditOrder = order" :class="['inline-block px-2 py-1 rounded-full text-xs font-bold cursor-pointer hover:opacity-80 transition', order.status === 'approved' ? 'bg-green-100 text-green-700' : order.status === 'rejected' ? 'bg-red-100 text-red-800' : order.status === 'expired' ? 'bg-stone-200 text-stone-500' : 'bg-amber-100 text-amber-700']">
+                      <button @click="statusEditOrder = order" :class="['inline-block px-2 py-1 rounded-full text-xs font-bold cursor-pointer hover:opacity-80 transition', order.status === 'approved' ? 'bg-green-100 text-green-700' : order.status === 'rejected' ? 'bg-red-100 text-red-800' : order.status === 'expired' ? 'bg-gray-100 text-gray-500' : 'bg-amber-100 text-amber-700']">
                         {{ order.status === 'approved' ? '已接單' : order.status === 'rejected' ? '已拒絕' : order.status === 'expired' ? '已過期' : '待審核' }}
                       </button>
                     </td>
                     <td class="px-4 py-3 text-stone-500 whitespace-nowrap">
-                      <span class="hidden lg:inline">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
-                      <span class="hidden md:inline lg:hidden">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
-                      <span class="md:hidden">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
+                      <span class="hidden sm:inline">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
+                      <span class="sm:hidden">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
                     </td>
-                    <td class="md:hidden lg:table-cell px-4 py-3 font-bold text-stone-800 whitespace-nowrap">{{ order.companyName }}</td>
-                    <td class="hidden md:table-cell px-4 py-3 text-stone-600 whitespace-nowrap">{{ order.contactName }}</td>
-                    <td class="hidden md:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.contactPhone || '-' }}</td>
-                    <td class="hidden lg:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.resource || '-' }}</td>
-                    <td class="hidden lg:table-cell px-4 py-3 text-right font-bold text-red-800 whitespace-nowrap">
+                    <td class="px-4 py-3 font-bold text-stone-800 whitespace-nowrap">{{ order.companyName }}</td>
+                    <td class="hidden sm:table-cell px-4 py-3 text-stone-600 whitespace-nowrap">{{ order.contactName }}</td>
+                    <td class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.contactPhone || '-' }}</td>
+                    <td class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.resource || '-' }}</td>
+                    <td class="hidden sm:table-cell px-4 py-3 text-right font-bold text-red-800 whitespace-nowrap">
                       {{ groupTotalAmountMap[order.id] > 0 ? '$' + groupTotalAmountMap[order.id].toLocaleString() : '-' }}
                     </td>
-                    <td class="hidden md:table-cell px-4 py-3 text-center whitespace-nowrap">
+                    <td class="hidden sm:table-cell px-4 py-3 text-center whitespace-nowrap">
                       <div class="flex gap-2 justify-center">
                         <button @click="printSingleStock(order)" :disabled="printingSingleId === order.id" class="px-3 py-1 bg-stone-100 text-stone-500 rounded-lg hover:bg-stone-200 transition text-xs font-bold" title="列印備料單">備貨單</button>
                         <button @click="printSingleLabel(order)" :disabled="printingSingleId === order.id" class="px-3 py-1 bg-stone-100 text-stone-500 rounded-lg hover:bg-stone-200 transition text-xs font-bold" title="列印出貨單">出貨單</button>
@@ -711,7 +652,7 @@
                     </td>
                   </tr>
                   <!-- 手機版操作列：橫跨全部欄位，桌面版隱藏 -->
-                  <tr class="md:hidden border-b border-stone-100">
+                  <tr class="sm:hidden border-b border-stone-100">
                     <td colspan="4" class="px-3 pb-2.5 pt-0">
                       <div class="flex gap-2">
                         <button @click="printSingleStock(order)" :disabled="printingSingleId === order.id" class="flex-1 py-1.5 bg-stone-100 text-stone-500 rounded-lg hover:bg-stone-200 transition text-xs font-bold text-center disabled:opacity-40">
@@ -729,6 +670,7 @@
                   </template>
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
 
@@ -747,8 +689,8 @@
                 <button @click="changeOrderStatus('rejected')" :class="['w-full py-2.5 rounded-xl text-sm font-bold transition', statusEditOrder.status === 'rejected' ? 'bg-red-600 text-white cursor-default' : 'bg-red-50 text-red-700 hover:bg-red-100']">
                   <i class="fas fa-times-circle mr-2"></i>已拒絕
                 </button>
-                <button @click="changeOrderStatus('expired')" :class="['w-full py-2.5 rounded-xl text-sm font-bold transition', statusEditOrder.status === 'expired' ? 'bg-stone-500 text-white cursor-default' : 'bg-stone-100 text-stone-500 hover:bg-stone-200']">
-                  <i class="fas fa-calendar-times mr-2"></i>已過期
+                <button @click="changeOrderStatus('expired')" :class="['w-full py-2.5 rounded-xl text-sm font-bold transition', statusEditOrder.status === 'expired' ? 'bg-gray-600 text-white cursor-default' : 'bg-gray-50 text-gray-500 hover:bg-gray-100']">
+                  <i class="fas fa-history mr-2"></i>已過期
                 </button>
               </div>
               <button @click="statusEditOrder = null" class="mt-4 w-full py-2 rounded-xl text-sm font-bold bg-stone-100 text-stone-500 hover:bg-stone-200 transition">取消</button>
@@ -766,7 +708,7 @@
                   <div class="mt-2 flex items-center">
                     <button @click="statusEditOrder = detailModalOrder" v-if="detailModalOrder.status === 'approved'" class="px-4 py-1 rounded-lg font-bold bg-green-100 text-green-700 text-sm focus:outline-none" style="display:inline-block;">已接單</button>
                     <button @click="statusEditOrder = detailModalOrder" v-else-if="detailModalOrder.status === 'rejected'" class="px-4 py-1 rounded-lg font-bold bg-red-100 text-red-800 text-sm focus:outline-none" style="display:inline-block;">已拒絕</button>
-                    <button @click="statusEditOrder = detailModalOrder" v-else-if="detailModalOrder.status === 'expired'" class="px-4 py-1 rounded-lg font-bold bg-stone-200 text-stone-500 text-sm focus:outline-none" style="display:inline-block;">已過期</button>
+                    <button @click="statusEditOrder = detailModalOrder" v-else-if="detailModalOrder.status === 'expired'" class="px-4 py-1 rounded-lg font-bold bg-gray-100 text-gray-500 text-sm focus:outline-none" style="display:inline-block;">已過期</button>
                     <button @click="statusEditOrder = detailModalOrder" v-else class="px-4 py-1 rounded-lg font-bold bg-amber-100 text-amber-700 text-sm focus:outline-none" style="display:inline-block;">待審核</button>
                   </div>
                 </div>
@@ -811,7 +753,7 @@
                         </div>
                         <div>
                           <p class="text-xs text-stone-400 font-medium mb-0.5">配送時間</p>
-                          <p class="text-sm font-semibold text-stone-800">{{ detailModalOrder.deliveryTime ? new Date(detailModalOrder.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</p>
+                          <p class="text-sm font-semibold text-stone-800">{{ detailModalOrder.deliveryTime ? new Date(detailModalOrder.deliveryTime.seconds * 1000).toLocaleString('zh-TW') : '-' }}</p>
                         </div>
                       </div>
                       <div v-if="detailModalOrder.address" class="py-3">
@@ -1236,7 +1178,7 @@
                 <div class="flex-1 min-w-0">
                   <p class="font-black text-stone-800 truncate">{{ group.companyName }}</p>
                   <div class="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
-                    <span class="text-xs text-stone-500"><i class="fas fa-truck mr-1"></i>{{ group.deliveryTime ? new Date(group.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
+                    <span class="text-xs text-stone-500"><i class="fas fa-truck mr-1"></i>{{ group.deliveryTime ? new Date(group.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-' }}</span>
                     <span class="text-xs text-stone-500"><i class="fas fa-user mr-1"></i>{{ group.contactName }}<span v-if="group.contactPhone"> {{ group.contactPhone }}</span></span>
                   </div>
                 </div>
@@ -1529,6 +1471,36 @@
       </div>
     </div>
 
+    <!-- 新訂單彈跳通知 -->
+    <div v-if="newOrderNotif.show" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-6 animate-fade-in">
+      <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative overflow-hidden animate-zoom-in">
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 to-orange-500"></div>
+        <div class="flex flex-col items-center text-center">
+          <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4 relative">
+            <i class="fas fa-bell text-2xl text-red-500"></i>
+            <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-black">{{ newOrderNotif.orders.length }}</span>
+          </div>
+          <h3 class="text-xl font-black text-stone-800 mb-1">有新的待審核團購單！</h3>
+          <p class="text-sm text-stone-500 mb-4">以下訂單等待您的審核</p>
+          <div class="w-full space-y-2 mb-6 max-h-48 overflow-y-auto hide-scroll">
+            <div v-for="order in newOrderNotif.orders" :key="order.id" class="bg-amber-50 rounded-xl p-3 text-left border border-amber-100">
+              <p class="font-black text-stone-800">{{ order.companyName }}</p>
+              <p class="text-xs text-stone-500 mt-0.5">
+                <i class="fas fa-user mr-1"></i>{{ order.contactName }}
+                <span v-if="order.deliveryTime" class="ml-2">
+                  <i class="fas fa-truck mr-1"></i>{{ new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) }}
+                </span>
+              </p>
+            </div>
+          </div>
+          <div class="flex gap-3 w-full">
+            <button @click="newOrderNotif.show = false" class="flex-1 bg-stone-100 text-stone-500 py-3 rounded-xl font-bold hover:bg-stone-200 transition">關閉</button>
+            <button @click="newOrderNotif.show = false; adminTab = 'review'; fetchReviewList()" class="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600 transition shadow-lg shadow-red-500/30"><i class="fas fa-clock mr-2"></i>前往審核</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 自訂提示對話框 -->
     <div v-if="customAlert.show" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-fade-in">
       <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative border border-white overflow-hidden animate-zoom-in">
@@ -1548,9 +1520,9 @@
   </div>
 
   <script type="module">
-    import { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+    import { createApp, ref, computed, watch, onMounted, nextTick } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, query, where, setDoc, orderBy, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, query, where, setDoc, orderBy, Timestamp, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyDb3xTmnkscf9tC5znTBzkCfSzD0zLJTYk",
@@ -1566,34 +1538,6 @@
 
     createApp({
       setup() {
-                                // ...existing code...
-                                // 定期自動查詢待審核訂單，並通知有新訂單
-                                const lastReviewCount = ref(0);
-                                let reviewInterval = null;
-                                function showReviewNotification(newCount) {
-                                  // 使用自訂美化彈窗
-                                  customAlert.value = { show: true, message: `有 ${newCount} 筆新的待審核訂單！`, type: 'info' };
-                                }
-                                async function pollReviewList() {
-                                  // 只在管理員介面才輪詢
-                                  if (currentView.value !== 'admin') return;
-                                  const prevCount = lastReviewCount.value;
-                                  await fetchReviewList(true); // silent=true，不觸發 loading，避免閃爍
-                                  const nowCount = adminData.value.reviewList.length;
-                                  if (nowCount > prevCount && prevCount !== 0) {
-                                    showReviewNotification(nowCount - prevCount);
-                                  }
-                                  lastReviewCount.value = nowCount;
-                                }
-                                onMounted(() => {
-                                  // ...existing code...
-                                  // 啟動定時查詢
-                                  reviewInterval = setInterval(pollReviewList, 30000); // 每 30 秒查詢一次
-                                });
-                                // 離開時清除定時器
-                                onUnmounted(() => {
-                                  if (reviewInterval) clearInterval(reviewInterval);
-                                });
                         // 批次匯出備貨單
                         const batchExportStock = async () => {
                           if (!selectedOrderIds.value.length) return;
@@ -1685,6 +1629,10 @@
         const showAdminMenu = ref(false);
         const adminTab = ref('accounts');
         const customAlert = ref({ show: false, message: '', type: 'info' });
+        
+        // 新訂單通知
+        const newOrderNotif = ref({ show: false, orders: [] });
+        const reviewUnsubscribe = ref(null);
         
         // 用戶資料
         const user = ref(null);
@@ -2179,18 +2127,14 @@
           if (detailsStatus.value !== 'all') {
             list = list.filter(o => o.status === detailsStatus.value);
           }
-          // 日期範圍篩選（依配送時間）
+          // 日期範圍篩選（依配送時間，UTC+8）
           if (detailsStart.value && detailsEnd.value) {
-            const startMs = new Date(detailsStart.value + 'T00:00:00').getTime();
-            const endMs   = new Date(detailsEnd.value   + 'T23:59:59').getTime();
+            const startMs = new Date(detailsStart.value + 'T00:00:00+08:00').getTime();
+            const endMs   = new Date(detailsEnd.value   + 'T23:59:59+08:00').getTime();
             list = list.filter(o => {
               const t = o.deliveryTime?.seconds ? o.deliveryTime.seconds * 1000 : null;
               return t !== null && t >= startMs && t <= endMs;
             });
-          }
-          // 全部模式下排除已拒絕與已過期，需要時可切換篩選
-          if (detailsStatus.value === 'all') {
-            list = list.filter(o => o.status !== 'rejected' && o.status !== 'expired');
           }
           const [field, order] = detailsSort.value.split('-');
           return list.sort((a, b) => {
@@ -2217,12 +2161,12 @@
             .reduce((sum, o) => sum + (groupTotalAmountMap.value[o.id] || 0), 0)
         );
         const detailsDashboardTotal = computed(() =>
-          sortedDetailsList.value.filter(o => o.status !== 'rejected')
+          sortedDetailsList.value.filter(o => o.status !== 'rejected' && o.status !== 'expired')
             .reduce((sum, o) => sum + (groupTotalAmountMap.value[o.id] || 0), 0)
         );
         // 訂單數統計
         const detailsOrderCount = computed(() =>
-           sortedDetailsList.value.filter(o => o.status !== 'rejected').length
+           sortedDetailsList.value.filter(o => o.status !== 'rejected' && o.status !== 'expired').length
         );
         const detailsApprovedCount = computed(() =>
            sortedDetailsList.value.filter(o => o.status === 'approved').length
@@ -2241,9 +2185,12 @@
         watch([detailsSort, detailsStatus, detailsKeyword, detailsStart, detailsEnd], () => { detailsPage.value = 1; });
 
         const getTaiwanDateStr = (offsetDays = 0) => {
-          const tzDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
-          if (offsetDays) tzDate.setDate(tzDate.getDate() + offsetDays);
-          return tzDate.toISOString().slice(0, 10);
+          const twDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+          if (offsetDays) twDate.setDate(twDate.getDate() + offsetDays);
+          const y = twDate.getFullYear();
+          const m = String(twDate.getMonth() + 1).padStart(2, '0');
+          const d = String(twDate.getDate()).padStart(2, '0');
+          return `${y}-${m}-${d}`;
         };
 
         const isTodayFilter = computed(() => {
@@ -2495,6 +2442,67 @@
           }
         };
 
+        // 啟動待審核即時監聽（新訂單通知）
+        const startReviewListener = () => {
+          if (reviewUnsubscribe.value) {
+            reviewUnsubscribe.value();
+            reviewUnsubscribe.value = null;
+          }
+          let initialized = false;
+          const q = query(
+            collection(db, "GroupOrders"),
+            where("status", "==", "pending"),
+            orderBy("createdAt", "desc")
+          );
+          reviewUnsubscribe.value = onSnapshot(q, (snapshot) => {
+            // 更新待審核列表
+            adminData.value.reviewList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            if (!initialized) {
+              initialized = true;
+              return;
+            }
+            // 偵測新增訂單
+            const newOrders = [];
+            snapshot.docChanges().forEach(change => {
+              if (change.type === 'added') {
+                newOrders.push({ id: change.doc.id, ...change.doc.data() });
+              }
+            });
+            if (newOrders.length > 0) {
+              newOrderNotif.value = { show: true, orders: newOrders };
+            }
+          }, (error) => {
+            console.error('監聽待審核訂單錯誤:', error);
+          });
+        };
+
+        // 檢查並標記已過期訂單
+        const checkAndExpireOrders = async () => {
+          try {
+            const now = new Date();
+            for (const status of ['pending', 'approved']) {
+              const q = query(collection(db, "GroupOrders"), where("status", "==", status));
+              const snap = await getDocs(q);
+              for (const docSnap of snap.docs) {
+                const data = docSnap.data();
+                if (data.deliveryTime) {
+                  const deliveryDate = data.deliveryTime.seconds
+                    ? new Date(data.deliveryTime.seconds * 1000)
+                    : new Date(data.deliveryTime);
+                  if (deliveryDate < now) {
+                    await updateDoc(doc(db, "GroupOrders", docSnap.id), {
+                      status: 'expired',
+                      expiredAt: new Date().toISOString()
+                    });
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error('檢查過期訂單錯誤:', error);
+          }
+        };
+
         // 登入處理
         const handleLogin = async () => {
           if (!loginForm.value.id || !loginForm.value.pass) {
@@ -2514,7 +2522,9 @@
                 sessionStorage.setItem('currentView', 'admin');
                 showAlert('登入成功！', 'success');
                 await fetchAdminAccounts();
+                await checkAndExpireOrders();
                 await fetchReviewList();
+                startReviewListener();
                 adminTab.value = adminData.value.reviewList.length > 0 ? 'review' : 'details';
                 sessionStorage.setItem('adminTab', adminTab.value);
               } else {
@@ -2532,7 +2542,9 @@
                       sessionStorage.setItem('currentView', 'admin');
                       showAlert('登入成功！', 'success');
                       await fetchAdminAccounts();
+                      await checkAndExpireOrders();
                       await fetchReviewList();
+                      startReviewListener();
                       adminTab.value = adminData.value.reviewList.length > 0 ? 'review' : 'details';
                       sessionStorage.setItem('adminTab', adminTab.value);
                     } else {
@@ -2562,7 +2574,9 @@
                   showAlert('登入成功！', 'success');
                   if (user.value.role === 'admin') {
                     await fetchAdminAccounts();
+                    await checkAndExpireOrders();
                     await fetchReviewList();
+                    startReviewListener();
                     if (adminData.value.reviewList.length > 0) {
                       adminTab.value = 'review';
                     } else {
@@ -2589,6 +2603,10 @@
 
         // 登出
         const logout = () => {
+          if (reviewUnsubscribe.value) {
+            reviewUnsubscribe.value();
+            reviewUnsubscribe.value = null;
+          }
           user.value = null;
           currentView.value = 'login';
           sessionStorage.clear();
@@ -2716,8 +2734,8 @@
         };
 
         // 獲取待審核列表
-        const fetchReviewList = async (silent = false) => {
-          if (!silent) loading.value = true;
+        const fetchReviewList = async () => {
+          loading.value = true;
           try {
             const q = query(
               collection(db, "GroupOrders"),
@@ -2725,42 +2743,20 @@
               orderBy("createdAt", "desc")
             );
             const querySnapshot = await getDocs(q);
-            const now = Date.now();
-            // 檢查並自動將已超過配送時間的待審核單子標記為已過期
-            const expirePromises = [];
-            const newList = [];
-            querySnapshot.docs.forEach(d => {
-              const data = d.data();
-              const deliveryMs = data.deliveryTime?.seconds ? data.deliveryTime.seconds * 1000 : null;
-              if (deliveryMs && deliveryMs < now) {
-                // 配送時間已過，自動設為 expired
-                expirePromises.push(updateDoc(doc(db, "GroupOrders", d.id), {
-                  status: "expired",
-                  expiredAt: new Date().toISOString()
-                }));
-              } else {
-                newList.push({ id: d.id, ...data });
-              }
-            });
-            if (expirePromises.length > 0) {
-              await Promise.all(expirePromises);
-              if (!silent) showAlert(`已將 ${expirePromises.length} 筆逾期訂單自動標記為已過期`, 'info');
-            }
-            // 只在資料有變動時才更新 reviewList，避免 UI 閃爍
-            const oldIds = adminData.value.reviewList.map(o => o.id).join(',');
-            const newIds = newList.map(o => o.id).join(',');
-            if (oldIds !== newIds) {
-              adminData.value.reviewList = newList;
-              // 計算每個訂單的總金額
-              for (const order of adminData.value.reviewList) {
-                await calculateOrderTotal(order.id);
-              }
+            adminData.value.reviewList = querySnapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }));
+            
+            // 自动计算每个订单的总金额
+            for (const order of adminData.value.reviewList) {
+              await calculateOrderTotal(order.id);
             }
           } catch (error) {
             console.error('獲取待審核列表錯誤:', error);
-            if (!silent) showAlert('獲取失敗', 'error');
+            showAlert('獲取失敗', 'error');
           } finally {
-            if (!silent) loading.value = false;
+            loading.value = false;
           }
         };
 
@@ -2866,8 +2862,6 @@
               }
               
               return {
-                          // ...existing code...
-                          lastReviewCount,
                 id: doc.id,
                 ...orderData,
                 totalAmount: orderTotal
@@ -2965,8 +2959,6 @@
             } else if (newStatus === 'rejected') {
               updateData.rejectedAt = new Date().toISOString();
               updateData.rejectedBy = user.value.id;
-            } else if (newStatus === 'expired') {
-              updateData.expiredAt = new Date().toISOString();
             }
             
             await updateDoc(docRef, updateData);
@@ -3643,15 +3635,14 @@
               if (adminTab.value === 'accounts' && user.value?.role !== 'admin') {
                 adminTab.value = 'details';
               }
-              // 總是先抓待審核數量，確保 badge 正確
-              fetchReviewList();
+              
               // 根據當前分頁載入對應資料
               if (adminTab.value === 'accounts') {
                 fetchAdminAccounts();
               } else if (adminTab.value === 'items') {
                 fetchAdminItems();
               } else if (adminTab.value === 'review') {
-                //fetchReviewList(); // 已提前抓
+                // fetchReviewList handled by startReviewListener
               } else if (adminTab.value === 'details') {
                 fetchOrderDetails(); // 自動查詢當天的 approved 訂單
               } else if (adminTab.value === 'stock') {
@@ -3659,6 +3650,8 @@
               } else if (adminTab.value === 'labels') {
                 fetchLabelOrders();
               }
+              // 啟動即時監聽 & 檢查過期
+              checkAndExpireOrders().then(() => startReviewListener());
             }
           }
         });
@@ -3671,6 +3664,7 @@
           user,
           loginForm,
           adminData,
+          newOrderNotif,
           detailsStatus,
           detailsSort,
           detailsKeyword,
