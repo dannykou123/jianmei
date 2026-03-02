@@ -224,9 +224,9 @@
         
         <!-- 帳號管理 -->
         <div v-if="adminTab === 'accounts'" class="space-y-4">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-black text-stone-800">帳號管理</h2>
-            <button @click="openAddAccountModal" class="bg-brand-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-brand-700 transition shadow-lg flex items-center gap-2">
+          <div class="flex items-center justify-between mb-4 gap-2">
+            <h2 class="text-xl font-black text-stone-800">帳號管理</h2>
+            <button @click="openAddAccountModal" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-brand-700 transition shadow-lg flex items-center gap-1.5 whitespace-nowrap">
               <i class="fas fa-plus"></i>新增帳號
             </button>
           </div>
@@ -280,10 +280,10 @@
 
         <!-- 常用聯絡人管理 -->
         <div v-if="adminTab === 'contacts'" class="space-y-4">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-black text-stone-800">常用聯絡人管理</h2>
-            <button @click="openAddContactModal" class="bg-brand-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-brand-700 transition shadow-lg flex items-center gap-2">
-              <i class="fas fa-plus"></i>新增聯絡人
+          <div class="flex items-center justify-between mb-4 gap-2">
+            <h2 class="text-xl font-black text-stone-800">常用聯絡人</h2>
+            <button @click="openAddContactModal" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-brand-700 transition shadow-lg flex items-center gap-1.5 whitespace-nowrap">
+              <i class="fas fa-plus"></i>新增
             </button>
           </div>
 
@@ -409,13 +409,13 @@
                         <i class="fas fa-phone w-4 text-stone-400"></i>
                         <span>電話：{{ g.contactPhone }}</span>
                       </div>
-                      <div class="flex items-center gap-2">
-                        <i class="fas fa-truck w-4 text-stone-400"></i>
-                        <span>配送時間：{{ g.deliveryTime ? new Date(g.deliveryTime.seconds * 1000).toLocaleString('zh-TW') : '-' }}</span>
+                      <div class="flex items-start gap-2">
+                        <i class="fas fa-truck w-4 text-stone-400 mt-0.5"></i>
+                        <span class="break-all">配送：{{ g.deliveryTime ? new Date(g.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-' }}</span>
                       </div>
-                      <div class="flex items-center gap-2">
-                        <i class="fas fa-calendar-plus w-4 text-stone-400"></i>
-                        <span>建立時間：{{ g.createdAt ? new Date(g.createdAt.seconds * 1000).toLocaleString('zh-TW') : '-' }}</span>
+                      <div class="flex items-start gap-2">
+                        <i class="fas fa-calendar-plus w-4 text-stone-400 mt-0.5"></i>
+                        <span class="break-all">建立：{{ g.createdAt ? new Date(g.createdAt.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-' }}</span>
                       </div>
                     </div>
                     <p v-if="g.address" class="text-sm text-stone-500 mt-3"><i class="fas fa-map-marker-alt mr-2"></i>{{ g.address }}</p>
@@ -516,9 +516,9 @@
 
         <!-- 訂單詳情 -->
         <div v-if="adminTab === 'details'" class="space-y-4">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-2xl font-black text-stone-800">訂單管理</h2>
-            <button @click="openCreateOrderModal" class="inline-flex items-center gap-2 px-4 py-2 bg-stone-800 text-white rounded-xl text-sm font-bold hover:bg-black transition">
+          <div class="flex items-center justify-between mb-4 gap-2">
+            <h2 class="text-xl font-black text-stone-800 whitespace-nowrap">訂單管理</h2>
+            <button @click="openCreateOrderModal" class="inline-flex items-center gap-1.5 px-3 py-2 bg-stone-800 text-white rounded-xl text-sm font-bold hover:bg-black transition whitespace-nowrap flex-shrink-0">
               <i class="fas fa-plus"></i>新增訂單
             </button>
           </div>
@@ -530,12 +530,12 @@
           </div>
           <div v-else>
             <!-- 批次匯出按鈕 -->
-            <div class="mb-3 flex gap-2 items-center">
-              <button @click="batchExportStock" :disabled="selectedOrderIds.length === 0" class="px-4 py-2 bg-stone-800 text-white rounded-lg text-sm font-bold hover:bg-black transition disabled:opacity-40">
-                <i class="fas fa-boxes mr-1"></i>批次匯出備貨單
+            <div class="mb-3 flex flex-wrap gap-2 items-center">
+              <button @click="batchExportStock" :disabled="selectedOrderIds.length === 0" class="flex-1 sm:flex-none px-4 py-2 bg-stone-800 text-white rounded-lg text-sm font-bold hover:bg-black transition disabled:opacity-40 whitespace-nowrap">
+                <i class="fas fa-boxes mr-1"></i><span class="hidden sm:inline">批次匯出</span>備貨單
               </button>
-              <button @click="batchExportLabels" :disabled="selectedOrderIds.length === 0" class="px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-bold hover:bg-green-800 transition disabled:opacity-40">
-                <i class="fas fa-shipping-fast mr-1"></i>批次匯出出貨單 ({{ selectedOrderIds.length }})
+              <button @click="batchExportLabels" :disabled="selectedOrderIds.length === 0" class="flex-1 sm:flex-none px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-bold hover:bg-green-800 transition disabled:opacity-40 whitespace-nowrap">
+                <i class="fas fa-shipping-fast mr-1"></i><span class="hidden sm:inline">批次匯出</span>出貨單 ({{ selectedOrderIds.length }})
               </button>
             </div>
             <!-- Dashboard 總金額區塊 -->
@@ -556,51 +556,63 @@
                 <span class="text-base font-bold text-stone-400 mt-2">訂單數：{{ detailsPendingCount }}</span>
               </div>
             </div>
-            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-4 py-3 flex flex-wrap items-center gap-3">
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-4 py-3 flex flex-col gap-3">
+              <!-- 日期選擇列 -->
               <div class="flex items-center gap-2">
-                <label class="text-xs font-bold text-stone-400 whitespace-nowrap">開始</label>
-                <input type="date" v-model="detailsStart" class="px-2 py-1.5 border border-stone-200 rounded-lg text-sm text-stone-700 outline-none bg-white">
+                <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                  <label class="text-xs font-bold text-stone-400 whitespace-nowrap">開始</label>
+                  <input type="date" v-model="detailsStart" class="flex-1 min-w-0 px-2 py-1.5 border border-stone-200 rounded-lg text-sm text-stone-700 outline-none bg-white">
+                </div>
+                <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                  <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
+                  <input type="date" v-model="detailsEnd" class="flex-1 min-w-0 px-2 py-1.5 border border-stone-200 rounded-lg text-sm text-stone-700 outline-none bg-white">
+                </div>
               </div>
-              <div class="flex items-center gap-2">
-                <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
-                <input type="date" v-model="detailsEnd" class="px-2 py-1.5 border border-stone-200 rounded-lg text-sm text-stone-700 outline-none bg-white">
-              </div>
-              <div class="flex items-center gap-2">
-                <button @click="setYesterdayFilter" :class="['px-3 py-1 rounded-lg text-sm font-bold transition', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日訂單</button>
-                <button @click="setTodayFilter" :class="['px-3 py-1 rounded-lg text-sm font-bold transition', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
-                <button @click="setTomorrowFilter" :class="['px-3 py-1 rounded-lg text-sm font-bold transition', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
-              </div>
-              <div v-if="detailsStart && detailsEnd" class="flex items-center gap-2 ml-auto">
-                <button @click="printAllFilteredStock" :disabled="loading" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-boxes"></i>總備貨單</button>
-                <button @click="printAllFilteredLabels" :disabled="loading" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-shipping-fast"></i>總出貨單</button>
-                <button @click="clearDetailsFilter" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition"><i class="fas fa-undo"></i>清除篩選</button>
+              <!-- 快速篩選 + 列印按鈕 -->
+              <div class="flex flex-wrap items-center gap-2">
+                <button @click="setYesterdayFilter" :class="['px-3 py-1 rounded-lg text-xs font-bold transition', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日</button>
+                <button @click="setTodayFilter" :class="['px-3 py-1 rounded-lg text-xs font-bold transition', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日</button>
+                <button @click="setTomorrowFilter" :class="['px-3 py-1 rounded-lg text-xs font-bold transition', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日</button>
+                <template v-if="detailsStart && detailsEnd">
+                  <div class="w-px h-4 bg-stone-200"></div>
+                  <button @click="printAllFilteredStock" :disabled="loading" class="inline-flex items-center gap-1 px-3 py-1 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-boxes"></i><span>備貨單</span></button>
+                  <button @click="printAllFilteredLabels" :disabled="loading" class="inline-flex items-center gap-1 px-3 py-1 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-shipping-fast"></i><span>出貨單</span></button>
+                  <button @click="clearDetailsFilter" class="inline-flex items-center gap-1 px-3 py-1 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition"><i class="fas fa-undo"></i><span>清除</span></button>
+                </template>
               </div>
             </div>
-            <!-- 篩選列 + 分頁 -->
-            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
-              <div class="flex rounded-lg border border-stone-200 overflow-hidden">
-                <button @click="detailsStatus = 'all'" :class="['px-3 py-1.5 text-sm font-bold transition', detailsStatus === 'all' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">全部</button>
-                <button @click="detailsStatus = 'approved'" :class="['px-3 py-1.5 text-sm font-bold border-l border-stone-200 transition', detailsStatus === 'approved' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已接單</button>
-                <button @click="detailsStatus = 'pending'" :class="['px-3 py-1.5 text-sm font-bold border-l border-stone-200 transition', detailsStatus === 'pending' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">待審核</button>
-                <button @click="detailsStatus = 'rejected'" :class="['px-3 py-1.5 text-sm font-bold border-l border-stone-200 transition', detailsStatus === 'rejected' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已拒絕</button>
+            <!-- 篩選列 + 搜尋 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-4 py-3 flex flex-col gap-3">
+              <!-- 狀態篩選 + 每頁筆數 -->
+              <div class="flex items-center gap-2 flex-wrap">
+                <div class="flex rounded-lg border border-stone-200 overflow-hidden flex-shrink-0">
+                  <button @click="detailsStatus = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', detailsStatus === 'all' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">全部</button>
+                  <button @click="detailsStatus = 'approved'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'approved' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已接單</button>
+                  <button @click="detailsStatus = 'pending'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'pending' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">待審核</button>
+                  <button @click="detailsStatus = 'rejected'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'rejected' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已拒絕</button>
+                </div>
+                <select v-model.number="detailsPageSize" class="px-2 py-1.5 border border-stone-200 rounded-lg text-xs font-bold text-stone-700 bg-white outline-none">
+                  <option :value="10">10筆</option>
+                  <option :value="20">20筆</option>
+                  <option :value="50">50筆</option>
+                  <option :value="100">100筆</option>
+                </select>
+                <p class="text-xs font-bold text-stone-400 whitespace-nowrap ml-auto">共 {{ sortedDetailsList.length }} 筆</p>
               </div>
-              <select v-model.number="detailsPageSize" class="px-3 py-1.5 border border-stone-200 rounded-lg text-sm font-bold text-stone-700 bg-white outline-none">
-                <option :value="10">每頁 10 筆</option>
-                <option :value="20">每頁 20 筆</option>
-                <option :value="50">每頁 50 筆</option>
-                <option :value="100">每頁 100 筆</option>
-              </select>
-              <div class="relative flex-1">
+              <!-- 搜尋欄 -->
+              <div class="relative">
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-xs"></i>
-                <input type="text" v-model="detailsKeyword" placeholder="公司名稱、聯絡人、電話、地址..." class="w-full pl-8 pr-3 py-1.5 border border-stone-200 rounded-lg text-sm outline-none text-stone-700">
+                <input type="text" v-model="detailsKeyword" placeholder="公司名稱、聯絡人、電話..." class="w-full pl-8 pr-3 py-1.5 border border-stone-200 rounded-lg text-sm outline-none text-stone-700">
               </div>
-              <p class="text-xs font-bold text-stone-400 whitespace-nowrap">共 {{ sortedDetailsList.length }} 筆</p>
-              <div class="flex items-center gap-1 border-l border-stone-100 pl-3">
-                <button @click="detailsPage = 1" :disabled="detailsPage === 1" class="px-2 py-1 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold">«</button>
-                <button @click="detailsPage--" :disabled="detailsPage === 1" class="px-2 py-1 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold">‹</button>
-                <span class="text-sm text-stone-500 font-bold px-2 whitespace-nowrap">{{ detailsPage }} / {{ totalDetailsPages }}</span>
-                <button @click="detailsPage++" :disabled="detailsPage === totalDetailsPages" class="px-2 py-1 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold">›</button>
-                <button @click="detailsPage = totalDetailsPages" :disabled="detailsPage === totalDetailsPages" class="px-2 py-1 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold">»</button>
+              <!-- 分頁控制 -->
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-stone-400 font-bold">第 {{ detailsPage }} / {{ totalDetailsPages }} 頁</span>
+                <div class="flex items-center gap-1">
+                  <button @click="detailsPage = 1" :disabled="detailsPage === 1" class="w-8 h-8 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold flex items-center justify-center">«</button>
+                  <button @click="detailsPage--" :disabled="detailsPage === 1" class="w-8 h-8 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold flex items-center justify-center">‹</button>
+                  <button @click="detailsPage++" :disabled="detailsPage === totalDetailsPages" class="w-8 h-8 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold flex items-center justify-center">›</button>
+                  <button @click="detailsPage = totalDetailsPages" :disabled="detailsPage === totalDetailsPages" class="w-8 h-8 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold flex items-center justify-center">»</button>
+                </div>
               </div>
             </div>
             <!-- 表格 -->
@@ -1070,9 +1082,9 @@
 
         <!-- 備貨統計 -->
         <div v-if="adminTab === 'stock'" class="space-y-4">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-black text-stone-800">備貨統計</h2>
-            <button v-if="adminData.stockList.length > 0" @click="printStockLabels" class="no-print bg-stone-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-stone-700 transition shadow-lg flex items-center gap-2">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-black text-stone-800">備貨統計</h2>
+            <button v-if="adminData.stockList.length > 0" @click="printStockLabels" class="no-print bg-stone-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-stone-700 transition shadow-lg flex items-center gap-2 whitespace-nowrap">
               <i class="fas fa-print"></i>列印備貨單
             </button>
           </div>
@@ -1117,21 +1129,20 @@
           </div>
         </div>
 
-        <!-- 出貨單 -->
         <div v-if="adminTab === 'labels'" class="space-y-4">
-          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-            <h2 class="text-2xl font-black text-stone-800">出貨單</h2>
-            <div class="flex flex-wrap items-center gap-3">
-              <div class="flex items-center gap-2">
+          <div class="mb-4">
+            <h2 class="text-xl font-black text-stone-800 mb-3">出貨單</h2>
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center gap-1.5 flex-1 min-w-0">
                 <label class="text-xs font-bold text-stone-400 whitespace-nowrap">起始</label>
-                <input type="date" v-model="labelStart" class="px-3 py-2 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none font-bold text-stone-700">
+                <input type="date" v-model="labelStart" class="flex-1 min-w-0 px-2 py-2 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none font-bold text-stone-700 text-sm">
               </div>
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5 flex-1 min-w-0">
                 <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
-                <input type="date" v-model="labelEnd" class="px-3 py-2 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none font-bold text-stone-700">
+                <input type="date" v-model="labelEnd" class="flex-1 min-w-0 px-2 py-2 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none font-bold text-stone-700 text-sm">
               </div>
-              <button v-if="labelSelectedIds.length > 0" @click="printLabels" class="bg-green-600 text-white px-5 py-2 rounded-xl font-bold hover:bg-green-700 transition flex items-center gap-2 whitespace-nowrap shadow-lg">
-                <i class="fas fa-print"></i>列印 ({{ labelSelectedIds.length }} 張)
+              <button v-if="labelSelectedIds.length > 0" @click="printLabels" class="bg-green-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-green-700 transition flex items-center gap-2 whitespace-nowrap shadow-lg text-sm">
+                <i class="fas fa-print"></i>列印 ({{ labelSelectedIds.length }})
               </button>
             </div>
           </div>
@@ -1159,10 +1170,10 @@
                 <input type="checkbox" :checked="isGroupAllSelected(group)" @change="toggleGroupLabels(group)" class="w-5 h-5 rounded accent-stone-800 cursor-pointer flex-shrink-0">
                 <div class="flex-1 min-w-0">
                   <p class="font-black text-stone-800 truncate">{{ group.companyName }}</p>
-                  <p class="text-xs text-stone-500 mt-0.5">
-                    <i class="fas fa-truck mr-1"></i>{{ group.deliveryTime ? new Date(group.deliveryTime.seconds * 1000).toLocaleString('zh-TW') : '-' }}
-                    <span class="ml-3"><i class="fas fa-user mr-1"></i>{{ group.contactName }} {{ group.contactPhone }}</span>
-                  </p>
+                  <div class="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
+                    <span class="text-xs text-stone-500"><i class="fas fa-truck mr-1"></i>{{ group.deliveryTime ? new Date(group.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-' }}</span>
+                    <span class="text-xs text-stone-500"><i class="fas fa-user mr-1"></i>{{ group.contactName }}<span v-if="group.contactPhone"> {{ group.contactPhone }}</span></span>
+                  </div>
                 </div>
                 <span class="text-xs font-bold text-stone-500 flex-shrink-0 bg-stone-200 px-2 py-1 rounded-lg">{{ group.orders.length }} 人</span>
               </div>
