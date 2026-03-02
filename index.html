@@ -556,29 +556,24 @@
                 <span class="text-base font-bold text-stone-400 mt-2">訂單數：{{ detailsPendingCount }}</span>
               </div>
             </div>
-            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-4 py-3 flex flex-col gap-3">
-              <!-- 日期選擇列 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-4 py-3 flex flex-wrap items-center gap-3">
               <div class="flex items-center gap-2">
-                <div class="flex items-center gap-1.5 flex-1 min-w-0">
-                  <label class="text-xs font-bold text-stone-400 whitespace-nowrap">開始</label>
-                  <input type="date" v-model="detailsStart" class="flex-1 min-w-0 px-2 py-1.5 border border-stone-200 rounded-lg text-sm text-stone-700 outline-none bg-white">
-                </div>
-                <div class="flex items-center gap-1.5 flex-1 min-w-0">
-                  <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
-                  <input type="date" v-model="detailsEnd" class="flex-1 min-w-0 px-2 py-1.5 border border-stone-200 rounded-lg text-sm text-stone-700 outline-none bg-white">
-                </div>
+                <label class="text-xs font-bold text-stone-400 whitespace-nowrap">開始</label>
+                <input type="date" v-model="detailsStart" class="px-2 py-1.5 border border-stone-200 rounded-lg text-sm text-stone-700 outline-none bg-white">
               </div>
-              <!-- 快速篩選 + 列印按鈕 -->
-              <div class="flex flex-wrap items-center gap-2">
-                <button @click="setYesterdayFilter" :class="['px-3 py-1 rounded-lg text-xs font-bold transition', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日</button>
-                <button @click="setTodayFilter" :class="['px-3 py-1 rounded-lg text-xs font-bold transition', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日</button>
-                <button @click="setTomorrowFilter" :class="['px-3 py-1 rounded-lg text-xs font-bold transition', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日</button>
-                <template v-if="detailsStart && detailsEnd">
-                  <div class="w-px h-4 bg-stone-200"></div>
-                  <button @click="printAllFilteredStock" :disabled="loading" class="inline-flex items-center gap-1 px-3 py-1 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-boxes"></i><span>備貨單</span></button>
-                  <button @click="printAllFilteredLabels" :disabled="loading" class="inline-flex items-center gap-1 px-3 py-1 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-shipping-fast"></i><span>出貨單</span></button>
-                  <button @click="clearDetailsFilter" class="inline-flex items-center gap-1 px-3 py-1 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition"><i class="fas fa-undo"></i><span>清除</span></button>
-                </template>
+              <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
+                <input type="date" v-model="detailsEnd" class="px-2 py-1.5 border border-stone-200 rounded-lg text-sm text-stone-700 outline-none bg-white">
+              </div>
+              <div class="flex items-center gap-2">
+                <button @click="setYesterdayFilter" :class="['px-3 py-1 rounded-lg text-sm font-bold transition', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日訂單</button>
+                <button @click="setTodayFilter" :class="['px-3 py-1 rounded-lg text-sm font-bold transition', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
+                <button @click="setTomorrowFilter" :class="['px-3 py-1 rounded-lg text-sm font-bold transition', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
+              </div>
+              <div v-if="detailsStart && detailsEnd" class="flex items-center gap-2 ml-auto">
+                <button @click="printAllFilteredStock" :disabled="loading" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-boxes"></i>總備貨單</button>
+                <button @click="printAllFilteredLabels" :disabled="loading" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-shipping-fast"></i>總出貨單</button>
+                <button @click="clearDetailsFilter" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition"><i class="fas fa-undo"></i>清除篩選</button>
               </div>
             </div>
             <!-- 篩選列 + 搜尋 -->
