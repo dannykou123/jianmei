@@ -572,27 +572,35 @@
               <!-- 狀態篩選 + 每頁筆數 -->
               <div class="flex items-center gap-2 flex-wrap">
                 <div class="flex rounded-lg border border-stone-200 overflow-hidden flex-shrink-0">
-                  <button @click="detailsStatus = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', detailsStatus === 'all' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">全部</button>
-                  <button @click="detailsStatus = 'approved'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'approved' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已接單</button>
-                  <button @click="detailsStatus = 'pending'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'pending' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">待審核</button>
-                  <button @click="detailsStatus = 'rejected'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'rejected' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已拒絕</button>
+                  <button @click="detailsStatus = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', detailsStatus === 'all' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50', 'w-auto']">全部</button>
+                  <button @click="detailsStatus = 'approved'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'approved' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50', 'w-auto']">已接單</button>
+                  <button @click="detailsStatus = 'pending'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'pending' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50', 'w-auto']">待審核</button>
+                  <button @click="detailsStatus = 'rejected'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'rejected' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50', 'w-auto']">已拒絕</button>
+                  <button @click="detailsStatus = 'expired'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'expired' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50', 'w-auto']">已過期</button>
                 </div>
-                <select v-model.number="detailsPageSize" class="px-2 py-1.5 border border-stone-200 rounded-lg text-xs font-bold text-stone-700 bg-white outline-none">
-                  <option :value="10">10筆</option>
-                  <option :value="20">20筆</option>
-                  <option :value="50">50筆</option>
-                  <option :value="100">100筆</option>
-                </select>
-                <p class="text-xs font-bold text-stone-400 whitespace-nowrap ml-auto">共 {{ sortedDetailsList.length }} 筆</p>
-              </div>
-              <!-- 搜尋欄 -->
-              <div class="relative">
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-xs"></i>
-                <input type="text" v-model="detailsKeyword" placeholder="公司名稱、聯絡人、電話..." class="w-full pl-8 pr-3 py-1.5 border border-stone-200 rounded-lg text-sm outline-none text-stone-700">
-              </div>
+                <div class="flex items-center gap-2 ml-auto">
+                  <div class="relative w-64">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-xs"></i>
+                    <input type="text" v-model="detailsKeyword" placeholder="公司名稱、聯絡人、電話..." class="w-full pl-8 pr-3 py-1.5 border border-stone-200 rounded-lg text-sm outline-none text-stone-700">
+                  </div>
+                  <select v-model.number="detailsPageSize" class="px-2 py-1.5 border border-stone-200 rounded-lg text-xs font-bold text-stone-700 bg-white outline-none">
+                    <option :value="10">10筆</option>
+                    <option :value="20">20筆</option>
+                    <option :value="50">50筆</option>
+                    <option :value="100">100筆</option>
+                  </select>
+
+                </div>
               <!-- 分頁控制 -->
-              <div class="flex items-center justify-between">
-                <span class="text-xs text-stone-400 font-bold">第 {{ detailsPage }} / {{ totalDetailsPages }} 頁</span>
+            </div>
+            <!-- 表格 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-x-auto">
+              <!-- 分頁控制列移到 table 最上方 -->
+              <div class="flex items-center justify-between px-4 pt-4">
+                <div class="flex items-center gap-3">
+                  <span class="text-xs text-stone-400 font-bold">第 {{ detailsPage }} / {{ totalDetailsPages }} 頁</span>
+                  <span class="text-xs font-bold text-stone-400">共 {{ sortedDetailsList.length }} 筆</span>
+                </div>
                 <div class="flex items-center gap-1">
                   <button @click="detailsPage = 1" :disabled="detailsPage === 1" class="w-8 h-8 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold flex items-center justify-center">«</button>
                   <button @click="detailsPage--" :disabled="detailsPage === 1" class="w-8 h-8 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold flex items-center justify-center">‹</button>
@@ -600,9 +608,6 @@
                   <button @click="detailsPage = totalDetailsPages" :disabled="detailsPage === totalDetailsPages" class="w-8 h-8 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold flex items-center justify-center">»</button>
                 </div>
               </div>
-            </div>
-            <!-- 表格 -->
-            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-x-auto">
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b border-stone-100 text-xs font-black text-stone-400 uppercase tracking-wider">
@@ -630,8 +635,8 @@
                       <input type="checkbox" :checked="selectedOrderIds.includes(order.id)" @change="toggleOrderSelection(order.id)" class="w-4 h-4 accent-stone-800">
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap">
-                      <button @click="statusEditOrder = order" :class="['inline-block px-2 py-1 rounded-full text-xs font-bold cursor-pointer hover:opacity-80 transition', order.status === 'approved' ? 'bg-green-100 text-green-700' : order.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-700']">
-                        {{ order.status === 'approved' ? '已接單' : order.status === 'rejected' ? '已拒絕' : '待審核' }}
+                      <button @click="statusEditOrder = order" :class="['inline-block px-2 py-1 rounded-full text-xs font-bold cursor-pointer hover:opacity-80 transition', order.status === 'approved' ? 'bg-green-100 text-green-700' : order.status === 'rejected' ? 'bg-red-100 text-red-800' : order.status === 'expired' ? 'bg-stone-200 text-stone-500' : 'bg-amber-100 text-amber-700']">
+                        {{ order.status === 'approved' ? '已接單' : order.status === 'rejected' ? '已拒絕' : order.status === 'expired' ? '已過期' : '待審核' }}
                       </button>
                     </td>
                     <td class="px-4 py-3 text-stone-500 whitespace-nowrap">
@@ -690,6 +695,9 @@
                 <button @click="changeOrderStatus('rejected')" :class="['w-full py-2.5 rounded-xl text-sm font-bold transition', statusEditOrder.status === 'rejected' ? 'bg-red-600 text-white cursor-default' : 'bg-red-50 text-red-700 hover:bg-red-100']">
                   <i class="fas fa-times-circle mr-2"></i>已拒絕
                 </button>
+                <button @click="changeOrderStatus('expired')" :class="['w-full py-2.5 rounded-xl text-sm font-bold transition', statusEditOrder.status === 'expired' ? 'bg-stone-500 text-white cursor-default' : 'bg-stone-100 text-stone-500 hover:bg-stone-200']">
+                  <i class="fas fa-calendar-times mr-2"></i>已過期
+                </button>
               </div>
               <button @click="statusEditOrder = null" class="mt-4 w-full py-2 rounded-xl text-sm font-bold bg-stone-100 text-stone-500 hover:bg-stone-200 transition">取消</button>
             </div>
@@ -706,6 +714,7 @@
                   <div class="mt-2 flex items-center">
                     <button @click="statusEditOrder = detailModalOrder" v-if="detailModalOrder.status === 'approved'" class="px-4 py-1 rounded-lg font-bold bg-green-100 text-green-700 text-sm focus:outline-none" style="display:inline-block;">已接單</button>
                     <button @click="statusEditOrder = detailModalOrder" v-else-if="detailModalOrder.status === 'rejected'" class="px-4 py-1 rounded-lg font-bold bg-red-100 text-red-800 text-sm focus:outline-none" style="display:inline-block;">已拒絕</button>
+                    <button @click="statusEditOrder = detailModalOrder" v-else-if="detailModalOrder.status === 'expired'" class="px-4 py-1 rounded-lg font-bold bg-stone-200 text-stone-500 text-sm focus:outline-none" style="display:inline-block;">已過期</button>
                     <button @click="statusEditOrder = detailModalOrder" v-else class="px-4 py-1 rounded-lg font-bold bg-amber-100 text-amber-700 text-sm focus:outline-none" style="display:inline-block;">待審核</button>
                   </div>
                 </div>
@@ -1487,7 +1496,7 @@
   </div>
 
   <script type="module">
-    import { createApp, ref, computed, watch, onMounted, nextTick } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+    import { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, query, where, setDoc, orderBy, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
@@ -1505,6 +1514,34 @@
 
     createApp({
       setup() {
+                                // ...existing code...
+                                // 定期自動查詢待審核訂單，並通知有新訂單
+                                const lastReviewCount = ref(0);
+                                let reviewInterval = null;
+                                function showReviewNotification(newCount) {
+                                  // 使用自訂美化彈窗
+                                  customAlert.value = { show: true, message: `有 ${newCount} 筆新的待審核訂單！`, type: 'info' };
+                                }
+                                async function pollReviewList() {
+                                  // 只在管理員介面才輪詢
+                                  if (currentView.value !== 'admin') return;
+                                  const prevCount = lastReviewCount.value;
+                                  await fetchReviewList(true); // silent=true，不觸發 loading，避免閃爍
+                                  const nowCount = adminData.value.reviewList.length;
+                                  if (nowCount > prevCount && prevCount !== 0) {
+                                    showReviewNotification(nowCount - prevCount);
+                                  }
+                                  lastReviewCount.value = nowCount;
+                                }
+                                onMounted(() => {
+                                  // ...existing code...
+                                  // 啟動定時查詢
+                                  reviewInterval = setInterval(pollReviewList, 30000); // 每 30 秒查詢一次
+                                });
+                                // 離開時清除定時器
+                                onUnmounted(() => {
+                                  if (reviewInterval) clearInterval(reviewInterval);
+                                });
                         // 批次匯出備貨單
                         const batchExportStock = async () => {
                           if (!selectedOrderIds.value.length) return;
@@ -2099,8 +2136,10 @@
               return t !== null && t >= startMs && t <= endMs;
             });
           }
-          // 排除已拒絕訂單
-          list = list.filter(o => o.status !== 'rejected');
+          // 全部模式下排除已拒絕與已過期，需要時可切換篩選
+          if (detailsStatus.value === 'all') {
+            list = list.filter(o => o.status !== 'rejected' && o.status !== 'expired');
+          }
           const [field, order] = detailsSort.value.split('-');
           return list.sort((a, b) => {
             let valA, valB;
@@ -2625,8 +2664,8 @@
         };
 
         // 獲取待審核列表
-        const fetchReviewList = async () => {
-          loading.value = true;
+        const fetchReviewList = async (silent = false) => {
+          if (!silent) loading.value = true;
           try {
             const q = query(
               collection(db, "GroupOrders"),
@@ -2634,20 +2673,42 @@
               orderBy("createdAt", "desc")
             );
             const querySnapshot = await getDocs(q);
-            adminData.value.reviewList = querySnapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data()
-            }));
-            
-            // 自动计算每个订单的总金额
-            for (const order of adminData.value.reviewList) {
-              await calculateOrderTotal(order.id);
+            const now = Date.now();
+            // 檢查並自動將已超過配送時間的待審核單子標記為已過期
+            const expirePromises = [];
+            const newList = [];
+            querySnapshot.docs.forEach(d => {
+              const data = d.data();
+              const deliveryMs = data.deliveryTime?.seconds ? data.deliveryTime.seconds * 1000 : null;
+              if (deliveryMs && deliveryMs < now) {
+                // 配送時間已過，自動設為 expired
+                expirePromises.push(updateDoc(doc(db, "GroupOrders", d.id), {
+                  status: "expired",
+                  expiredAt: new Date().toISOString()
+                }));
+              } else {
+                newList.push({ id: d.id, ...data });
+              }
+            });
+            if (expirePromises.length > 0) {
+              await Promise.all(expirePromises);
+              if (!silent) showAlert(`已將 ${expirePromises.length} 筆逾期訂單自動標記為已過期`, 'info');
+            }
+            // 只在資料有變動時才更新 reviewList，避免 UI 閃爍
+            const oldIds = adminData.value.reviewList.map(o => o.id).join(',');
+            const newIds = newList.map(o => o.id).join(',');
+            if (oldIds !== newIds) {
+              adminData.value.reviewList = newList;
+              // 計算每個訂單的總金額
+              for (const order of adminData.value.reviewList) {
+                await calculateOrderTotal(order.id);
+              }
             }
           } catch (error) {
             console.error('獲取待審核列表錯誤:', error);
-            showAlert('獲取失敗', 'error');
+            if (!silent) showAlert('獲取失敗', 'error');
           } finally {
-            loading.value = false;
+            if (!silent) loading.value = false;
           }
         };
 
@@ -2753,6 +2814,8 @@
               }
               
               return {
+                          // ...existing code...
+                          lastReviewCount,
                 id: doc.id,
                 ...orderData,
                 totalAmount: orderTotal
@@ -2850,6 +2913,8 @@
             } else if (newStatus === 'rejected') {
               updateData.rejectedAt = new Date().toISOString();
               updateData.rejectedBy = user.value.id;
+            } else if (newStatus === 'expired') {
+              updateData.expiredAt = new Date().toISOString();
             }
             
             await updateDoc(docRef, updateData);
@@ -3526,14 +3591,15 @@
               if (adminTab.value === 'accounts' && user.value?.role !== 'admin') {
                 adminTab.value = 'details';
               }
-              
+              // 總是先抓待審核數量，確保 badge 正確
+              fetchReviewList();
               // 根據當前分頁載入對應資料
               if (adminTab.value === 'accounts') {
                 fetchAdminAccounts();
               } else if (adminTab.value === 'items') {
                 fetchAdminItems();
               } else if (adminTab.value === 'review') {
-                fetchReviewList();
+                //fetchReviewList(); // 已提前抓
               } else if (adminTab.value === 'details') {
                 fetchOrderDetails(); // 自動查詢當天的 approved 訂單
               } else if (adminTab.value === 'stock') {
