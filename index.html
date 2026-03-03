@@ -673,6 +673,7 @@
                       <td v-else-if="col.key === 'companyName'" class="px-4 py-3 font-bold text-stone-800 whitespace-nowrap">{{ order.companyName }}</td>
                       <td v-else-if="col.key === 'contactName'" class="hidden sm:table-cell px-4 py-3 text-stone-600 whitespace-nowrap">{{ order.contactName }}</td>
                       <td v-else-if="col.key === 'contactPhone'" class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.contactPhone || '-' }}</td>
+                      <td v-else-if="col.key === 'address'" class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.address || '-' }}</td>
                       <td v-else-if="col.key === 'resource'" class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.resource || '-' }}</td>
                       <td v-else-if="col.key === 'totalAmount'" class="hidden sm:table-cell px-4 py-3 text-right font-bold text-red-800 whitespace-nowrap">
                         {{ groupTotalAmountMap[order.id] > 0 ? '$' + groupTotalAmountMap[order.id].toLocaleString() : '-' }}
@@ -1043,27 +1044,27 @@
                       </div>
                       <div>
                         <label class="text-xs font-bold text-stone-400 mb-1 block">公司名稱 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.companyName" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition" :class="!createOrderForm.companyName ? 'border-red-300' : 'border-stone-200'">
-                        <p v-if="!createOrderForm.companyName" class="text-xs text-red-400 mt-1">必填</p>
+                        <input v-model="createOrderForm.companyName" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="createOrderSubmitted && !createOrderForm.companyName ? 'border-red-300' : 'border-stone-200'">
+                        <p v-if="createOrderSubmitted && !createOrderForm.companyName" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                       <div>
                         <label class="text-xs font-bold text-stone-400 mb-1 block">聯絡人 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.contactName" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition" :class="!createOrderForm.contactName ? 'border-red-300' : 'border-stone-200'">
-                        <p v-if="!createOrderForm.contactName" class="text-xs text-red-400 mt-1">必填</p>
+                        <input v-model="createOrderForm.contactName" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="createOrderSubmitted && !createOrderForm.contactName ? 'border-red-300' : 'border-stone-200'">
+                        <p v-if="createOrderSubmitted && !createOrderForm.contactName" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                       <div>
                         <label class="text-xs font-bold text-stone-400 mb-1 block">聯絡電話 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.contactPhone" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition" :class="!createOrderForm.contactPhone ? 'border-red-300' : 'border-stone-200'">
-                        <p v-if="!createOrderForm.contactPhone" class="text-xs text-red-400 mt-1">必填</p>
+                        <input v-model="createOrderForm.contactPhone" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="createOrderSubmitted && !createOrderForm.contactPhone ? 'border-red-300' : 'border-stone-200'">
+                        <p v-if="createOrderSubmitted && !createOrderForm.contactPhone" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                       <div>
                         <label class="text-xs font-bold text-stone-400 mb-1 block">配送時間 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition" :class="!createOrderForm.deliveryTime ? 'border-red-300' : 'border-stone-200'">
-                        <p v-if="!createOrderForm.deliveryTime" class="text-xs text-red-400 mt-1">必填</p>
+                        <input v-model="createOrderForm.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="createOrderSubmitted && !createOrderForm.deliveryTime ? 'border-red-300' : 'border-stone-200'">
+                        <p v-if="createOrderSubmitted && !createOrderForm.deliveryTime" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                        <div>
                          <label class="text-xs font-bold text-stone-400 mb-1 block">來源<span class="text-red-500 ml-0.5">*</span></label>
-                         <div class="flex gap-4 py-2" :class="!createOrderForm.resource ? 'rounded-lg border border-red-300 px-2' : ''">
+                         <div class="flex gap-4 py-2" :class="createOrderSubmitted && !createOrderForm.resource ? 'rounded-lg border border-red-300 px-2' : ''">
                            <label class="inline-flex items-center gap-2">
                              <input type="radio" v-model="createOrderForm.resource" value="Line" class="accent-brand-600">
                              <span>Line</span>
@@ -1077,12 +1078,13 @@
                              <span>傳真</span>
                            </label>
                          </div>
-                         <p v-if="!createOrderForm.resource" class="text-xs text-red-400 mt-1">必填</p>
+                         <p v-if="createOrderSubmitted && !createOrderForm.resource" class="text-xs text-red-400 mt-1">必填</p>
                        </div>
                     </div>
                     <div>
-                      <label class="text-xs font-bold text-stone-400 mb-1 block">配送地址</label>
-                      <input v-model="createOrderForm.address" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                      <label class="text-xs font-bold text-stone-400 mb-1 block">配送地址<span class="text-red-500 ml-0.5">*</span></label>
+                      <input v-model="createOrderForm.address" type="text" :class="['w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition', createOrderSubmitted && !createOrderForm.address ? 'border-red-300' : 'border-stone-200']">
+                      <p v-if="createOrderSubmitted && !createOrderForm.address" class="text-xs text-red-400 mt-1">必填</p>
                     </div>
                   </div>
                 <!-- 訂購明細 -->
@@ -1766,6 +1768,7 @@
         const showCreateOrderModal = ref(false);
         const createOrderTab = ref('info');
         const createOrderForm = ref({ companyName: '', contactName: '', contactPhone: '', address: '', deliveryTime: '' });
+        const createOrderSubmitted = ref(false);
         const createOrderCustomers = ref([]);
         const addingCreateCustomer = ref(false);
         const newCreateCustomerData = ref({ customerName: '', customerUnit: '', note: '', items: [] });
@@ -1774,6 +1777,7 @@
           if (adminData.value.itemsList.length === 0) await fetchAdminItems();
           if (frequentContacts.value.length === 0) await fetchFrequentContacts();
           createOrderForm.value = { companyName: '', contactName: '', contactPhone: '', address: '', deliveryTime: '', resource: '', status: 'pending' };
+          createOrderSubmitted.value = false;
           createOrderCustomers.value = [];
           addingCreateCustomer.value = false;
           createOrderTab.value = 'info';
@@ -1809,12 +1813,14 @@
         };
 
         const saveCreateGroupOrder = async () => {
+          createOrderSubmitted.value = true;
           const f = createOrderForm.value;
           if (!f.companyName) { showAlert('請填寫公司名稱', 'error'); return; }
           if (!f.contactName) { showAlert('請填寫聯絡人', 'error'); return; }
           if (!f.contactPhone) { showAlert('請填寫聯絡電話', 'error'); return; }
           if (!f.deliveryTime) { showAlert('請選擇配送時間', 'error'); return; }
           if (new Date(f.deliveryTime) < new Date()) { showAlert('配送時間不可早於現在', 'error'); return; }
+          if (!f.address) { showAlert('請填寫配送地址', 'error'); return; }
           if (!f.resource) { showAlert('請選擇來源', 'error'); return; }
           if (createOrderCustomers.value.length === 0) { showAlert('請至少新增一位訂購人', 'error'); return; }
           if (adminData.value.itemsList.length === 0) await fetchAdminItems();
@@ -1824,7 +1830,7 @@
               companyName: f.companyName,
               contactName: f.contactName,
               contactPhone: f.contactPhone || '',
-              address: f.address || '',
+              address: f.address,
               resource: f.resource || '',
               status: 'approved',
               createdAt: new Date(),
@@ -2076,13 +2082,15 @@
         const detailsEnd = ref('');
         const statusEditOrder = ref(null);
         const showColumnSettings = ref(false);
-        const tableColumns = ref(JSON.parse(localStorage.getItem('tableColumns') || JSON.stringify({orderNo:true,contactName:true,contactPhone:true,resource:false,totalAmount:true})));
+        const tableColumns = ref(JSON.parse(localStorage.getItem('tableColumns') || JSON.stringify({orderNo:true,contactName:true,contactPhone:true,address:false,resource:false,totalAmount:true})));
         watch(tableColumns, val => localStorage.setItem('tableColumns', JSON.stringify(val)), { deep: true });
-        const _defaultColOrder = ['orderNo','deliveryTime','companyName','contactName','contactPhone','resource','totalAmount'];
+        const _defaultColOrder = ['orderNo','deliveryTime','companyName','contactName','contactPhone','address','resource','totalAmount'];
         const columnOrder = ref(JSON.parse(localStorage.getItem('columnOrder') || JSON.stringify(_defaultColOrder)));
+        // 遷移：補上舊版 localStorage 中缺少的欄位
+        { const co = columnOrder.value; if (!co.includes('address')) { const ri = co.indexOf('resource'); ri >= 0 ? co.splice(ri, 0, 'address') : co.push('address'); } }
         watch(columnOrder, val => localStorage.setItem('columnOrder', JSON.stringify(val)), { deep: true });
         const colDragFrom = ref(null);
-        const colMetaMap = { orderNo:{label:'訂單編號',toggleable:true}, deliveryTime:{label:'配送時間',toggleable:false}, companyName:{label:'公司名稱',toggleable:false}, contactName:{label:'聯絡人',toggleable:true}, contactPhone:{label:'連絡電話',toggleable:true}, resource:{label:'來源',toggleable:true}, totalAmount:{label:'總金額',toggleable:true} };
+        const colMetaMap = { orderNo:{label:'訂單編號',toggleable:true}, deliveryTime:{label:'配送時間',toggleable:false}, companyName:{label:'公司名稱',toggleable:false}, contactName:{label:'聯絡人',toggleable:true}, contactPhone:{label:'連絡電話',toggleable:true}, address:{label:'地址',toggleable:true}, resource:{label:'來源',toggleable:true}, totalAmount:{label:'總金額',toggleable:true} };
         function columnDrop(idx) { if (colDragFrom.value === null || colDragFrom.value === idx) { colDragFrom.value = null; return; } const arr = [...columnOrder.value]; const [item] = arr.splice(colDragFrom.value, 1); arr.splice(idx, 0, item); columnOrder.value = arr; colDragFrom.value = null; }
         const orderedVisibleColumns = computed(() => columnOrder.value.filter(k => tableColumns.value[k] !== false).map(k => ({ key: k, ...colMetaMap[k] })));
         const reviewSort = ref('createdAt-desc'); // 待審核排序
@@ -2254,14 +2262,21 @@
         const sortedDetailsList = computed(() => {
           const kw = detailsKeyword.value.trim().toLowerCase();
           let list = [...adminData.value.detailsList];
-          // 關鍵字篩選
+          // 關鍵字篩選：依目前顯示的欄位動態搜尋
           if (kw) {
+            const _colFieldMap = {
+              orderNo:      o => o.id || '',
+              deliveryTime: o => o.deliveryTime?.seconds ? new Date(o.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '',
+              companyName:  o => o.companyName || '',
+              contactName:  o => o.contactName || '',
+              contactPhone: o => o.contactPhone || '',
+              address:      o => o.address || '',
+              resource:     o => o.resource || '',
+              totalAmount:  o => '',
+            };
+            const visibleKeys = orderedVisibleColumns.value.map(c => c.key);
             list = list.filter(o =>
-              (o.companyName || '').toLowerCase().includes(kw) ||
-              (o.contactName || '').toLowerCase().includes(kw) ||
-              (o.contactPhone || '').includes(kw) ||
-              (o.address || '').toLowerCase().includes(kw) ||
-              (o.id || '').toLowerCase().includes(kw)
+              visibleKeys.some(k => (_colFieldMap[k]?.(o) || '').toLowerCase().includes(kw))
             );
           }
           // 狀態篩選
@@ -3950,8 +3965,8 @@
           createOrderCustomers,
           addingCreateCustomer,
           newCreateCustomerData,
+          createOrderSubmitted,
           openCreateOrderModal,
-          confirmAddCreateCustomer,
           saveCreateGroupOrder,
           showAlert,
           handleLogin,
