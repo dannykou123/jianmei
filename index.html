@@ -85,6 +85,9 @@
       .label-customer { font-size: 14pt; font-weight: bold; margin-bottom: 1mm; }
       .label-items { flex: 1; overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; column-gap: 3mm; align-content: start; }
       .label-item-row { display: flex; flex-direction: column; padding: 0.8mm 0; line-height: 1.5; }
+      .label-items-compact .label-item-row { padding: 0.3mm 0; }
+      .label-items-compact .label-item-name { font-size: 9.5pt; }
+      .label-items-compact .label-item-right { font-size: 9pt; }
       .label-item-name { font-size: 10pt; font-weight: bold; line-height: 1.2; white-space: normal; }
       .label-item-right { font-size: 9.5pt; color: #333; line-height: 1.2; }
       .label-footer { border-top: 1.5px solid #000; padding-top: 1mm; margin-top: auto; }
@@ -522,16 +525,16 @@
           </div>
           <div v-else>
             <!-- 批次匯出按鈕 -->
-            <div class="mb-3 flex flex-wrap gap-2 items-center">
+            <div class="mb-3 flex flex-wrap gap-2 items-center justify-center">
               <button @click="batchExportStock" :disabled="selectedOrderIds.length === 0" class="flex-1 sm:flex-none px-4 py-2 bg-stone-800 text-white rounded-lg text-sm font-bold hover:bg-black transition disabled:opacity-40 whitespace-nowrap">
-                <i class="fas fa-boxes mr-1"></i><span class="hidden sm:inline">批次匯出</span>備貨單
+                <i class="fas fa-boxes mr-1"></i><span class="hidden sm:inline">列印</span>備貨單
               </button>
               <button @click="batchExportLabels" :disabled="selectedOrderIds.length === 0" class="flex-1 sm:flex-none px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-bold hover:bg-green-800 transition disabled:opacity-40 whitespace-nowrap">
-                <i class="fas fa-shipping-fast mr-1"></i><span class="hidden sm:inline">批次匯出</span>出貨單 ({{ selectedOrderIds.length }})
+                <i class="fas fa-shipping-fast mr-1"></i><span class="hidden sm:inline">列印</span>出貨單 ({{ selectedOrderIds.length }})
               </button>
             </div>
             <!-- Dashboard 總金額區塊 -->
-            <div class="grid grid-cols-3 gap-2 md:gap-4 mb-2">
+            <div v-if="detailsStart && detailsEnd" class="grid grid-cols-3 gap-2 md:gap-4 mb-2">
               <div class="bg-white rounded-2xl shadow-sm border border-stone-100 p-3 md:p-5 flex flex-col items-center">
                 <span class="text-[10px] md:text-xs font-bold text-stone-400 mb-1 text-center leading-tight">全部金額<span class="hidden sm:inline"> (不含已拒絕/已過期)</span></span>
                 <span class="text-base md:text-2xl font-black text-red-700">${{ detailsDashboardTotal.toLocaleString() }}</span>
@@ -567,9 +570,7 @@
                 <button @click="setTomorrowFilter" :class="['flex-1 sm:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
               </div>
               <!-- 匯出/清除按鈕：手機滿版，sm+ 靠右（空間不足自動換行至第二列，仍靠右） -->
-              <div v-if="detailsStart && detailsEnd" class="flex items-center gap-1.5 w-full sm:w-auto sm:ml-auto">
-                <button @click="printAllFilteredStock" :disabled="loading" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-boxes"></i>總備貨單</button>
-                <button @click="printAllFilteredLabels" :disabled="loading" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40 whitespace-nowrap"><i class="fas fa-shipping-fast"></i>總出貨單</button>
+              <div v-if="detailsStart || detailsEnd || detailsKeyword || detailsStatus !== 'all' || selectedOrderIds.length > 0" class="flex items-center gap-1.5 w-full sm:w-auto sm:ml-auto">
                 <button @click="clearDetailsFilter" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition whitespace-nowrap"><i class="fas fa-undo"></i>清除篩選</button>
               </div>
             </div>
@@ -800,6 +801,10 @@
                         <p class="text-xs text-stone-400 font-medium mb-0.5">地址</p>
                         <p class="text-sm font-semibold text-stone-800">{{ detailModalOrder.address }}</p>
                       </div>
+                      <div v-if="detailModalOrder.resource" class="py-3">
+                        <p class="text-xs text-stone-400 font-medium mb-0.5">來源</p>
+                        <p class="text-sm font-semibold text-stone-800">{{ detailModalOrder.resource }}</p>
+                      </div>
                     </div>
                     <!-- 總金額 -->
                     <div v-if="groupTotalAmountMap[detailModalOrder.id] > 0" class="mt-4 flex items-center justify-between bg-stone-50 rounded-xl px-4 py-3 border border-stone-100">
@@ -831,6 +836,25 @@
                       <div>
                         <label class="text-xs font-bold text-stone-400 mb-1 block">配送地址</label>
                         <input v-model="editFormData.address" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                      </div>
+                      <div>
+                        <label class="text-xs font-bold text-stone-400 mb-1 block">來源</label>
+                        <div v-if="detailModalOrder.resource === '網路'" class="py-1">
+                          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-stone-100 text-stone-500 rounded-lg text-sm">
+                            <i class="fas fa-lock text-xs"></i>{{ detailModalOrder.resource }}（不可修改）
+                          </span>
+                        </div>
+                        <div v-else class="flex gap-4 py-1">
+                          <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="radio" v-model="editFormData.resource" value="Line" class="accent-brand-600"><span>Line</span>
+                          </label>
+                          <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="radio" v-model="editFormData.resource" value="電話" class="accent-brand-600"><span>電話</span>
+                          </label>
+                          <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="radio" v-model="editFormData.resource" value="傳真" class="accent-brand-600"><span>傳真</span>
+                          </label>
+                        </div>
                       </div>
                       <div>
                         <label class="text-xs font-bold text-stone-400 mb-1 block">狀態</label>
@@ -1038,8 +1062,8 @@
                         <p v-if="!createOrderForm.deliveryTime" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                        <div>
-                         <label class="text-xs font-bold text-stone-400 mb-1 block">來源</label>
-                         <div class="flex gap-4 py-2">
+                         <label class="text-xs font-bold text-stone-400 mb-1 block">來源<span class="text-red-500 ml-0.5">*</span></label>
+                         <div class="flex gap-4 py-2" :class="!createOrderForm.resource ? 'rounded-lg border border-red-300 px-2' : ''">
                            <label class="inline-flex items-center gap-2">
                              <input type="radio" v-model="createOrderForm.resource" value="Line" class="accent-brand-600">
                              <span>Line</span>
@@ -1053,6 +1077,7 @@
                              <span>傳真</span>
                            </label>
                          </div>
+                         <p v-if="!createOrderForm.resource" class="text-xs text-red-400 mt-1">必填</p>
                        </div>
                     </div>
                     <div>
@@ -1256,18 +1281,10 @@
     <!-- 出貨單列印區 (平時隱藏，列印時顯示) -->
     <div id="label-print-area">
       <template v-for="(orderId, labelIdx) in labelSelectedIds" :key="orderId">
-        <div v-for="info in getLabelInfo(orderId)" :key="info.orderId" :class="info.isFirstPage ? 'label-ticket' : 'label-ticket-cont'">
-          <!-- 第1頁：完整標題；後續頁：精簡標題 -->
-          <div v-if="info.isFirstPage" class="label-header">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;">
-              <div class="label-company">{{ info.companyName }}</div>
-              <!-- 訂單編號已移至左下，不在右上顯示 -->
-            </div>
+        <div v-for="info in getLabelInfo(orderId)" :key="info.orderId" class="label-ticket">
+          <div class="label-header">
+            <div class="label-company">{{ info.companyName }}</div>
             <div class="label-delivery">配送：{{ info.deliveryTimeStr }}</div>
-          </div>
-          <div v-else class="label-cont-header">
-            <div style="font-size:11pt;font-weight:bold;">{{ info.companyName }}</div>
-            <div style="font-size:9pt;color:#555;">配送：{{ info.deliveryTimeStr }}</div>
           </div>
           <div style="margin-bottom:2mm; display:flex; justify-content:space-between; align-items:baseline;">
             <div class="label-customer">
@@ -1275,7 +1292,7 @@
             </div>
             <div v-if="info.totalPages > 1" class="label-page-num">{{ info.pageNum }}/{{ info.totalPages }}</div>
           </div>
-          <div class="label-items">
+          <div :class="['label-items', info.isLastPage && info.note && info.items.length >= 10 ? 'label-items-compact' : '']">
             <div v-for="(item, i) in info.items" :key="i" class="label-item-row">
               <div class="label-item-name">{{ item.itemName }}</div>
               <div class="label-item-right">×{{ item.qty }}　${{ item.subtotal }}</div>
@@ -1318,23 +1335,16 @@
     <div id="single-label-print-area">
       <template v-if="singlePrintGroupData">
         <template v-for="(order, orderIdx) in singlePrintGroupData.orders" :key="order.id">
-          <div v-for="info in getSingleLabelInfo(order)" :key="info.key" :class="info.isFirstPage ? 'label-ticket' : 'label-ticket-cont'">
-            <div v-if="info.isFirstPage" class="label-header">
-              <div style="display:flex;justify-content:space-between;align-items:baseline;">
-                <div class="label-company">{{ info.companyName }}</div>
-                <!-- 訂單編號已移至左下，不在右上顯示 -->
-              </div>
+          <div v-for="info in getSingleLabelInfo(order)" :key="info.key" class="label-ticket">
+            <div class="label-header">
+              <div class="label-company">{{ info.companyName }}</div>
               <div class="label-delivery">配送：{{ info.deliveryTimeStr }}</div>
-            </div>
-            <div v-else class="label-cont-header">
-              <div style="font-size:11pt;font-weight:bold;">{{ info.companyName }}</div>
-              <div style="font-size:9pt;color:#555;">配送：{{ info.deliveryTimeStr }}</div>
             </div>
             <div style="margin-bottom:2mm; display:flex; justify-content:space-between; align-items:baseline;">
               <div class="label-customer">{{ info.customerName }}<span v-if="info.customerUnit" style="font-size:11pt;font-weight:normal">　{{ info.customerUnit }}</span></div>
               <div v-if="info.totalPages > 1" class="label-page-num">{{ info.pageNum }}/{{ info.totalPages }}</div>
             </div>
-            <div class="label-items">
+            <div :class="['label-items', info.isLastPage && info.note && info.items.length >= 10 ? 'label-items-compact' : '']">
               <div v-for="(item, i) in info.items" :key="i" class="label-item-row">
                 <div class="label-item-name">{{ item.itemName }}</div>
                 <div class="label-item-right">×{{ item.qty }}　${{ item.subtotal }}</div>
@@ -1655,6 +1665,9 @@
                         // 批次匯出出貨單
                         const batchExportLabels = async () => {
                           if (!selectedOrderIds.value.length) return;
+                          // 確保品項已載入並建立價格對照表
+                          if (adminData.value.itemsList.length === 0) await fetchAdminItems();
+                          adminData.value.itemsList.forEach(item => { labelPriceMap.value[item.name] = item.price || 0; });
                           // 取得所有選取訂單的 groupOrderId
                           const selectedOrders = adminData.value.detailsList.filter(o => selectedOrderIds.value.includes(o.id));
                           const groups = [];
@@ -1664,11 +1677,11 @@
                             const orders = snap.docs.map(d => {
                               const data = d.data(); let totalAmount = 0;
                               const items = (data.items || []).map(item => {
-                                const price = labelPriceMap.value[item.itemName] || 0;
+                                const price = item.price || labelPriceMap.value[item.itemName] || 0;
                                 const qty = parseInt(item.qty) || 0;
-                                totalAmount += price * qty; return item;
+                                totalAmount += price * qty; return { ...item, price };
                               });
-                              return { id: d.id, ...data, items, totalAmount };
+                              return { id: d.id, ...data, items, totalAmount: data.totalAmount || totalAmount };
                             }).sort((a, b) => (a.customerName || '').localeCompare(b.customerName || '', 'zh-TW'));
                             if (orders.length) groups.push({ ...order, orders });
                           }
@@ -1760,7 +1773,7 @@
         const openCreateOrderModal = async () => {
           if (adminData.value.itemsList.length === 0) await fetchAdminItems();
           if (frequentContacts.value.length === 0) await fetchFrequentContacts();
-          createOrderForm.value = { companyName: '', contactName: '', contactPhone: '', address: '', deliveryTime: '', status: 'pending' };
+          createOrderForm.value = { companyName: '', contactName: '', contactPhone: '', address: '', deliveryTime: '', resource: '', status: 'pending' };
           createOrderCustomers.value = [];
           addingCreateCustomer.value = false;
           createOrderTab.value = 'info';
@@ -1802,6 +1815,8 @@
           if (!f.contactPhone) { showAlert('請填寫聯絡電話', 'error'); return; }
           if (!f.deliveryTime) { showAlert('請選擇配送時間', 'error'); return; }
           if (new Date(f.deliveryTime) < new Date()) { showAlert('配送時間不可早於現在', 'error'); return; }
+          if (!f.resource) { showAlert('請選擇來源', 'error'); return; }
+          if (createOrderCustomers.value.length === 0) { showAlert('請至少新增一位訂購人', 'error'); return; }
           if (adminData.value.itemsList.length === 0) await fetchAdminItems();
           loading.value = true;
           try {
@@ -1810,6 +1825,7 @@
               contactName: f.contactName,
               contactPhone: f.contactPhone || '',
               address: f.address || '',
+              resource: f.resource || '',
               status: 'approved',
               createdAt: new Date(),
               updatedAt: new Date().toISOString(),
@@ -1850,13 +1866,16 @@
           editingCustomerOrderId.value = null;
           editingNewCustomerOrder.value = false;
           editingOrderId.value = order.id;
+          const _origDT = order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toISOString().slice(0, 16) : '';
           editFormData.value = {
             companyName: order.companyName || '',
             contactName: order.contactName || '',
             contactPhone: order.contactPhone || '',
             address: order.address || '',
+            resource: order.resource || '',
             status: order.status || 'pending',
-            deliveryTime: order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toISOString().slice(0, 16) : ''
+            deliveryTime: _origDT,
+            _originalDeliveryTime: _origDT
           };
           if (adminData.value.itemsList.length === 0) await fetchAdminItems();
           await fetchGroupOrders(order.id);
@@ -1880,7 +1899,8 @@
             showAlert('請填寫公司名稱和聯絡人', 'error');
             return;
           }
-          if (editFormData.value.deliveryTime && new Date(editFormData.value.deliveryTime) < new Date()) {
+          const dtChanged = editFormData.value.deliveryTime !== editFormData.value._originalDeliveryTime;
+          if (dtChanged && editFormData.value.deliveryTime && new Date(editFormData.value.deliveryTime) < new Date()) {
             showAlert('配送時間不可早於現在', 'error');
             return;
           }
@@ -1892,6 +1912,7 @@
               contactName: editFormData.value.contactName,
               contactPhone: editFormData.value.contactPhone,
               address: editFormData.value.address,
+              resource: editFormData.value.resource || '',
               status: editFormData.value.status,
               updatedAt: new Date().toISOString(),
               updatedBy: user.value.id
@@ -1907,6 +1928,7 @@
               contactName: editFormData.value.contactName,
               contactPhone: editFormData.value.contactPhone,
               address: editFormData.value.address,
+              resource: editFormData.value.resource || '',
               status: editFormData.value.status,
               deliveryTime: editFormData.value.deliveryTime ? { seconds: Math.floor(new Date(editFormData.value.deliveryTime).getTime() / 1000) } : detailModalOrder.value.deliveryTime
             };
@@ -2091,11 +2113,12 @@
           for (const group of labelGroupsWithOrders.value) {
             const order = group.orders.find(o => o.id === orderId);
             if (order) {
-              const allItems = order.items.map(item => ({
-                itemName: item.itemName,
-                qty: item.qty,
-                subtotal: ((labelPriceMap.value[item.itemName] || 0) * (parseInt(item.qty) || 0)).toLocaleString()
-              }));
+              const allItems = order.items.map(item => {
+                const qty = parseInt(item.qty) || 0;
+                const price = item.price || labelPriceMap.value[item.itemName] || 0;
+                const subtotalVal = item.subtotal != null ? item.subtotal : price * qty;
+                return { itemName: item.itemName, qty: item.qty, subtotal: subtotalVal.toLocaleString() };
+              });
               const pages = [];
               for (let i = 0; i < allItems.length; i += LABEL_ITEMS_PER_PAGE) {
                 pages.push(allItems.slice(i, i + LABEL_ITEMS_PER_PAGE));
@@ -2323,22 +2346,29 @@
           const d = getTaiwanDateStr(0);
           detailsStart.value = d;
           detailsEnd.value = d;
+          detailsStatus.value = 'all';
+          selectedOrderIds.value = sortedDetailsList.value.filter(o => o.status === 'approved').map(o => o.id);
         };
         const setTomorrowFilter = () => {
           const d = getTaiwanDateStr(1);
           detailsStart.value = d;
           detailsEnd.value = d;
+          detailsStatus.value = 'all';
+          selectedOrderIds.value = sortedDetailsList.value.filter(o => o.status === 'approved').map(o => o.id);
         };
         const setYesterdayFilter = () => {
           const d = getTaiwanDateStr(-1);
           detailsStart.value = d;
           detailsEnd.value = d;
+          detailsStatus.value = 'all';
+          selectedOrderIds.value = sortedDetailsList.value.filter(o => o.status === 'approved').map(o => o.id);
         };
         const clearDetailsFilter = () => {
           detailsStart.value = '';
           detailsEnd.value = '';
           detailsKeyword.value = '';
           detailsStatus.value = 'all';
+          selectedOrderIds.value = [];
         };
 
         const filteredContactPicker = computed(() => {
@@ -3511,6 +3541,9 @@
             fetchStockList();
           } else if (newTab === 'labels') {
             fetchLabelOrders();
+          } else if (newTab === 'details') {
+            clearDetailsFilter();
+            fetchOrderDetails();
           }
         });
 
@@ -3779,11 +3812,8 @@
           stockEnd.value = dateStr;
           labelStart.value = dateStr;
           labelEnd.value = dateStr;
-          // 訂單管理預設：今天 ~ 明天
-          const today = new Date();
-          detailsStart.value = today.toISOString().split('T')[0];
-          detailsEnd.value = dateStr;
-          
+          // 訂單管理預設：無篩選（清除篩選狀態）
+
           if (savedUser && savedView) {
             user.value = JSON.parse(savedUser);
             currentView.value = savedView;
