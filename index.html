@@ -570,24 +570,26 @@
             <!-- 篩選 + 表格：一體卡片 -->
             <div class="bg-white rounded-2xl shadow-sm border border-stone-100">
               <!-- Row 1: 狀態按鈕 + 搜尋欄 + 每頁筆數 -->
-              <div class="flex items-center gap-2 px-4 pt-3 pb-2">
-                <div class="flex rounded-lg border border-stone-200 overflow-hidden flex-shrink-0">
+              <div class="flex flex-col md:flex-row md:items-center gap-2 px-4 pt-3 pb-2">
+                <div class="flex rounded-lg border border-stone-200 overflow-hidden flex-shrink-0 self-start">
                   <button @click="detailsStatus = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', detailsStatus === 'all' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">全部</button>
                   <button @click="detailsStatus = 'approved'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'approved' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已接單</button>
                   <button @click="detailsStatus = 'pending'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'pending' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">待審核</button>
                   <button @click="detailsStatus = 'rejected'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'rejected' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已拒絕</button>
                   <button @click="detailsStatus = 'expired'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'expired' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已過期</button>
                 </div>
-                <div class="relative flex-1 min-w-0">
-                  <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-xs"></i>
-                  <input type="text" v-model="detailsKeyword" placeholder="公司名稱、聯絡人、電話..." class="w-full pl-8 pr-3 py-1.5 border border-stone-200 rounded-lg text-sm outline-none text-stone-700">
+                <div class="flex items-center gap-2 md:flex-1 md:min-w-0">
+                  <div class="relative flex-1 min-w-0">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-xs"></i>
+                    <input type="text" v-model="detailsKeyword" placeholder="公司名稱、聯絡人、電話、訂單編號..." class="w-full pl-8 pr-3 py-1.5 border border-stone-200 rounded-lg text-sm outline-none text-stone-700">
+                  </div>
+                  <select v-model.number="detailsPageSize" class="px-2 py-1.5 border border-stone-200 rounded-lg text-xs font-bold text-stone-700 bg-white outline-none flex-shrink-0">
+                    <option :value="10">每頁10筆</option>
+                    <option :value="20">每頁20筆</option>
+                    <option :value="50">每頁50筆</option>
+                    <option :value="100">每頁100筆</option>
+                  </select>
                 </div>
-                <select v-model.number="detailsPageSize" class="px-2 py-1.5 border border-stone-200 rounded-lg text-xs font-bold text-stone-700 bg-white outline-none flex-shrink-0">
-                  <option :value="10">10筆</option>
-                  <option :value="20">20筆</option>
-                  <option :value="50">50筆</option>
-                  <option :value="100">100筆</option>
-                </select>
               </div>
               <!-- Row 2: 頁碼資訊 + 分頁按鈕 -->
               <div class="flex items-center justify-between px-4 pb-3">
@@ -606,6 +608,7 @@
                   <tr class="border-b border-stone-100 text-xs font-black text-stone-400 uppercase tracking-wider">
                     <th class="px-4 py-3 text-center"><input type="checkbox" :checked="isAllOrderSelected" @change="toggleAllOrderSelection" class="w-4 h-4 accent-stone-800"></th>
                     <th class="px-4 py-3 text-left">狀態</th>
+                    <th class="hidden sm:table-cell px-2 py-3 text-left text-xs">訂單編號</th>
                     <th class="px-4 py-3 text-left cursor-pointer select-none hover:text-stone-600 transition" @click="sortByField('deliveryTime')">
                       配送時間
                       <i :class="['fas ml-1', detailsSort.startsWith('deliveryTime') ? (detailsSort.endsWith('asc') ? 'fa-sort-up text-stone-700' : 'fa-sort-down text-stone-700') : 'fa-sort text-stone-300']"></i>
@@ -632,6 +635,7 @@
                         {{ order.status === 'approved' ? '已接單' : order.status === 'rejected' ? '已拒絕' : order.status === 'expired' ? '已過期' : '待審核' }}
                       </button>
                     </td>
+                    <td class="hidden sm:table-cell px-2 py-3 text-xs text-stone-800 font-mono">{{ order.id }}</td>
                     <td class="px-4 py-3 text-stone-500 whitespace-nowrap">
                       <span class="hidden sm:inline">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
                       <span class="sm:hidden">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
@@ -704,7 +708,13 @@
               <!-- Modal Header -->
               <div class="flex items-start justify-between px-6 pt-5 pb-4">
                 <div>
-                  <h3 class="text-xl font-black text-stone-900 leading-tight">{{ detailModalOrder.companyName }}</h3>
+                  <div class="flex items-baseline gap-2 flex-wrap">
+                    <h3 class="text-xl font-black text-stone-900 leading-tight">{{ detailModalOrder.companyName }}</h3>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-stone-100 border border-stone-200 rounded-md select-all" style="font-size:11px;">
+                      <i class="fas fa-hashtag text-stone-400" style="font-size:9px;"></i>
+                      <span class="font-mono text-stone-500 tracking-wide">{{ detailModalOrder.id }}</span>
+                    </span>
+                  </div>
                   <div class="mt-2 flex items-center">
                     <button @click="statusEditOrder = detailModalOrder" v-if="detailModalOrder.status === 'approved'" class="px-4 py-1 rounded-lg font-bold bg-green-100 text-green-700 text-sm focus:outline-none" style="display:inline-block;">已接單</button>
                     <button @click="statusEditOrder = detailModalOrder" v-else-if="detailModalOrder.status === 'rejected'" class="px-4 py-1 rounded-lg font-bold bg-red-100 text-red-800 text-sm focus:outline-none" style="display:inline-block;">已拒絕</button>
@@ -826,6 +836,7 @@
                           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 bg-stone-50 border-b border-stone-100 gap-2">
                             <div class="flex items-center justify-between sm:justify-start gap-2 min-w-0">
                               <div class="flex items-center gap-2 min-w-0">
+                                <span class="text-xs font-bold text-stone-400 bg-stone-200 px-1.5 py-0.5 rounded flex-shrink-0">#{{ idx + 1 }}</span>
                                 <span class="font-bold text-stone-800 text-sm">{{ customerOrder.customerName }}</span>
                                 <span v-if="customerOrder.customerUnit" class="text-xs text-stone-400 bg-stone-200 px-2 py-0.5 rounded-md flex-shrink-0">{{ customerOrder.customerUnit }}</span>
                               </div>
@@ -1210,11 +1221,14 @@
 
     <!-- 出貨單列印區 (平時隱藏，列印時顯示) -->
     <div id="label-print-area">
-      <template v-for="orderId in labelSelectedIds" :key="orderId">
+      <template v-for="(orderId, labelIdx) in labelSelectedIds" :key="orderId">
         <div v-for="info in getLabelInfo(orderId)" :key="info.orderId" :class="info.isFirstPage ? 'label-ticket' : 'label-ticket-cont'">
           <!-- 第1頁：完整標題；後續頁：精簡標題 -->
           <div v-if="info.isFirstPage" class="label-header">
-            <div class="label-company">{{ info.companyName }}</div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <div class="label-company">{{ info.companyName }}</div>
+              <!-- 訂單編號已移至左下，不在右上顯示 -->
+            </div>
             <div class="label-delivery">配送：{{ info.deliveryTimeStr }}</div>
           </div>
           <div v-else class="label-cont-header">
@@ -1239,7 +1253,7 @@
           </div>
           <div style="border-top:2px solid #000; margin-top:1.2mm; margin-bottom:0.3mm;"></div>
           <div class="label-footer" style="display:flex; justify-content:space-between; align-items:center; font-size:8pt; color:#888; margin-top:0; border:none;">
-            <div class="label-brand" style="margin:0; text-align:left;">健美滷味</div>
+            <div class="label-order-id" style="margin:0; text-align:left;">訂單編號：{{ orderId }}</div>
             <div class="label-page-num" style="margin:0; text-align:right;">{{ info.pageNum }}/{{ info.totalPages }}</div>
           </div>
         </div>
@@ -1269,10 +1283,13 @@
     <!-- 單筆出貨單列印區 -->
     <div id="single-label-print-area">
       <template v-if="singlePrintGroupData">
-        <template v-for="order in singlePrintGroupData.orders" :key="order.id">
+        <template v-for="(order, orderIdx) in singlePrintGroupData.orders" :key="order.id">
           <div v-for="info in getSingleLabelInfo(order)" :key="info.key" :class="info.isFirstPage ? 'label-ticket' : 'label-ticket-cont'">
             <div v-if="info.isFirstPage" class="label-header">
-              <div class="label-company">{{ info.companyName }}</div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                <div class="label-company">{{ info.companyName }}</div>
+                <!-- 訂單編號已移至左下，不在右上顯示 -->
+              </div>
               <div class="label-delivery">配送：{{ info.deliveryTimeStr }}</div>
             </div>
             <div v-else class="label-cont-header">
@@ -1295,7 +1312,7 @@
             </div>
             <div style="border-top:2px solid #000; margin-top:1.2mm; margin-bottom:0.3mm;"></div>
             <div class="label-footer" style="display:flex; justify-content:space-between; align-items:center; font-size:8pt; color:#888; margin-top:0; border:none;">
-              <div class="label-brand" style="margin:0; text-align:left;">健美滷味</div>
+              <div class="label-order-id" style="margin:0; text-align:left;">訂單編號：{{ order.id }}</div>
               <div class="label-page-num" style="margin:0; text-align:right;">{{ info.pageNum }}/{{ info.totalPages }}</div>
             </div>
           </div>
@@ -2120,7 +2137,8 @@
               (o.companyName || '').toLowerCase().includes(kw) ||
               (o.contactName || '').toLowerCase().includes(kw) ||
               (o.contactPhone || '').includes(kw) ||
-              (o.address || '').toLowerCase().includes(kw)
+              (o.address || '').toLowerCase().includes(kw) ||
+              (o.id || '').toLowerCase().includes(kw)
             );
           }
           // 狀態篩選
