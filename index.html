@@ -61,24 +61,17 @@
       .stock-ticket-name { font-size: 11pt; font-weight: bold; line-height: 1.2; white-space: normal; }
       .stock-ticket-qty { font-size: 11pt; font-weight: bold; color: #111; line-height: 1.2; }
       .stock-ticket-footer { border-top: 1px solid #000; padding-top: 1mm; margin-top: auto; font-size: 10pt; display: flex; justify-content: space-between; color: #666; }
-      .label-ticket {
+      .label-ticket, .label-ticket-cont {
         width: 75mm; height: 100mm;
         page-break-after: always; page-break-inside: avoid;
         border: 1px solid #000; padding: 3mm;
         box-sizing: border-box; font-family: Arial, sans-serif;
         overflow: hidden; display: flex; flex-direction: column;
       }
-      .label-ticket-cont {
-        width: 75mm; height: 100mm;
-        page-break-after: always; page-break-inside: avoid;
-        border: 1px solid #000; padding: 3mm;
-        box-sizing: border-box; font-family: Arial, sans-serif;
-        overflow: hidden; display: flex; flex-direction: column;
-      }
-      .label-ticket-cont:last-child { page-break-after: auto; }
+      .label-ticket:last-child, .label-ticket-cont:last-child { page-break-after: auto; }
       .label-cont-header { padding-bottom: 1.5mm; margin-bottom: 2mm; }
       .label-page-num { font-size: 8pt; color: #aaa; text-align: right; margin-top: 1mm; }
-      .label-ticket:last-child { page-break-after: auto; }
+
       .label-header { border-bottom: 1.5px solid #000; padding-bottom: 2mm; margin-bottom: 2mm; }
       .label-company { font-size: 14pt; font-weight: bold; line-height: 1.25; }
       .label-delivery { font-size: 10pt; color: #333; margin-top: 0.5mm; }
@@ -406,11 +399,11 @@
                       </div>
                       <div class="flex items-start gap-2">
                         <i class="fas fa-truck w-4 text-stone-400 mt-0.5"></i>
-                        <span class="break-all">配送：{{ g.deliveryTime ? new Date(g.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-' }}</span>
+                        <span class="break-all">配送：{{ fmtTs(g.deliveryTime) }}</span>
                       </div>
                       <div class="flex items-start gap-2">
                         <i class="fas fa-calendar-plus w-4 text-stone-400 mt-0.5"></i>
-                        <span class="break-all">建立：{{ g.createdAt ? new Date(g.createdAt.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-' }}</span>
+                        <span class="break-all">建立：{{ fmtTs(g.createdAt) }}</span>
                       </div>
                     </div>
                     <p v-if="g.address" class="text-sm text-stone-500 mt-3"><i class="fas fa-map-marker-alt mr-2"></i>{{ g.address }}</p>
@@ -660,15 +653,15 @@
                       <input type="checkbox" :checked="selectedOrderIds.includes(order.id)" @change="toggleOrderSelection(order.id)" class="w-4 h-4 accent-stone-800">
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap">
-                      <button @click="statusEditOrder = order" :class="['inline-block px-2 py-1 rounded-full text-xs font-bold cursor-pointer hover:opacity-80 transition', order.status === 'approved' ? 'bg-green-100 text-green-700' : order.status === 'rejected' ? 'bg-red-100 text-red-800' : order.status === 'expired' ? 'bg-gray-100 text-gray-500' : 'bg-amber-100 text-amber-700']">
-                        {{ order.status === 'approved' ? '已接單' : order.status === 'rejected' ? '已拒絕' : order.status === 'expired' ? '已過期' : '待審核' }}
+                      <button @click="statusEditOrder = order" :class="['inline-block px-2 py-1 rounded-full text-xs font-bold cursor-pointer hover:opacity-80 transition', statusClass(order.status)]">
+                        {{ statusLabel(order.status) }}
                       </button>
                     </td>
                     <template v-for="col in orderedVisibleColumns" :key="col.key">
                       <td v-if="col.key === 'orderNo'" class="hidden sm:table-cell px-2 py-3 text-xs text-stone-800 font-mono">{{ order.id }}</td>
                       <td v-else-if="col.key === 'deliveryTime'" class="px-4 py-3 text-stone-500 whitespace-nowrap">
-                        <span class="hidden sm:inline">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
-                        <span class="sm:hidden">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
+                        <span class="hidden sm:inline">{{ fmtTs(order.deliveryTime) }}</span>
+                        <span class="sm:hidden">{{ fmtTs(order.deliveryTime, 'short') }}</span>
                       </td>
                       <td v-else-if="col.key === 'companyName'" class="px-4 py-3 font-bold text-stone-800 whitespace-nowrap">{{ order.companyName }}</td>
                       <td v-else-if="col.key === 'contactName'" class="hidden sm:table-cell px-4 py-3 text-stone-600 whitespace-nowrap">{{ order.contactName }}</td>
@@ -748,10 +741,7 @@
                     </span>
                   </div>
                   <div class="mt-2 flex items-center">
-                    <button @click="statusEditOrder = detailModalOrder" v-if="detailModalOrder.status === 'approved'" class="px-4 py-1 rounded-lg font-bold bg-green-100 text-green-700 text-sm focus:outline-none" style="display:inline-block;">已接單</button>
-                    <button @click="statusEditOrder = detailModalOrder" v-else-if="detailModalOrder.status === 'rejected'" class="px-4 py-1 rounded-lg font-bold bg-red-100 text-red-800 text-sm focus:outline-none" style="display:inline-block;">已拒絕</button>
-                    <button @click="statusEditOrder = detailModalOrder" v-else-if="detailModalOrder.status === 'expired'" class="px-4 py-1 rounded-lg font-bold bg-gray-100 text-gray-500 text-sm focus:outline-none" style="display:inline-block;">已過期</button>
-                    <button @click="statusEditOrder = detailModalOrder" v-else class="px-4 py-1 rounded-lg font-bold bg-amber-100 text-amber-700 text-sm focus:outline-none" style="display:inline-block;">待審核</button>
+                    <button @click="statusEditOrder = detailModalOrder" :class="['px-4 py-1 rounded-lg font-bold text-sm focus:outline-none', statusClass(detailModalOrder.status)]" style="display:inline-block;">{{ statusLabel(detailModalOrder.status) }}</button>
                   </div>
                 </div>
                 <button @click="closeDetailModal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition mt-0.5 flex-shrink-0"><i class="fas fa-times text-sm"></i></button>
@@ -795,7 +785,7 @@
                         </div>
                         <div>
                           <p class="text-xs text-stone-400 font-medium mb-0.5">配送時間</p>
-                          <p class="text-sm font-semibold text-stone-800">{{ detailModalOrder.deliveryTime ? new Date(detailModalOrder.deliveryTime.seconds * 1000).toLocaleString('zh-TW') : '-' }}</p>
+                          <p class="text-sm font-semibold text-stone-800">{{ fmtTs(detailModalOrder.deliveryTime, 'full') }}</p>
                         </div>
                       </div>
                       <div v-if="detailModalOrder.address" class="py-3">
@@ -1037,54 +1027,45 @@
                         <label class="text-xs font-bold text-stone-400 mb-1 block">常用聯絡人</label>
                         <button type="button" @click="showContactPicker = true" class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm bg-stone-50 hover:bg-stone-100 transition text-left flex items-center justify-between gap-2">
                           <span :class="selectedContactId ? 'text-stone-800 font-bold' : 'text-stone-400'">
-                            {{ selectedContactId ? (frequentContacts.find(c => c.id === selectedContactId) ? frequentContacts.find(c => c.id === selectedContactId).companyName + ' / ' + frequentContacts.find(c => c.id === selectedContactId).contactName : '請選擇') : '點擊選擇常用聯絡人...' }}
+                            {{ selectedContact ? selectedContact.companyName + ' / ' + selectedContact.contactName : selectedContactId ? '請選擇' : '點擊選擇常用聯絡人...' }}
                           </span>
                           <i class="fas fa-address-book text-stone-400 flex-shrink-0"></i>
                         </button>
                       </div>
                       <div>
                         <label class="text-xs font-bold text-stone-400 mb-1 block">公司名稱 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.companyName" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="createOrderSubmitted && !createOrderForm.companyName ? 'border-red-300' : 'border-stone-200'">
-                        <p v-if="createOrderSubmitted && !createOrderForm.companyName" class="text-xs text-red-400 mt-1">必填</p>
+                        <input v-model="createOrderForm.companyName" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="fieldErr('companyName') ? 'border-red-300' : 'border-stone-200'">
+                        <p v-if="fieldErr('companyName')" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                       <div>
                         <label class="text-xs font-bold text-stone-400 mb-1 block">聯絡人 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.contactName" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="createOrderSubmitted && !createOrderForm.contactName ? 'border-red-300' : 'border-stone-200'">
-                        <p v-if="createOrderSubmitted && !createOrderForm.contactName" class="text-xs text-red-400 mt-1">必填</p>
+                        <input v-model="createOrderForm.contactName" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="fieldErr('contactName') ? 'border-red-300' : 'border-stone-200'">
+                        <p v-if="fieldErr('contactName')" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                       <div>
                         <label class="text-xs font-bold text-stone-400 mb-1 block">聯絡電話 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.contactPhone" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="createOrderSubmitted && !createOrderForm.contactPhone ? 'border-red-300' : 'border-stone-200'">
-                        <p v-if="createOrderSubmitted && !createOrderForm.contactPhone" class="text-xs text-red-400 mt-1">必填</p>
+                        <input v-model="createOrderForm.contactPhone" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="fieldErr('contactPhone') ? 'border-red-300' : 'border-stone-200'">
+                        <p v-if="fieldErr('contactPhone')" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                       <div>
                         <label class="text-xs font-bold text-stone-400 mb-1 block">配送時間 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="createOrderSubmitted && !createOrderForm.deliveryTime ? 'border-red-300' : 'border-stone-200'">
-                        <p v-if="createOrderSubmitted && !createOrderForm.deliveryTime" class="text-xs text-red-400 mt-1">必填</p>
+                        <input v-model="createOrderForm.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="fieldErr('deliveryTime') ? 'border-red-300' : 'border-stone-200'">
+                        <p v-if="fieldErr('deliveryTime')" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                        <div>
                          <label class="text-xs font-bold text-stone-400 mb-1 block">來源<span class="text-red-500 ml-0.5">*</span></label>
-                         <div class="flex gap-4 py-2" :class="createOrderSubmitted && !createOrderForm.resource ? 'rounded-lg border border-red-300 px-2' : ''">
-                           <label class="inline-flex items-center gap-2">
-                             <input type="radio" v-model="createOrderForm.resource" value="Line" class="accent-brand-600">
-                             <span>Line</span>
-                           </label>
-                           <label class="inline-flex items-center gap-2">
-                             <input type="radio" v-model="createOrderForm.resource" value="電話" class="accent-brand-600">
-                             <span>電話</span>
-                           </label>
-                           <label class="inline-flex items-center gap-2">
-                             <input type="radio" v-model="createOrderForm.resource" value="傳真" class="accent-brand-600">
-                             <span>傳真</span>
-                           </label>
+                         <div class="flex gap-4 py-2" :class="fieldErr('resource') ? 'rounded-lg border border-red-300 px-2' : ''">
+                           <label class="inline-flex items-center gap-2"><input type="radio" v-model="createOrderForm.resource" value="Line" class="accent-brand-600"><span>Line</span></label>
+                           <label class="inline-flex items-center gap-2"><input type="radio" v-model="createOrderForm.resource" value="電話" class="accent-brand-600"><span>電話</span></label>
+                           <label class="inline-flex items-center gap-2"><input type="radio" v-model="createOrderForm.resource" value="傳真" class="accent-brand-600"><span>傳真</span></label>
                          </div>
-                         <p v-if="createOrderSubmitted && !createOrderForm.resource" class="text-xs text-red-400 mt-1">必填</p>
+                         <p v-if="fieldErr('resource')" class="text-xs text-red-400 mt-1">必填</p>
                        </div>
                     </div>
                     <div>
                       <label class="text-xs font-bold text-stone-400 mb-1 block">配送地址<span class="text-red-500 ml-0.5">*</span></label>
-                      <input v-model="createOrderForm.address" type="text" :class="['w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition', createOrderSubmitted && !createOrderForm.address ? 'border-red-300' : 'border-stone-200']">
-                      <p v-if="createOrderSubmitted && !createOrderForm.address" class="text-xs text-red-400 mt-1">必填</p>
+                      <input v-model="createOrderForm.address" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="fieldErr('address') ? 'border-red-300' : 'border-stone-200'">
+                      <p v-if="fieldErr('address')" class="text-xs text-red-400 mt-1">必填</p>
                     </div>
                   </div>
                 <!-- 訂購明細 -->
@@ -1131,20 +1112,63 @@
                   <div v-if="createOrderCustomers.length === 0 && !addingCreateCustomer" class="text-center py-10 text-stone-400 text-sm">尚未新增訂購人</div>
                   <div class="space-y-2">
                     <div v-for="(customer, cidx) in createOrderCustomers" :key="cidx" class="rounded-xl border border-stone-100 overflow-hidden">
-                      <div class="flex items-center justify-between px-4 py-3 bg-stone-50 border-b border-stone-100">
-                        <div class="flex items-center gap-2">
-                          <span class="font-bold text-stone-800 text-sm">{{ customer.customerName }}</span>
-                          <span v-if="customer.customerUnit" class="text-xs text-stone-400 bg-stone-200 px-2 py-0.5 rounded-md">{{ customer.customerUnit }}</span>
+                      <!-- 編輯中 -->
+                      <template v-if="editingCreateCustomerIdx === cidx">
+                        <div class="p-4 bg-stone-50 space-y-3">
+                          <div class="grid grid-cols-2 gap-2">
+                            <div>
+                              <label class="text-xs font-bold text-stone-400 mb-1 block">訂購人</label>
+                              <input v-model="editingCreateCustomerData.customerName" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                            </div>
+                            <div>
+                              <label class="text-xs font-bold text-stone-400 mb-1 block">單位</label>
+                              <input v-model="editingCreateCustomerData.customerUnit" type="text" placeholder="部門、公司..." class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                            </div>
+                          </div>
+                          <div>
+                            <label class="text-xs font-bold text-stone-400 mb-2 block">訂購項目</label>
+                            <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                              <div v-for="(item, iidx) in editingCreateCustomerData.items" :key="iidx" class="flex items-center gap-1.5">
+                                <span class="flex-1 text-sm text-stone-700 truncate">{{ item.itemName }}</span>
+                                <div class="flex items-center border border-stone-200 rounded-lg overflow-hidden bg-white">
+                                  <button type="button" @click="item.qty = Math.max(0, (item.qty||0)-1)" class="w-7 h-7 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition">−</button>
+                                  <span class="w-7 text-center text-sm font-medium text-stone-800 select-none">{{ item.qty||0 }}</span>
+                                  <button type="button" @click="item.qty = (item.qty||0)+1" class="w-7 h-7 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition">+</button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <label class="text-xs font-bold text-stone-400 mb-1 block">備註</label>
+                            <input v-model="editingCreateCustomerData.note" type="text" placeholder="不要辣、備品..." class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                          </div>
+                          <div class="flex gap-2 pt-1">
+                            <button @click="saveEditCreateCustomer" class="px-3 py-1.5 bg-stone-800 text-white rounded-lg text-xs font-bold hover:bg-stone-900 transition"><i class="fas fa-save mr-1"></i>保存</button>
+                            <button @click="editingCreateCustomerIdx = null" class="px-3 py-1.5 bg-white border border-stone-200 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-100 transition">取消</button>
+                            <button @click="createOrderCustomers.splice(cidx,1); editingCreateCustomerIdx=null" class="ml-auto px-3 py-1.5 bg-white border border-stone-200 text-stone-500 rounded-lg text-xs font-bold hover:bg-stone-100 transition"><i class="fas fa-trash-alt mr-1"></i>刪除</button>
+                          </div>
                         </div>
-                        <button @click="createOrderCustomers.splice(cidx, 1)" class="px-3 py-1 bg-stone-100 text-stone-700 rounded-lg border border-stone-200 text-xs font-bold hover:bg-stone-200 transition">刪除</button>
-                      </div>
-                      <div class="px-4 py-2">
-                        <div v-for="(item, iidx) in customer.items.filter(i => i.qty > 0)" :key="iidx" class="flex justify-between items-center py-1.5 border-b border-stone-50 last:border-b-0">
-                          <span class="text-sm text-stone-600">{{ item.itemName }}</span>
-                          <span class="text-sm font-semibold text-stone-700">× {{ item.qty }}</span>
+                      </template>
+                      <!-- 唯讀 -->
+                      <template v-else>
+                        <div class="flex items-center justify-between px-4 py-3 bg-stone-50 border-b border-stone-100">
+                          <div class="flex items-center gap-2">
+                            <span class="font-bold text-stone-800 text-sm">{{ customer.customerName }}</span>
+                            <span v-if="customer.customerUnit" class="text-xs text-stone-400 bg-stone-200 px-2 py-0.5 rounded-md">{{ customer.customerUnit }}</span>
+                          </div>
+                          <div class="flex gap-1.5">
+                            <button @click="startEditCreateCustomer(cidx)" class="px-3 py-1 bg-stone-100 text-stone-700 rounded-lg border border-stone-200 text-xs font-bold hover:bg-stone-200 transition">編輯</button>
+                            <button @click="createOrderCustomers.splice(cidx,1)" class="px-3 py-1 bg-stone-100 text-stone-700 rounded-lg border border-stone-200 text-xs font-bold hover:bg-stone-200 transition">刪除</button>
+                          </div>
                         </div>
-                        <div v-if="customer.note" class="mt-2 mb-1 text-xs text-stone-400"><i class="fas fa-comment-dots mr-1"></i>{{ customer.note }}</div>
-                      </div>
+                        <div class="px-4 py-2">
+                          <div v-for="(item, iidx) in customer.items.filter(i => i.qty > 0)" :key="iidx" class="flex justify-between items-center py-1.5 border-b border-stone-50 last:border-b-0">
+                            <span class="text-sm text-stone-600">{{ item.itemName }}</span>
+                            <span class="text-sm font-semibold text-stone-700">× {{ item.qty }}</span>
+                          </div>
+                          <div v-if="customer.note" class="mt-2 mb-1 text-xs text-stone-400"><i class="fas fa-comment-dots mr-1"></i>{{ customer.note }}</div>
+                        </div>
+                      </template>
                     </div>
                   </div>
                 </div>
@@ -1250,7 +1274,7 @@
                 <div class="flex-1 min-w-0">
                   <p class="font-black text-stone-800 truncate">{{ group.companyName }}</p>
                   <div class="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
-                    <span class="text-xs text-stone-500"><i class="fas fa-truck mr-1"></i>{{ group.deliveryTime ? new Date(group.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-' }}</span>
+                    <span class="text-xs text-stone-500"><i class="fas fa-truck mr-1"></i>{{ fmtTs(group.deliveryTime, 'short') }}</span>
                     <span class="text-xs text-stone-500"><i class="fas fa-user mr-1"></i>{{ group.contactName }}<span v-if="group.contactPhone"> {{ group.contactPhone }}</span></span>
                   </div>
                 </div>
@@ -1577,7 +1601,7 @@
               <p class="text-xs text-stone-500 mt-0.5">
                 <i class="fas fa-user mr-1"></i>{{ order.contactName }}
                 <span v-if="order.deliveryTime" class="ml-2">
-                  <i class="fas fa-truck mr-1"></i>{{ new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) }}
+                  <i class="fas fa-truck mr-1"></i>{{ fmtTs(order.deliveryTime, 'short') }}
                 </span>
               </p>
             </div>
@@ -1599,9 +1623,27 @@
             <i :class="['text-2xl', customAlert.type === 'success' ? 'fas fa-check' : customAlert.type === 'error' ? 'fas fa-times' : 'fas fa-info']" :style="customAlert.type === 'success' ? 'color:#22c55e' : ''"></i>
           </div>
           <p class="font-bold text-lg text-stone-800 mb-6">{{ customAlert.message }}</p>
-          <button @click="customAlert.show = false" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-black transition">
+          <button @click="customAlert.show = false" :class="['w-full text-white py-3 rounded-xl font-bold transition shadow-lg', customAlert.type === 'success' ? 'bg-green-500 hover:bg-green-600 shadow-green-500/30' : customAlert.type === 'error' ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' : 'bg-brand-500 hover:bg-brand-600 shadow-brand-500/30']">
             確定
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 自訂確認對話框 -->
+    <div v-if="customConfirm.show" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[101] flex items-center justify-center p-6 animate-fade-in">
+      <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative overflow-hidden animate-zoom-in">
+        <div :class="['absolute top-0 left-0 w-full h-2', customConfirm.type === 'danger' ? 'bg-red-500' : 'bg-amber-400']"></div>
+        <div class="flex flex-col items-center text-center">
+          <div :class="['w-16 h-16 rounded-full flex items-center justify-center mb-4', customConfirm.type === 'danger' ? 'bg-red-100' : 'bg-amber-50']">
+            <i :class="['text-2xl', customConfirm.type === 'danger' ? 'fas fa-trash text-red-500' : 'fas fa-exclamation-triangle text-amber-400']"></i>
+          </div>
+          <p class="font-bold text-lg text-stone-800 mb-2">{{ customConfirm.type === 'danger' ? '確認刪除' : '確認操作' }}</p>
+          <p class="text-sm text-stone-500 mb-6 leading-relaxed">{{ customConfirm.message }}</p>
+          <div class="flex gap-3 w-full">
+            <button @click="confirmCancel" class="flex-1 py-3 bg-stone-100 text-stone-600 rounded-xl font-bold hover:bg-stone-200 transition">取消</button>
+            <button @click="confirmOk" :class="['flex-1 py-3 text-white rounded-xl font-bold transition shadow-lg', customConfirm.type === 'danger' ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' : 'bg-stone-800 hover:bg-black']">{{ customConfirm.type === 'danger' ? '確定刪除' : '確定' }}</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1721,6 +1763,12 @@
         const showAdminMenu = ref(false);
         const adminTab = ref('accounts');
         const customAlert = ref({ show: false, message: '', type: 'info' });
+        const customConfirm = ref({ show: false, message: '', type: 'confirm', resolve: null });
+        const showConfirm = (message, type = 'confirm') => new Promise(resolve => {
+          customConfirm.value = { show: true, message, type, resolve };
+        });
+        const confirmOk = () => { customConfirm.value.resolve(true); customConfirm.value.show = false; };
+        const confirmCancel = () => { customConfirm.value.resolve(false); customConfirm.value.show = false; };
         
         // 新訂單通知
         const newOrderNotif = ref({ show: false, orders: [] });
@@ -1769,9 +1817,24 @@
         const createOrderTab = ref('info');
         const createOrderForm = ref({ companyName: '', contactName: '', contactPhone: '', address: '', deliveryTime: '' });
         const createOrderSubmitted = ref(false);
+        const fieldErr = (f) => createOrderSubmitted.value && !createOrderForm.value[f];
+        // 日期格式化
+        const fmtTs = (ts, mode) => {
+          if (!ts?.seconds) return '-';
+          const d = new Date(ts.seconds * 1000);
+          if (mode === 'short') return d.toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+          if (mode === 'full')  return d.toLocaleString('zh-TW');
+          return d.toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+        };
+        // 狀態標籤 / 樣式
+        const statusLabel = s => ({approved:'已接單',rejected:'已拒絕',expired:'已過期',pending:'待審核'}[s] || '待審核');
+        const statusClass = s => s==='approved'?'bg-green-100 text-green-700':s==='rejected'?'bg-red-100 text-red-800':s==='expired'?'bg-gray-100 text-gray-500':'bg-amber-100 text-amber-700';
+        const selectedContact = computed(() => frequentContacts.value.find(c => c.id === selectedContactId.value) || null);
         const createOrderCustomers = ref([]);
         const addingCreateCustomer = ref(false);
         const newCreateCustomerData = ref({ customerName: '', customerUnit: '', note: '', items: [] });
+        const editingCreateCustomerIdx = ref(null);
+        const editingCreateCustomerData = ref({});
 
         const openCreateOrderModal = async () => {
           if (adminData.value.itemsList.length === 0) await fetchAdminItems();
@@ -1786,6 +1849,28 @@
           showCreateOrderModal.value = true;
         };
 
+        const startEditCreateCustomer = (cidx) => {
+          const c = createOrderCustomers.value[cidx];
+          editingCreateCustomerData.value = {
+            customerName: c.customerName,
+            customerUnit: c.customerUnit || '',
+            note: c.note || '',
+            items: adminData.value.itemsList.map(i => ({ itemName: i.name, qty: (c.items.find(x => x.itemName === i.name)?.qty) || 0 }))
+          };
+          editingCreateCustomerIdx.value = cidx;
+          addingCreateCustomer.value = false;
+        };
+        const saveEditCreateCustomer = () => {
+          const data = editingCreateCustomerData.value;
+          if (!data.customerName) { showAlert('請填寫訂購人', 'error'); return; }
+          createOrderCustomers.value[editingCreateCustomerIdx.value] = {
+            customerName: data.customerName,
+            customerUnit: data.customerUnit || '',
+            note: data.note || '',
+            items: data.items.filter(i => i.qty > 0)
+          };
+          editingCreateCustomerIdx.value = null;
+        };
         const confirmAddCreateCustomer = () => {
           const data = newCreateCustomerData.value;
           const validItems = data.items.filter(i => i.qty > 0);
@@ -1987,7 +2072,7 @@
         };
 
         const deleteCustomerOrder = async (orderId, idx) => {
-          if (!confirm('確定要刪除此訂單嗎？')) return;
+          if (!await showConfirm('確定要刪除此訂單嗎？', 'danger')) return;
           loading.value = true;
           try {
             await deleteDoc(doc(db, 'Orders', orderId));
@@ -2133,9 +2218,7 @@
               }
               if (pages.length === 0) pages.push([]);
               const totalPages = pages.length;
-              const deliveryTimeStr = group.deliveryTime
-                ? new Date(group.deliveryTime.seconds * 1000).toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
-                : '-';
+              const deliveryTimeStr = fmtTs(group.deliveryTime, 'short');
               return pages.map((chunk, idx) => ({
                 orderId: order.id + '_p' + idx,
                 pageNum: idx + 1,
@@ -2266,7 +2349,7 @@
           if (kw) {
             const _colFieldMap = {
               orderNo:      o => o.id || '',
-              deliveryTime: o => o.deliveryTime?.seconds ? new Date(o.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '',
+              deliveryTime: o => fmtTs(o.deliveryTime),
               companyName:  o => o.companyName || '',
               contactName:  o => o.contactName || '',
               contactPhone: o => o.contactPhone || '',
@@ -2442,7 +2525,7 @@
           finally { loading.value = false; }
         };
         const deleteContact = async (contact) => {
-          if (!confirm(`確定要刪除「${contact.companyName}」嗎？`)) return;
+          if (!await showConfirm(`確定要刪除「${contact.companyName}」嗎？`, 'danger')) return;
           loading.value = true;
           try {
             await deleteDoc(doc(db, 'FrequentContacts', contact.id));
@@ -2587,7 +2670,7 @@
             return;
           }
           
-          if (!confirm(`確定要刪除帳號「${account.name || account.accountId}」嗎？此操作無法復原。`)) {
+          if (!await showConfirm(`確定要刪除帳號「${account.name || account.accountId}」嗎？此操作無法復原。`, 'danger')) {
             return;
           }
           
@@ -2916,7 +2999,7 @@
 
         // 刪除產品
         const deleteItem = async (item) => {
-          if (!confirm(`確定要刪除產品「${item.name}」嗎？此操作無法復原。`)) {
+          if (!await showConfirm(`確定要刪除產品「${item.name}」嗎？此操作無法復原。`, 'danger')) {
             return;
           }
           
@@ -2963,7 +3046,7 @@
 
         // 確認團購
         const confirmGroup = async (group) => {
-          if (!confirm(`確定要確認「${group.companyName}」嗎？`)) return;
+          if (!await showConfirm(`確定要確認「${group.companyName}」嗎？`)) return;
           
           loading.value = true;
           try {
@@ -2985,7 +3068,7 @@
 
         // 駁回團購
         const rejectGroup = async (group) => {
-          if (!confirm(`確定要拒絕「${group.companyName}」的接單嗎？`)) return;
+          if (!await showConfirm(`確定要拒絕「${group.companyName}」的接單嗎？`)) return;
           
           loading.value = true;
           try {
@@ -3212,8 +3295,8 @@
         };
         
         // 取消編輯
-        const cancelEditOrder = () => {
-          if (confirm('確定要取消編輯嗎？未保存的更改將會遺失。')) {
+        const cancelEditOrder = async () => {
+          if (await showConfirm('確定要取消編輯嗎？未保存的更改將會遺失。')) {
             editingOrderId.value = null;
             editFormData.value = {};
             editOrdersList.value = [];
@@ -3227,7 +3310,7 @@
             return;
           }
           
-          if (!confirm('確定要保存所有更改嗎？')) return;
+          if (!await showConfirm('確定要保存所有更改嗎？')) return;
 
           if (adminData.value.itemsList.length === 0) await fetchAdminItems();
           loading.value = true;
@@ -3337,7 +3420,7 @@
         const removeOrder = async (idx) => {
           const orderItem = editOrdersList.value[idx];
           if (orderItem.id) {
-            if (!confirm('確定要刪除此訂單嗎？此操作無法復原。')) return;
+            if (!await showConfirm('確定要刪除此訂單嗎？此操作無法復原。', 'danger')) return;
             try {
               await deleteDoc(doc(db, "Orders", orderItem.id));
               showAlert('訂單已刪除', 'success');
@@ -3593,9 +3676,7 @@
           for (let i = 0; i < allItems.length; i += SINGLE_LABEL_PER_PAGE) pages.push(allItems.slice(i, i + SINGLE_LABEL_PER_PAGE));
           if (pages.length === 0) pages.push([]);
           const totalPages = pages.length;
-          const deliveryTimeStr = group.deliveryTime
-            ? new Date(group.deliveryTime.seconds * 1000).toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
-            : '-';
+          const deliveryTimeStr = fmtTs(group.deliveryTime, 'short');
           return pages.map((chunk, idx) => ({
             key: order.id + '_p' + idx, pageNum: idx + 1, totalPages,
             isFirstPage: idx === 0, isLastPage: idx === totalPages - 1,
@@ -3901,6 +3982,9 @@
           labelStart,
           labelEnd,
           customAlert,
+          customConfirm,
+          confirmOk,
+          confirmCancel,
           showAccountModal,
           showSettingsMenu,
           editingAccount,
@@ -3966,7 +4050,17 @@
           addingCreateCustomer,
           newCreateCustomerData,
           createOrderSubmitted,
+          fieldErr,
+          fmtTs,
+          statusLabel,
+          statusClass,
+          selectedContact,
           openCreateOrderModal,
+          confirmAddCreateCustomer,
+          editingCreateCustomerIdx,
+          editingCreateCustomerData,
+          startEditCreateCustomer,
+          saveEditCreateCustomer,
           saveCreateGroupOrder,
           showAlert,
           handleLogin,
