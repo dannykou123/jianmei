@@ -346,8 +346,14 @@
                   <div class="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3 mb-1">
                     <h3 class="font-black text-stone-800 text-base">{{ item.name }}</h3>
                     <p class="text-lg font-black text-brand-600">NT$ {{ item.price }}</p>
+                    <span v-if="item.isCombo" class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
+                      <i class="fas fa-layer-group text-[10px]"></i>組合 {{ item.combos ? item.combos.length : 0 }}項
+                    </span>
                   </div>
                   <p v-if="item.description" class="text-sm text-stone-500 line-clamp-2">{{ item.description }}</p>
+                  <div v-if="item.isCombo && item.combos && item.combos.length" class="mt-1 flex flex-wrap gap-1">
+                    <span v-for="comp in item.combos" :key="comp.itemName" class="text-xs bg-stone-100 text-stone-500 px-2 py-0.5 rounded">{{ comp.itemName }} ×{{ comp.qty }}</span>
+                  </div>
                 </div>
                 
                 <div class="flex gap-2 sm:flex-shrink-0">
@@ -581,7 +587,7 @@
                 <div class="flex items-center gap-2 md:flex-1 md:min-w-0">
                   <div class="relative flex-1 min-w-0">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-xs"></i>
-                    <input type="text" v-model="detailsKeyword" placeholder="公司名稱、聯絡人、電話、訂單編號..." class="w-full pl-8 pr-3 py-1.5 border border-stone-200 rounded-lg text-sm outline-none text-stone-700">
+                    <input type="text" v-model="detailsKeyword" placeholder="關鍵字搜尋..." class="w-full pl-8 pr-3 py-1.5 border border-stone-200 rounded-lg text-sm outline-none text-stone-700">
                   </div>
                   <select v-model.number="detailsPageSize" class="px-2 py-1.5 border border-stone-200 rounded-lg text-xs font-bold text-stone-700 bg-white outline-none flex-shrink-0">
                     <option :value="10">每頁10筆</option>
@@ -589,6 +595,30 @@
                     <option :value="50">每頁50筆</option>
                     <option :value="100">每頁100筆</option>
                   </select>
+                  <!-- 欄位設定按鈕 -->
+                  <div class="relative flex-shrink-0">
+                    <button @click="showColumnSettings = !showColumnSettings" :class="['w-8 h-8 flex items-center justify-center rounded-lg border transition', showColumnSettings ? 'bg-stone-800 text-white border-stone-800' : 'bg-white border-stone-200 text-stone-500 hover:bg-stone-100']" title="欄位設定">
+                      <i class="fas fa-columns text-xs"></i>
+                    </button>
+                    <div v-if="showColumnSettings" class="fixed inset-0 z-40" @click="showColumnSettings = false"></div>
+                    <div v-if="showColumnSettings" class="absolute right-0 top-10 z-50 bg-white border border-stone-200 rounded-xl shadow-xl p-3 min-w-[140px]" @click.stop>
+                      <p class="text-xs font-black text-stone-500 mb-1.5 px-1">欄位顯示與排序</p>
+                      <p class="text-[10px] text-stone-400 mb-2 px-1">拖曳 <i class="fas fa-grip-vertical"></i> 調整順序</p>
+                      <div v-for="(key, idx) in columnOrder" :key="key"
+                           class="flex items-center gap-1.5 px-1 py-1.5 rounded select-none"
+                           :class="colDragFrom === idx ? 'opacity-40 bg-stone-100' : 'hover:bg-stone-50'"
+                           draggable="true"
+                           @dragstart="colDragFrom = idx"
+                           @dragover.prevent
+                           @drop="columnDrop(idx)"
+                           @dragend="colDragFrom = null">
+                        <i class="fas fa-grip-vertical text-stone-300 text-xs cursor-grab flex-shrink-0"></i>
+                        <input v-if="colMetaMap[key].toggleable" type="checkbox" :checked="tableColumns[key]" @change="tableColumns[key] = !tableColumns[key]" class="accent-stone-800 flex-shrink-0 cursor-pointer">
+                        <span v-else class="w-3.5 flex-shrink-0"></span>
+                        <span class="text-xs text-stone-700 cursor-grab">{{ colMetaMap[key].label }}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <!-- Row 2: 頁碼資訊 + 分頁按鈕 -->
@@ -608,19 +638,17 @@
                   <tr class="border-b border-stone-100 text-xs font-black text-stone-400 uppercase tracking-wider">
                     <th class="px-4 py-3 text-center"><input type="checkbox" :checked="isAllOrderSelected" @change="toggleAllOrderSelection" class="w-4 h-4 accent-stone-800"></th>
                     <th class="px-4 py-3 text-left">狀態</th>
-                    <th class="hidden sm:table-cell px-2 py-3 text-left text-xs">訂單編號</th>
-                    <th class="px-4 py-3 text-left cursor-pointer select-none hover:text-stone-600 transition" @click="sortByField('deliveryTime')">
-                      配送時間
-                      <i :class="['fas ml-1', detailsSort.startsWith('deliveryTime') ? (detailsSort.endsWith('asc') ? 'fa-sort-up text-stone-700' : 'fa-sort-down text-stone-700') : 'fa-sort text-stone-300']"></i>
-                    </th>
-                    <th class="px-4 py-3 text-left cursor-pointer select-none hover:text-stone-600 transition" @click="sortByField('companyName')">
-                      公司名稱
-                      <i :class="['fas ml-1', detailsSort.startsWith('companyName') ? (detailsSort.endsWith('asc') ? 'fa-sort-up text-stone-700' : 'fa-sort-down text-stone-700') : 'fa-sort text-stone-300']"></i>
-                    </th>
-                    <th class="hidden sm:table-cell px-4 py-3 text-left">聯絡人</th>
-                    <th class="hidden sm:table-cell px-4 py-3 text-left">連絡電話</th>
-                    <th class="hidden sm:table-cell px-4 py-3 text-left">來源</th>
-                    <th class="hidden sm:table-cell px-4 py-3 text-right">總金額</th>
+                    <template v-for="col in orderedVisibleColumns" :key="col.key">
+                      <th v-if="col.key === 'deliveryTime'" class="px-4 py-3 text-left cursor-pointer select-none hover:text-stone-600 transition" @click="sortByField('deliveryTime')">
+                        配送時間 <i :class="['fas ml-1', detailsSort.startsWith('deliveryTime') ? (detailsSort.endsWith('asc') ? 'fa-sort-up text-stone-700' : 'fa-sort-down text-stone-700') : 'fa-sort text-stone-300']"></i>
+                      </th>
+                      <th v-else-if="col.key === 'companyName'" class="px-4 py-3 text-left cursor-pointer select-none hover:text-stone-600 transition" @click="sortByField('companyName')">
+                        公司名稱 <i :class="['fas ml-1', detailsSort.startsWith('companyName') ? (detailsSort.endsWith('asc') ? 'fa-sort-up text-stone-700' : 'fa-sort-down text-stone-700') : 'fa-sort text-stone-300']"></i>
+                      </th>
+                      <th v-else-if="col.key === 'totalAmount'" class="hidden sm:table-cell px-4 py-3 text-right">總金額</th>
+                      <th v-else-if="col.key === 'orderNo'" class="hidden sm:table-cell px-2 py-3 text-left">訂單編號</th>
+                      <th v-else class="hidden sm:table-cell px-4 py-3 text-left">{{ col.label }}</th>
+                    </template>
                     <th class="hidden sm:table-cell px-4 py-3 text-center">操作</th>
                   </tr>
                 </thead>
@@ -635,18 +663,20 @@
                         {{ order.status === 'approved' ? '已接單' : order.status === 'rejected' ? '已拒絕' : order.status === 'expired' ? '已過期' : '待審核' }}
                       </button>
                     </td>
-                    <td class="hidden sm:table-cell px-2 py-3 text-xs text-stone-800 font-mono">{{ order.id }}</td>
-                    <td class="px-4 py-3 text-stone-500 whitespace-nowrap">
-                      <span class="hidden sm:inline">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
-                      <span class="sm:hidden">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
-                    </td>
-                    <td class="px-4 py-3 font-bold text-stone-800 whitespace-nowrap">{{ order.companyName }}</td>
-                    <td class="hidden sm:table-cell px-4 py-3 text-stone-600 whitespace-nowrap">{{ order.contactName }}</td>
-                    <td class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.contactPhone || '-' }}</td>
-                    <td class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.resource || '-' }}</td>
-                    <td class="hidden sm:table-cell px-4 py-3 text-right font-bold text-red-800 whitespace-nowrap">
-                      {{ groupTotalAmountMap[order.id] > 0 ? '$' + groupTotalAmountMap[order.id].toLocaleString() : '-' }}
-                    </td>
+                    <template v-for="col in orderedVisibleColumns" :key="col.key">
+                      <td v-if="col.key === 'orderNo'" class="hidden sm:table-cell px-2 py-3 text-xs text-stone-800 font-mono">{{ order.id }}</td>
+                      <td v-else-if="col.key === 'deliveryTime'" class="px-4 py-3 text-stone-500 whitespace-nowrap">
+                        <span class="hidden sm:inline">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
+                        <span class="sm:hidden">{{ order.deliveryTime ? new Date(order.deliveryTime.seconds * 1000).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '-' }}</span>
+                      </td>
+                      <td v-else-if="col.key === 'companyName'" class="px-4 py-3 font-bold text-stone-800 whitespace-nowrap">{{ order.companyName }}</td>
+                      <td v-else-if="col.key === 'contactName'" class="hidden sm:table-cell px-4 py-3 text-stone-600 whitespace-nowrap">{{ order.contactName }}</td>
+                      <td v-else-if="col.key === 'contactPhone'" class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.contactPhone || '-' }}</td>
+                      <td v-else-if="col.key === 'resource'" class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.resource || '-' }}</td>
+                      <td v-else-if="col.key === 'totalAmount'" class="hidden sm:table-cell px-4 py-3 text-right font-bold text-red-800 whitespace-nowrap">
+                        {{ groupTotalAmountMap[order.id] > 0 ? '$' + groupTotalAmountMap[order.id].toLocaleString() : '-' }}
+                      </td>
+                    </template>
                     <td class="hidden sm:table-cell px-4 py-3 text-center whitespace-nowrap">
                       <div class="flex gap-2 justify-center">
                         <button @click="printSingleStock(order)" :disabled="printingSingleId === order.id" class="px-3 py-1 bg-stone-100 text-stone-500 rounded-lg hover:bg-stone-200 transition text-xs font-bold" title="列印備料單">備貨單</button>
@@ -795,7 +825,7 @@
                         </div>
                         <div>
                           <label class="text-xs font-bold text-stone-400 mb-1 block">配送時間</label>
-                          <input v-model="editFormData.deliveryTime" type="datetime-local" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                          <input v-model="editFormData.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
                         </div>
                       </div>
                       <div>
@@ -988,20 +1018,24 @@
                         </button>
                       </div>
                       <div>
-                        <label class="text-xs font-bold text-stone-400 mb-1 block">公司名稱 *</label>
-                        <input v-model="createOrderForm.companyName" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                        <label class="text-xs font-bold text-stone-400 mb-1 block">公司名稱 <span class="text-red-500">*</span></label>
+                        <input v-model="createOrderForm.companyName" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition" :class="!createOrderForm.companyName ? 'border-red-300' : 'border-stone-200'">
+                        <p v-if="!createOrderForm.companyName" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                       <div>
-                        <label class="text-xs font-bold text-stone-400 mb-1 block">聯絡人 *</label>
-                        <input v-model="createOrderForm.contactName" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                        <label class="text-xs font-bold text-stone-400 mb-1 block">聯絡人 <span class="text-red-500">*</span></label>
+                        <input v-model="createOrderForm.contactName" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition" :class="!createOrderForm.contactName ? 'border-red-300' : 'border-stone-200'">
+                        <p v-if="!createOrderForm.contactName" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                       <div>
-                        <label class="text-xs font-bold text-stone-400 mb-1 block">聯絡電話</label>
-                        <input v-model="createOrderForm.contactPhone" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                        <label class="text-xs font-bold text-stone-400 mb-1 block">聯絡電話 <span class="text-red-500">*</span></label>
+                        <input v-model="createOrderForm.contactPhone" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition" :class="!createOrderForm.contactPhone ? 'border-red-300' : 'border-stone-200'">
+                        <p v-if="!createOrderForm.contactPhone" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                       <div>
-                        <label class="text-xs font-bold text-stone-400 mb-1 block">配送時間</label>
-                        <input v-model="createOrderForm.deliveryTime" type="datetime-local" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                        <label class="text-xs font-bold text-stone-400 mb-1 block">配送時間 <span class="text-red-500">*</span></label>
+                        <input v-model="createOrderForm.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition" :class="!createOrderForm.deliveryTime ? 'border-red-300' : 'border-stone-200'">
+                        <p v-if="!createOrderForm.deliveryTime" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                        <div>
                          <label class="text-xs font-bold text-stone-400 mb-1 block">來源</label>
@@ -1359,6 +1393,32 @@
           <div>
             <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">產品描述</label>
             <textarea v-model="itemForm.description" rows="3" placeholder="產品詳細說明..." class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700 resize-none"></textarea>
+          </div>
+
+          <!-- 組合品項設定 -->
+          <div class="border-2 border-stone-200 rounded-xl p-4">
+            <label class="flex items-center gap-2 cursor-pointer mb-1">
+              <input type="checkbox" v-model="itemForm.isCombo" class="w-4 h-4 accent-brand-600">
+              <span class="text-sm font-bold text-stone-700">此為組合品項（如：大綜合、小綜合）</span>
+            </label>
+            <p class="text-xs text-stone-400 mb-3 ml-6">備貨單將自動展開為內容物，不顯示組合名稱</p>
+            <div v-if="itemForm.isCombo" class="ml-2 mt-2 grid gap-1.5 max-h-52 overflow-y-auto pr-1">
+              <div v-for="it in adminData.itemsList.filter(i => !i.isCombo)" :key="it.id"
+                   class="flex items-center justify-between px-3 py-2 rounded-lg border transition"
+                   :class="comboQty(it.name) > 0 ? 'bg-amber-50 border-amber-300' : 'bg-stone-50 border-stone-200'">
+                <span class="text-sm font-medium" :class="comboQty(it.name) > 0 ? 'text-stone-800' : 'text-stone-400'">{{ it.name }}</span>
+                <div class="flex items-center gap-1">
+                  <button type="button" @click="setComboQty(it.name, -1)"
+                          :disabled="comboQty(it.name) === 0"
+                          class="w-7 h-7 flex items-center justify-center rounded-md font-bold text-base transition"
+                          :class="comboQty(it.name) === 0 ? 'text-stone-300 cursor-default' : 'text-stone-500 hover:bg-stone-200'">－</button>
+                  <span class="w-6 text-center text-sm font-mono font-bold"
+                        :class="comboQty(it.name) > 0 ? 'text-amber-600' : 'text-stone-300'">{{ comboQty(it.name) }}</span>
+                  <button type="button" @click="setComboQty(it.name, 1)"
+                          class="w-7 h-7 flex items-center justify-center rounded-md text-stone-500 hover:bg-stone-200 font-bold text-base transition">＋</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -1723,9 +1783,26 @@
           addingCreateCustomer.value = false;
         };
 
+        // 為品項補上 price / subtotal（用於出貨單顯示）
+        const enrichItemsWithPrice = (items) => {
+          if (adminData.value.itemsList.length === 0) return items;
+          const priceMap = {};
+          adminData.value.itemsList.forEach(it => { priceMap[it.name] = it.price || 0; });
+          return items.map(item => {
+            const price = priceMap[item.itemName] || item.price || 0;
+            const qty = parseInt(item.qty) || 0;
+            return { ...item, price, subtotal: price * qty };
+          });
+        };
+
         const saveCreateGroupOrder = async () => {
           const f = createOrderForm.value;
-          if (!f.companyName || !f.contactName) { showAlert('請填寫公司名稱和聯絡人', 'error'); return; }
+          if (!f.companyName) { showAlert('請填寫公司名稱', 'error'); return; }
+          if (!f.contactName) { showAlert('請填寫聯絡人', 'error'); return; }
+          if (!f.contactPhone) { showAlert('請填寫聯絡電話', 'error'); return; }
+          if (!f.deliveryTime) { showAlert('請選擇配送時間', 'error'); return; }
+          if (new Date(f.deliveryTime) < new Date()) { showAlert('配送時間不可早於現在', 'error'); return; }
+          if (adminData.value.itemsList.length === 0) await fetchAdminItems();
           loading.value = true;
           try {
             const groupData = {
@@ -1742,16 +1819,22 @@
             };
             if (f.deliveryTime) groupData.deliveryTime = new Date(f.deliveryTime);
             const groupRef = await addDoc(collection(db, 'GroupOrders'), groupData);
+            let grandTotal = 0;
             for (const customer of createOrderCustomers.value) {
+              const enrichedItems = enrichItemsWithPrice(customer.items.filter(i => i.itemName && i.qty > 0));
+              const orderTotal = enrichedItems.reduce((s, i) => s + (i.subtotal || 0), 0);
+              grandTotal += orderTotal;
               await addDoc(collection(db, 'Orders'), {
                 groupOrderId: groupRef.id,
                 customerName: customer.customerName,
                 customerUnit: customer.customerUnit || '',
                 note: customer.note || '',
-                items: customer.items,
+                items: enrichedItems,
+                totalAmount: orderTotal,
                 createdAt: new Date()
               });
             }
+            await updateDoc(groupRef, { totalAmount: grandTotal });
             showAlert('訂單建立成功', 'success');
             showCreateOrderModal.value = false;
             await fetchOrderDetails();
@@ -1795,6 +1878,10 @@
         const saveBasicInfo = async () => {
           if (!editFormData.value.companyName || !editFormData.value.contactName) {
             showAlert('請填寫公司名稱和聯絡人', 'error');
+            return;
+          }
+          if (editFormData.value.deliveryTime && new Date(editFormData.value.deliveryTime) < new Date()) {
+            showAlert('配送時間不可早於現在', 'error');
             return;
           }
           loading.value = true;
@@ -1902,20 +1989,21 @@
           if (!validItems.length) { showAlert('請至少新增一個有效品項', 'error'); return; }
           loading.value = true;
           try {
-            const priceMap = {};
-            adminData.value.itemsList.forEach(item => { priceMap[item.name] = item.price || 0; });
-            const newTotal = validItems.reduce((s, i) => s + (priceMap[i.itemName] || 0) * (parseInt(i.qty) || 0), 0);
+            const enrichedItems = enrichItemsWithPrice(validItems);
+            const newTotal = enrichedItems.reduce((s, i) => s + (i.subtotal || 0), 0);
             const newDocRef = await addDoc(collection(db, 'Orders'), {
               groupOrderId: detailModalOrder.value.id,
               customerName: data.customerName,
               customerUnit: data.customerUnit || '',
               note: data.note || '',
-              items: validItems,
+              items: enrichedItems,
+              totalAmount: newTotal,
               createdAt: new Date()
             });
-            groupOrders.value.push({ id: newDocRef.id, customerName: data.customerName, customerUnit: data.customerUnit, note: data.note, items: validItems, totalAmount: newTotal });
+            groupOrders.value.push({ id: newDocRef.id, customerName: data.customerName, customerUnit: data.customerUnit, note: data.note, items: enrichedItems, totalAmount: newTotal });
             const total = groupOrders.value.reduce((s, o) => s + (o.totalAmount || 0), 0);
             groupTotalAmountMap.value = { ...groupTotalAmountMap.value, [detailModalOrder.value.id]: total };
+            await updateDoc(doc(db, 'GroupOrders', detailModalOrder.value.id), { totalAmount: total });
             editingNewCustomerOrder.value = false;
             showAlert('已新增', 'success');
           } catch (e) { showAlert('新增失敗：' + e.message, 'error'); }
@@ -1950,7 +2038,9 @@
         const itemForm = ref({
           name: '',
           price: 0,
-          description: ''
+          description: '',
+          isCombo: false,
+          combos: [] // [{itemName, qty}]
         });
         const itemsSort = ref('createdAt-asc'); // 預設排序：建立時間從舊到新
         
@@ -1963,6 +2053,16 @@
         const detailsStart = ref('');
         const detailsEnd = ref('');
         const statusEditOrder = ref(null);
+        const showColumnSettings = ref(false);
+        const tableColumns = ref(JSON.parse(localStorage.getItem('tableColumns') || JSON.stringify({orderNo:true,contactName:true,contactPhone:true,resource:false,totalAmount:true})));
+        watch(tableColumns, val => localStorage.setItem('tableColumns', JSON.stringify(val)), { deep: true });
+        const _defaultColOrder = ['orderNo','deliveryTime','companyName','contactName','contactPhone','resource','totalAmount'];
+        const columnOrder = ref(JSON.parse(localStorage.getItem('columnOrder') || JSON.stringify(_defaultColOrder)));
+        watch(columnOrder, val => localStorage.setItem('columnOrder', JSON.stringify(val)), { deep: true });
+        const colDragFrom = ref(null);
+        const colMetaMap = { orderNo:{label:'訂單編號',toggleable:true}, deliveryTime:{label:'配送時間',toggleable:false}, companyName:{label:'公司名稱',toggleable:false}, contactName:{label:'聯絡人',toggleable:true}, contactPhone:{label:'連絡電話',toggleable:true}, resource:{label:'來源',toggleable:true}, totalAmount:{label:'總金額',toggleable:true} };
+        function columnDrop(idx) { if (colDragFrom.value === null || colDragFrom.value === idx) { colDragFrom.value = null; return; } const arr = [...columnOrder.value]; const [item] = arr.splice(colDragFrom.value, 1); arr.splice(idx, 0, item); columnOrder.value = arr; colDragFrom.value = null; }
+        const orderedVisibleColumns = computed(() => columnOrder.value.filter(k => tableColumns.value[k] !== false).map(k => ({ key: k, ...colMetaMap[k] })));
         const reviewSort = ref('createdAt-desc'); // 待審核排序
         const stockStart = ref('');
         const stockEnd = ref('');
@@ -2658,11 +2758,7 @@
         // 打開新增產品對話框
         const openAddItemModal = () => {
           editingItem.value = {};
-          itemForm.value = {
-            name: '',
-            price: 0,
-            description: ''
-          };
+          itemForm.value = { name: '', price: 0, description: '', isCombo: false, combos: [] };
           showItemModal.value = true;
         };
         
@@ -2672,7 +2768,9 @@
           itemForm.value = {
             name: item.name || '',
             price: item.price || 0,
-            description: item.description || ''
+            description: item.description || '',
+            isCombo: item.isCombo || false,
+            combos: item.combos ? item.combos.map(c => ({ itemName: c.itemName, qty: c.qty })) : []
           };
           showItemModal.value = true;
         };
@@ -2681,11 +2779,7 @@
         const closeItemModal = () => {
           showItemModal.value = false;
           editingItem.value = {};
-          itemForm.value = {
-            name: '',
-            price: 0,
-            description: ''
-          };
+          itemForm.value = { name: '', price: 0, description: '', isCombo: false, combos: [] };
         };
         
         // 儲存產品
@@ -2706,6 +2800,10 @@
               name: itemForm.value.name,
               price: itemForm.value.price,
               description: itemForm.value.description,
+              isCombo: itemForm.value.isCombo || false,
+              combos: (itemForm.value.isCombo && itemForm.value.combos)
+                ? itemForm.value.combos.filter(c => c.itemName && parseInt(c.qty) > 0).map(c => ({ itemName: c.itemName, qty: parseInt(c.qty) }))
+                : [],
               updatedAt: new Date().toISOString()
             };
             
@@ -2731,6 +2829,46 @@
           }
         };
         
+        // 組合品項編輯輔助函式
+        const comboQty = (name) => {
+          const entry = itemForm.value.combos.find(c => c.itemName === name);
+          return entry ? entry.qty : 0;
+        };
+        const setComboQty = (name, delta) => {
+          const idx = itemForm.value.combos.findIndex(c => c.itemName === name);
+          if (idx >= 0) {
+            const newQty = itemForm.value.combos[idx].qty + delta;
+            if (newQty <= 0) {
+              itemForm.value.combos.splice(idx, 1);
+            } else {
+              itemForm.value.combos[idx].qty = newQty;
+            }
+          } else if (delta > 0) {
+            itemForm.value.combos.push({ itemName: name, qty: 1 });
+          }
+        };
+
+        // 展開組合品項：將 combo 品項替換為其內容物（用於備貨單計算）
+        const expandStockItems = (rawStockMap) => {
+          if (!adminData.value.itemsList.length) return rawStockMap;
+          const comboMap = {};
+          adminData.value.itemsList.forEach(item => {
+            if (item.isCombo && item.combos && item.combos.length) comboMap[item.name] = item.combos;
+          });
+          const expanded = {};
+          for (const [name, qty] of Object.entries(rawStockMap)) {
+            if (comboMap[name]) {
+              comboMap[name].forEach(comp => {
+                const k = comp.itemName;
+                expanded[k] = (expanded[k] || 0) + qty * (parseInt(comp.qty) || 0);
+              });
+            } else {
+              expanded[name] = (expanded[name] || 0) + qty;
+            }
+          }
+          return expanded;
+        };
+
         // 刪除產品
         const deleteItem = async (item) => {
           if (!confirm(`確定要刪除產品「${item.name}」嗎？此操作無法復原。`)) {
@@ -2894,23 +3032,17 @@
             // 儲存當前訂單的總金額
             groupTotalAmountMap.value = { ...groupTotalAmountMap.value, [groupId]: groupTotalAmount.value };
             
-            // 計算備貨統計
-            const stockMap = {};
+            // 計算備貨統計（展開組合品項）
+            const rawStockMap = {};
             orders.forEach(order => {
               if (order.items && Array.isArray(order.items)) {
                 order.items.forEach(item => {
-                  const key = item.itemName;
-                  if (!stockMap[key]) {
-                    stockMap[key] = {
-                      name: item.itemName,
-                      quantity: 0
-                    };
-                  }
-                  stockMap[key].quantity += parseInt(item.qty) || 0;
+                  rawStockMap[item.itemName] = (rawStockMap[item.itemName] || 0) + (parseInt(item.qty) || 0);
                 });
               }
             });
-            groupStock.value = Object.values(stockMap);
+            const expandedMap = expandStockItems(rawStockMap);
+            groupStock.value = Object.entries(expandedMap).map(([name, quantity]) => ({ name, quantity }));
           } catch (error) {
             console.error('獲取訂單錯誤:', error);
             showAlert('獲取訂單失敗', 'error');
@@ -3051,7 +3183,8 @@
           }
           
           if (!confirm('確定要保存所有更改嗎？')) return;
-          
+
+          if (adminData.value.itemsList.length === 0) await fetchAdminItems();
           loading.value = true;
           try {
             // 更新 GroupOrder
@@ -3098,6 +3231,8 @@
                 continue;
               }
               
+              const enrichedItems = enrichItemsWithPrice(validItems);
+              const orderTotal = enrichedItems.reduce((s, i) => s + (i.subtotal || 0), 0);
               if (orderItem.id) {
                 // 更新現有訂單
                 const orderDocRef = doc(db, "Orders", orderItem.id);
@@ -3105,7 +3240,8 @@
                   customerName: orderItem.customerName,
                   customerUnit: orderItem.customerUnit || '',
                   note: orderItem.note || '',
-                  items: validItems,
+                  items: enrichedItems,
+                  totalAmount: orderTotal,
                   updatedAt: new Date().toISOString()
                 });
               } else {
@@ -3116,13 +3252,18 @@
                     customerName: orderItem.customerName,
                     customerUnit: orderItem.customerUnit || '',
                     note: orderItem.note || '',
-                    items: validItems,
+                    items: enrichedItems,
+                    totalAmount: orderTotal,
                     createdAt: new Date()
                   });
                 }
               }
             }
             
+            // 重新計算並回寫 GroupOrder 總金額
+            await calculateOrderTotal(editingOrderId.value);
+            const newGroupTotal = groupTotalAmountMap.value[editingOrderId.value] || 0;
+            await updateDoc(doc(db, 'GroupOrders', editingOrderId.value), { totalAmount: newGroupTotal });
             showAlert('保存成功', 'success');
             editingOrderId.value = null;
             editFormData.value = {};
@@ -3484,15 +3625,17 @@
         const printSingleStock = async (groupOrder) => {
           printingSingleId.value = groupOrder.id;
           try {
+            if (adminData.value.itemsList.length === 0) await fetchAdminItems();
             const orders = await _fetchSubOrders(groupOrder);
-            const stockMap = {};
+            const rawStockMap = {};
             orders.forEach(order => {
               (order.items || []).forEach(item => {
                 const qty = parseInt(item.qty) || 0;
-                if (qty > 0) stockMap[item.itemName] = (stockMap[item.itemName] || 0) + qty;
+                if (qty > 0) rawStockMap[item.itemName] = (rawStockMap[item.itemName] || 0) + qty;
               });
             });
-            const items = Object.entries(stockMap).map(([name, qty]) => ({ name, qty }));
+            const expandedMap = expandStockItems(rawStockMap);
+            const items = Object.entries(expandedMap).map(([name, qty]) => ({ name, qty }));
             singlePrintGroupData.value = { ...groupOrder, orders: [] };
             singleStockChunks.value = [];
             for (let i = 0; i < items.length; i += 12) singleStockChunks.value.push(items.slice(i, i + 12));
@@ -3559,18 +3702,19 @@
           try {
             if (adminData.value.itemsList.length === 0) await fetchAdminItems();
             adminData.value.itemsList.forEach(item => { labelPriceMap.value[item.name] = item.price || 0; });
-            const itemTotals = {};
+            const rawTotals = {};
             for (const groupOrder of sortedDetailsList.value) {
               const q = query(collection(db, 'Orders'), where('groupOrderId', '==', groupOrder.id));
               const snap = await getDocs(q);
               snap.docs.forEach(d => {
                 (d.data().items || []).forEach(item => {
                   if (item.itemName && parseInt(item.qty) > 0)
-                    itemTotals[item.itemName] = (itemTotals[item.itemName] || 0) + (parseInt(item.qty) || 0);
+                    rawTotals[item.itemName] = (rawTotals[item.itemName] || 0) + (parseInt(item.qty) || 0);
                 });
               });
             }
-            const items = Object.entries(itemTotals).map(([name, qty]) => ({ name, qty }));
+            const expandedTotals = expandStockItems(rawTotals);
+            const items = Object.entries(expandedTotals).map(([name, qty]) => ({ name, qty }));
             if (!items.length) { showAlert('沒有備貨項目', 'error'); return; }
             const size = 12;
             stockPrintChunks.value = [];
@@ -3689,6 +3833,13 @@
           detailsStart,
           detailsEnd,
           statusEditOrder,
+          showColumnSettings,
+          tableColumns,
+          columnOrder,
+          colDragFrom,
+          colMetaMap,
+          columnDrop,
+          orderedVisibleColumns,
           changeOrderStatus,
           printAllFilteredLabels,
           printAllFilteredStock,
@@ -3787,6 +3938,8 @@
           closeItemModal,
           saveItem,
           deleteItem,
+          comboQty,
+          setComboQty,
           fetchReviewList,
           confirmGroup,
           rejectGroup,
