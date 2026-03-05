@@ -18,12 +18,293 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     [v-cloak] { display: none; }
+
+    /* ═══════════════ Glass/SaaS Design System ═══════════════ */
+    :root {
+      --glass-bg: rgba(255,255,255,0.72);
+      --glass-bg-heavy: rgba(255,255,255,0.88);
+      --glass-bg-light: rgba(255,255,255,0.55);
+      --glass-border: rgba(255,255,255,0.45);
+      --glass-border-subtle: rgba(120,113,108,0.15);
+      --glass-border-strong: rgba(120,113,108,0.22);
+      --glass-blur: 16px;
+      --glass-blur-heavy: 24px;
+      --glass-shadow: 0 8px 32px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
+      --glass-shadow-lg: 0 16px 48px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06);
+      --glass-shadow-glow: 0 0 0 1px rgba(255,255,255,0.5) inset, 0 8px 32px rgba(0,0,0,0.08);
+      --glass-radius: 16px;
+      --glass-radius-sm: 12px;
+      --glass-radius-xs: 8px;
+      --glass-radius-full: 9999px;
+      --brand-glow: rgba(200,75,49,0.12);
+      --spring: cubic-bezier(0.23,1,0.32,1);
+      --smooth: cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* Animated mesh gradient background */
+    body {
+      background: #f5f3f0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 10% 20%, rgba(200,75,49,0.07) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 80% at 85% 75%, rgba(59,130,246,0.05) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 50% at 50% 10%, rgba(200,75,49,0.04) 0%, transparent 50%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      color: #1c1917;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* Glass Card */
+    .g-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--glass-border);
+      border-radius: var(--glass-radius);
+      box-shadow: var(--glass-shadow-glow);
+      transition: all 0.35s var(--spring);
+    }
+    .g-card:hover { box-shadow: var(--glass-shadow-lg); }
+    .g-card-solid {
+      background: var(--glass-bg-heavy);
+      backdrop-filter: blur(var(--glass-blur-heavy));
+      -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+      border: 1px solid var(--glass-border);
+      border-radius: var(--glass-radius);
+      box-shadow: var(--glass-shadow-glow);
+    }
+
+    /* Glass Nav */
+    .g-nav {
+      background: rgba(255,255,255,0.78);
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      border-bottom: 1px solid var(--glass-border-subtle);
+      box-shadow: 0 1px 12px rgba(0,0,0,0.04);
+    }
+
+    /* Glass Input */
+    .g-input {
+      height: 38px;
+      padding: 0 12px;
+      background: rgba(255,255,255,0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--glass-border-strong);
+      border-radius: var(--glass-radius-xs);
+      font-size: 14px;
+      font-weight: 500;
+      color: #1c1917;
+      outline: none;
+      transition: all 0.25s var(--smooth);
+    }
+    .g-input:focus {
+      background: rgba(255,255,255,0.92);
+      border-color: rgba(200,75,49,0.45);
+      box-shadow: 0 0 0 3px rgba(200,75,49,0.08), 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .g-input::placeholder { color: #a8a29e; font-weight: 400; }
+    textarea.g-input { height: auto; padding: 10px 12px; resize: none; }
+    .g-input-lg { height: 44px; padding: 0 16px; font-size: 15px; }
+
+    /* Glass Select */
+    .g-select {
+      height: 38px;
+      padding: 0 32px 0 12px;
+      appearance: none;
+      background: rgba(255,255,255,0.65) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='%2378716c'%3E%3Cpath d='M0 0l5 6 5-6z'/%3E%3C/svg%3E") no-repeat right 10px center;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--glass-border-strong);
+      border-radius: var(--glass-radius-xs);
+      font-size: 14px;
+      font-weight: 600;
+      color: #1c1917;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.25s var(--smooth);
+    }
+    .g-select:focus {
+      border-color: rgba(200,75,49,0.45);
+      box-shadow: 0 0 0 3px rgba(200,75,49,0.08);
+    }
+
+    /* Glass Label */
+    .g-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #a8a29e;
+    }
+
+    /* Glass Button System */
+    .g-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 16px;
+      border: none;
+      border-radius: var(--glass-radius-xs);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: all 0.25s var(--spring);
+      white-space: nowrap;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .g-btn:active { transform: scale(0.97); }
+    .g-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+    .g-btn-primary {
+      background: #1c1917;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .g-btn-primary:hover { background: #000; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+
+    .g-btn-brand {
+      background: linear-gradient(135deg, #C84B31, #E85D3A);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(200,75,49,0.3);
+    }
+    .g-btn-brand:hover { box-shadow: 0 6px 24px rgba(200,75,49,0.4); transform: translateY(-1px); }
+
+    .g-btn-glass {
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--glass-border-strong);
+      color: #57534e;
+    }
+    .g-btn-glass:hover { background: rgba(255,255,255,0.85); color: #1c1917; }
+
+    .g-btn-danger {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      color: #b91c1c;
+    }
+    .g-btn-danger:hover { background: rgba(239,68,68,0.15); }
+
+    .g-btn-success {
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.2);
+      color: #166534;
+    }
+    .g-btn-success:hover { background: rgba(34,197,94,0.15); }
+
+    .g-btn-sm { height: 30px; padding: 0 10px; font-size: 12px; }
+    .g-btn-lg { height: 42px; padding: 0 20px; font-size: 14px; }
+
+    /* Glass Badge */
+    .g-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: var(--glass-radius-full);
+      font-size: 12px;
+      font-weight: 700;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      transition: all 0.2s var(--smooth);
+    }
+    .g-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .g-badge-approved {
+      background: rgba(34,197,94,0.12);
+      color: #15803d;
+      border: 1px solid rgba(34,197,94,0.25);
+    }
+    .g-badge-approved::before { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+    .g-badge-pending {
+      background: rgba(245,158,11,0.12);
+      color: #92400e;
+      border: 1px solid rgba(245,158,11,0.25);
+    }
+    .g-badge-pending::before { background: #f59e0b; animation: pulse-dot 2s ease-in-out infinite; }
+    .g-badge-rejected {
+      background: rgba(239,68,68,0.10);
+      color: #991b1b;
+      border: 1px solid rgba(239,68,68,0.2);
+    }
+    .g-badge-rejected::before { background: #ef4444; }
+    .g-badge-expired {
+      background: rgba(168,162,158,0.12);
+      color: #78716c;
+      border: 1px solid rgba(168,162,158,0.25);
+    }
+    .g-badge-expired::before { background: #a8a29e; }
+
+    /* Glass Table */
+    .g-table { width: 100%; font-size: 14px; border-collapse: collapse; }
+    .g-table thead tr {
+      background: rgba(245,244,242,0.6);
+      backdrop-filter: blur(4px);
+      border-bottom: 1px solid var(--glass-border-strong);
+    }
+    .g-table thead th {
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #a8a29e;
+    }
+    .g-table tbody tr {
+      border-bottom: 1px solid rgba(120,113,108,0.08);
+      transition: all 0.2s var(--smooth);
+    }
+    .g-table tbody tr:hover { background: rgba(200,75,49,0.03); }
+    .g-table tbody td { padding: 10px 14px; }
+
+    /* Glass Modal */
+    .g-modal {
+      background: var(--glass-bg-heavy);
+      backdrop-filter: blur(var(--glass-blur-heavy));
+      -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+      border: 1px solid var(--glass-border);
+      border-radius: var(--glass-radius);
+      box-shadow: var(--glass-shadow-lg), 0 0 0 1px rgba(255,255,255,0.6) inset;
+    }
+    .g-modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--glass-border-subtle);
+    }
+    .g-modal-body { padding: 20px 24px; }
+    .g-modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--glass-border-subtle);
+    }
+
+    /* Animations */
     @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes zoom-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-    @keyframes slide-down { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    .animate-fade-in { animation: fade-in 0.2s ease-out; }
-    .animate-zoom-in { animation: zoom-in 0.3s ease-out; }
-    .animate-slide-down { animation: slide-down 0.3s ease-out; }
+    @keyframes zoom-in { from { opacity: 0; transform: scale(0.92) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes slide-down { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slide-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes glow-pulse { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
+    @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; transform: scale(0.75); } }
+    .animate-fade-in { animation: fade-in 0.3s var(--smooth); }
+    .animate-zoom-in { animation: zoom-in 0.4s var(--spring); }
+    .animate-slide-down { animation: slide-down 0.35s var(--spring); }
+    .animate-slide-up { animation: slide-up 0.35s var(--spring); }
+
+    /* Scrollbar glass style */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(168,162,158,0.3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(168,162,158,0.5); }
+
     .hide-scroll::-webkit-scrollbar { display: none; }
     .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
     @media print {
@@ -98,20 +379,23 @@
   <div id="app" v-cloak>
     
     <!-- 管理員登入頁面 -->
-    <div v-if="currentView === 'login'" class="flex flex-col items-center justify-center min-h-screen bg-stone-100 px-6">
-      <form @submit.prevent="handleLogin" class="bg-white p-10 rounded-[2rem] shadow-2xl w-full max-w-sm border border-white relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-500 to-brand-600"></div>
-        <h2 class="text-2xl font-black mb-10 text-center text-stone-800 tracking-tight">管理後台登入</h2>
-        <div class="space-y-6">
-          <div class="group">
-            <label class="text-[10px] font-black text-stone-400 uppercase ml-1 tracking-widest">Account ID</label>
-            <input v-model="loginForm.id" type="text" autocomplete="username" placeholder="請輸入帳號" class="w-full p-4 mt-1 border-2 border-stone-100 bg-stone-50 rounded-2xl focus:border-brand-500 focus:bg-white outline-none transition font-bold text-stone-700 placeholder:font-normal">
+    <div v-if="currentView === 'login'" class="flex flex-col items-center justify-center min-h-screen px-6">
+      <form @submit.prevent="handleLogin" class="g-card-solid p-10 w-full max-w-sm relative overflow-hidden" style="border-radius:var(--glass-radius);">
+        <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-brand-500 via-brand-400 to-orange-400" style="opacity:0.9"></div>
+        <div class="flex justify-center mb-6">
+          <span class="w-14 h-14 bg-gradient-to-br from-brand-600 to-brand-500 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg" style="box-shadow:0 8px 24px rgba(200,75,49,0.3);"><i class="fas fa-chart-pie"></i></span>
+        </div>
+        <h2 class="text-2xl font-black mb-8 text-center text-stone-800 tracking-tight">管理後台登入</h2>
+        <div class="space-y-5">
+          <div>
+            <label class="g-label ml-1 mb-1.5 block">Account ID</label>
+            <input v-model="loginForm.id" type="text" autocomplete="username" placeholder="請輸入帳號" class="g-input g-input-lg w-full">
           </div>
-          <div class="group">
-            <label class="text-[10px] font-black text-stone-400 uppercase ml-1 tracking-widest">Password</label>
-            <input v-model="loginForm.pass" type="password" autocomplete="current-password" placeholder="請輸入密碼" class="w-full p-4 mt-1 border-2 border-stone-100 bg-stone-50 rounded-2xl focus:border-brand-500 focus:bg-white outline-none transition" required>
+          <div>
+            <label class="g-label ml-1 mb-1.5 block">Password</label>
+            <input v-model="loginForm.pass" type="password" autocomplete="current-password" placeholder="請輸入密碼" class="g-input g-input-lg w-full" required>
           </div>
-          <button type="submit" :disabled="loading" class="w-full bg-stone-800 text-white py-4 rounded-2xl shadow-xl font-black hover:bg-black active:scale-[0.98] transition mt-2">
+          <button type="submit" :disabled="loading" class="g-btn g-btn-brand g-btn-lg w-full mt-2">
             {{ loading ? '驗證中...' : '確認登入' }}
           </button>
         </div>
@@ -119,47 +403,48 @@
     </div>
 
     <!-- 管理員後台 -->
-    <div v-else-if="currentView === 'admin'" class="min-h-screen bg-stone-50 pb-20 hide-for-label-print hide-for-stock-print">
+    <div v-else-if="currentView === 'admin'" class="min-h-screen pb-20 hide-for-label-print hide-for-stock-print">
       
       <!-- 導航欄 -->
-      <div class="bg-white/90 backdrop-blur-md px-4 py-3 shadow-sm sticky top-0 z-50 border-b border-stone-200 no-print">
+      <div class="g-nav px-4 py-2.5 sticky top-0 z-50 no-print">
         <div class="max-w-7xl mx-auto">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
                <h1 class="font-black text-base text-stone-900 flex items-center gap-2 whitespace-nowrap">
-                 <span class="w-8 h-8 bg-gradient-to-br from-brand-600 to-brand-500 text-white rounded-xl flex items-center justify-center text-base shadow-lg shadow-brand-500/30"><i class="fas fa-chart-pie"></i></span>
-                 <span>管理後台</span>
+                 <span class="w-8 h-8 bg-gradient-to-br from-brand-600 to-brand-500 text-white rounded-xl flex items-center justify-center text-base" style="box-shadow:0 4px 12px rgba(200,75,49,0.3);"><i class="fas fa-chart-pie"></i></span>
+                 <span class="hidden sm:inline">健美滷味管理後台</span>
+                 <span class="sm:hidden">管理後台</span>
                </h1>
             </div>
             
             <!-- 導航按鈕（手機與桌面共用） -->
-            <div class="flex items-center gap-1">
-               <button @click="adminTab='review'; fetchReviewList()" :class="['px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 whitespace-nowrap border', adminTab=='review'?'bg-red-500 text-white border-red-500 shadow-md shadow-red-500/30':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
-                 <i class="hidden sm:inline fas fa-clock"></i><span>待審核</span><span v-if="adminData.reviewList.length > 0" class="bg-white text-red-500 text-[10px] px-1.5 rounded-md font-black shadow-sm">{{ adminData.reviewList.length }}</span>
+            <div class="flex items-center gap-1.5">
+               <button @click="adminTab='review'; fetchReviewList()" :class="['g-btn g-btn-sm transition-all flex items-center gap-1', adminTab=='review'?'g-btn-brand':'g-btn-glass']">
+                 <i class="hidden sm:inline fas fa-clock"></i><span>待審核</span><span v-if="adminData.reviewList.length > 0" class="bg-white/90 text-red-500 text-[10px] px-1.5 rounded-full font-black" style="line-height:16px;">{{ adminData.reviewList.length }}</span>
                </button>
-               <button @click="adminTab='details'; fetchOrderDetails()" :class="['px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap border', adminTab=='details'?'bg-stone-800 text-white border-stone-800 shadow-md':'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
-                 <i class="hidden sm:inline fas fa-file-alt mr-1"></i>訂單管理
+               <button @click="adminTab='details'; fetchOrderDetails()" :class="['g-btn g-btn-sm transition-all', adminTab=='details'?'g-btn-primary':'g-btn-glass']">
+                 <i class="hidden sm:inline fas fa-file-alt"></i>訂單管理
                </button>
-               <div class="w-px h-5 bg-stone-300 mx-0.5"></div>
+               <div class="w-px h-5 bg-stone-200/60 mx-0.5"></div>
                <!-- 設定齒輪下拉選單 -->
                <div class="relative">
                  <div v-if="showSettingsMenu" class="fixed inset-0 z-40" @click="showSettingsMenu = false"></div>
-                 <button @click="showSettingsMenu = !showSettingsMenu" :class="['px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all border', (adminTab=='accounts'||adminTab=='items'||adminTab=='contacts') ? 'bg-stone-800 text-white border-stone-800 shadow-md' : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50']">
+                 <button @click="showSettingsMenu = !showSettingsMenu" :class="['g-btn g-btn-sm transition-all', (adminTab=='accounts'||adminTab=='items'||adminTab=='contacts') ? 'g-btn-primary' : 'g-btn-glass']">
                    <i class="fas fa-cog"></i>
                  </button>
-                 <div v-if="showSettingsMenu" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-stone-100 py-2 z-50 animate-slide-down">
-                   <button v-if="user && user.role === 'admin'" @click="adminTab='accounts'; fetchAdminAccounts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3 rounded-lg mx-0', adminTab=='accounts' ? 'bg-stone-100 text-stone-800' : 'text-stone-600 hover:bg-stone-50']">
+                 <div v-if="showSettingsMenu" class="absolute right-0 top-full mt-2 w-52 g-card-solid py-2 z-50 animate-slide-down" style="border-radius:var(--glass-radius-sm);">
+                   <button v-if="user && user.role === 'admin'" @click="adminTab='accounts'; fetchAdminAccounts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='accounts' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
                      <i class="fas fa-users w-4"></i>帳號管理
                    </button>
-                   <button @click="adminTab='items'; fetchAdminItems(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='items' ? 'bg-stone-100 text-stone-800' : 'text-stone-600 hover:bg-stone-50']">
+                   <button @click="adminTab='items'; fetchAdminItems(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='items' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
                      <i class="fas fa-box w-4"></i>產品管理
                    </button>
-                   <button @click="adminTab='contacts'; fetchFrequentContacts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='contacts' ? 'bg-stone-100 text-stone-800' : 'text-stone-600 hover:bg-stone-50']">
+                   <button @click="adminTab='contacts'; fetchFrequentContacts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='contacts' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
                      <i class="fas fa-address-book w-4"></i>常用聯絡人
                    </button>
                  </div>
                </div>
-               <button @click="logout" class="bg-stone-100 text-stone-500 px-2.5 py-1.5 rounded-xl text-xs font-bold hover:bg-stone-200 border border-stone-200">
+               <button @click="logout" class="g-btn g-btn-glass g-btn-sm">
                  <i class="fas fa-sign-out-alt"></i>
                </button>
             </div>
@@ -169,30 +454,30 @@
       
       <!-- 手機版側邊選單 -->
       <transition name="mobile-menu">
-        <div v-if="showAdminMenu" @click="showAdminMenu = false" class="md:hidden fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-40 no-print">
-          <div @click.stop class="bg-white w-72 h-full shadow-2xl p-6 overflow-y-auto">
-            <div class="flex items-center justify-between mb-8">
-              <h2 class="font-black text-xl text-stone-800">功能選單</h2>
-              <button @click="showAdminMenu = false" class="w-8 h-8 bg-stone-100 rounded-lg flex items-center justify-center text-stone-600 hover:bg-stone-200">
+        <div v-if="showAdminMenu" @click="showAdminMenu = false" class="md:hidden fixed inset-0 bg-black/30 backdrop-blur-md z-40 no-print animate-fade-in">
+          <div @click.stop class="w-72 h-full p-5 overflow-y-auto animate-slide-up" style="background:rgba(255,255,255,0.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:8px 0 40px rgba(0,0,0,0.08);">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="font-black text-lg text-stone-800">功能選單</h2>
+              <button @click="showAdminMenu = false" class="g-btn g-btn-glass g-btn-sm" style="width:32px;height:32px;padding:0;">
                 <i class="fas fa-times"></i>
               </button>
             </div>
-            <div class="space-y-2">
-              <button @click="adminTab='review'; fetchReviewList(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3', adminTab=='review'?'bg-red-500 text-white':'text-stone-600 hover:bg-stone-50']">
+            <div class="space-y-1">
+              <button @click="adminTab='review'; fetchReviewList(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm', adminTab=='review'?'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md':'text-stone-600 hover:bg-white/60']">
                 <i class="fas fa-clock w-5"></i><span>待審核 <span v-if="adminData.reviewList.length>0" class="text-xs">({{adminData.reviewList.length}})</span></span>
               </button>
-              <button @click="adminTab='details'; fetchOrderDetails(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3', adminTab=='details'?'bg-stone-800 text-white':'text-stone-600 hover:bg-stone-50']">
+              <button @click="adminTab='details'; fetchOrderDetails(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm', adminTab=='details'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-white/60']">
                 <i class="fas fa-file-alt w-5"></i><span>訂單管理</span>
               </button>
-              <div class="border-t border-stone-100 pt-2 mt-2">
-                <p class="text-[10px] font-black text-stone-400 uppercase tracking-widest px-4 mb-2">設定</p>
-                <button v-if="user && user.role === 'admin'" @click="adminTab='accounts'; fetchAdminAccounts(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3', adminTab=='accounts'?'bg-stone-800 text-white':'text-stone-600 hover:bg-stone-50']">
+              <div class="border-t border-stone-200/50 pt-2 mt-2">
+                <p class="g-label px-4 mb-2">設定</p>
+                <button v-if="user && user.role === 'admin'" @click="adminTab='accounts'; fetchAdminAccounts(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm', adminTab=='accounts'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-white/60']">
                   <i class="fas fa-users w-5"></i><span>帳號管理</span>
                 </button>
-                <button @click="adminTab='items'; fetchAdminItems(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3', adminTab=='items'?'bg-stone-800 text-white':'text-stone-600 hover:bg-stone-50']">
+                <button @click="adminTab='items'; fetchAdminItems(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm', adminTab=='items'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-white/60']">
                   <i class="fas fa-box w-5"></i><span>產品管理</span>
                 </button>
-                <button @click="adminTab='contacts'; fetchFrequentContacts(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3', adminTab=='contacts'?'bg-stone-800 text-white':'text-stone-600 hover:bg-stone-50']">
+                <button @click="adminTab='contacts'; fetchFrequentContacts(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm', adminTab=='contacts'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-white/60']">
                   <i class="fas fa-address-book w-5"></i><span>常用聯絡人</span>
                 </button>
               </div>
@@ -208,31 +493,31 @@
         <div v-if="adminTab === 'accounts'" class="space-y-4">
           <div class="flex items-center justify-between mb-4 gap-2">
             <h2 class="text-xl font-black text-stone-800">帳號管理</h2>
-            <button @click="openAddAccountModal" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-brand-700 transition shadow-lg flex items-center gap-1.5 whitespace-nowrap">
+            <button @click="openAddAccountModal" class="g-btn g-btn-brand flex items-center gap-1.5 whitespace-nowrap">
               <i class="fas fa-plus"></i>新增帳號
             </button>
           </div>
           
           <div v-if="loading" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
           
-          <div v-else-if="adminData.accountsList.length === 0" class="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-stone-200">
-            <i class="fas fa-users text-6xl mb-4 text-stone-300"></i>
+          <div v-else-if="adminData.accountsList.length === 0" class="text-center py-20 g-card">
+            <i class="fas fa-users text-5xl mb-4 text-stone-200"></i>
             <p class="font-bold text-stone-400">目前沒有帳號資料</p>
           </div>
           
           <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div v-for="account in adminData.accountsList" :key="account.id" class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 hover:shadow-md transition">
+            <div v-for="account in adminData.accountsList" :key="account.id" class="g-card p-5 hover:translate-y-[-2px]">
               <div class="flex justify-between items-start mb-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-12 h-12 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center text-white font-black text-lg">
+                  <div class="w-11 h-11 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center text-white font-black text-lg" style="box-shadow:0 4px 12px rgba(200,75,49,0.25);">
                     {{ account.name ? account.name.charAt(0).toUpperCase() : account.accountId.charAt(0) }}
                   </div>
                   <div>
                     <h3 class="font-black text-stone-800">{{ account.name || account.accountId }}</h3>
-                    <p class="text-xs text-stone-500">{{ account.accountId }}</p>
+                    <p class="text-xs text-stone-400">{{ account.accountId }}</p>
                   </div>
                 </div>
-                <span :class="['text-xs font-bold px-2 py-1 rounded-lg', account.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-stone-100 text-stone-500']">
+                <span :class="['g-badge', account.role === 'admin' ? 'g-badge-approved' : 'g-badge-expired']">
                   {{ account.role === 'admin' ? '管理者' : '一般使用者' }}
                 </span>
               </div>
@@ -248,12 +533,12 @@
                 </div>
               </div>
               
-              <div class="flex gap-2 pt-4 border-t border-stone-100">
-                <button @click="editAccount(account)" class="flex-1 bg-blue-50 text-blue-600 py-2 rounded-xl font-bold hover:bg-blue-100 transition text-sm">
-                  <i class="fas fa-edit mr-1"></i>編輯
+              <div class="flex gap-2 pt-4 border-t border-stone-100/60">
+                <button @click="editAccount(account)" class="g-btn g-btn-glass flex-1 text-blue-600">
+                  <i class="fas fa-edit"></i>編輯
                 </button>
-                <button @click="deleteAccount(account)" class="flex-1 bg-red-50 text-red-800 py-2 rounded-xl font-bold hover:bg-red-100 transition text-sm">
-                  <i class="fas fa-trash mr-1"></i>刪除
+                <button @click="deleteAccount(account)" class="g-btn g-btn-danger flex-1">
+                  <i class="fas fa-trash"></i>刪除
                 </button>
               </div>
             </div>
@@ -264,22 +549,22 @@
         <div v-if="adminTab === 'contacts'" class="space-y-4">
           <div class="flex items-center justify-between mb-4 gap-2">
             <h2 class="text-xl font-black text-stone-800">常用聯絡人</h2>
-            <button @click="openAddContactModal" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-brand-700 transition shadow-lg flex items-center gap-1.5 whitespace-nowrap">
+            <button @click="openAddContactModal" class="g-btn g-btn-brand flex items-center gap-1.5 whitespace-nowrap">
               <i class="fas fa-plus"></i>新增
             </button>
           </div>
 
           <div v-if="loading" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
 
-          <div v-else-if="frequentContacts.length === 0" class="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-stone-200">
-            <i class="fas fa-address-book text-6xl mb-4 text-stone-300"></i>
+          <div v-else-if="frequentContacts.length === 0" class="text-center py-20 g-card">
+            <i class="fas fa-address-book text-5xl mb-4 text-stone-200"></i>
             <p class="font-bold text-stone-400">尚無常用聯絡人</p>
           </div>
 
           <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div v-for="contact in frequentContacts" :key="contact.id" class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 hover:shadow-md transition">
+            <div v-for="contact in frequentContacts" :key="contact.id" class="g-card p-5 hover:translate-y-[-2px]">
               <div class="flex items-center gap-3 mb-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center text-white font-black text-lg flex-shrink-0">
+                <div class="w-11 h-11 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center text-white font-black text-lg flex-shrink-0" style="box-shadow:0 4px 12px rgba(200,75,49,0.25);">
                   {{ contact.companyName ? contact.companyName.charAt(0) : '?' }}
                 </div>
                 <div class="min-w-0">
@@ -297,12 +582,12 @@
                   <span class="line-clamp-2">{{ contact.address }}</span>
                 </div>
               </div>
-              <div class="flex gap-2 pt-4 border-t border-stone-100">
-                <button @click="editContact(contact)" class="flex-1 bg-blue-50 text-blue-600 py-2 rounded-xl font-bold hover:bg-blue-100 transition text-sm">
-                  <i class="fas fa-edit mr-1"></i>編輯
+              <div class="flex gap-2 pt-4 border-t border-stone-100/60">
+                <button @click="editContact(contact)" class="g-btn g-btn-glass flex-1 text-blue-600">
+                  <i class="fas fa-edit"></i>編輯
                 </button>
-                <button @click="deleteContact(contact)" class="flex-1 bg-red-50 text-red-800 py-2 rounded-xl font-bold hover:bg-red-100 transition text-sm">
-                  <i class="fas fa-trash mr-1"></i>刪除
+                <button @click="deleteContact(contact)" class="g-btn g-btn-danger flex-1">
+                  <i class="fas fa-trash"></i>刪除
                 </button>
               </div>
             </div>
@@ -314,7 +599,7 @@
           <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <h2 class="text-2xl font-black text-stone-800">產品管理</h2>
-              <select v-model="itemsSort" @change="fetchAdminItems" class="w-full sm:w-auto px-4 py-2 bg-white border-2 border-stone-200 rounded-xl font-bold text-stone-700 text-sm hover:border-brand-500 transition">
+              <select v-model="itemsSort" @change="fetchAdminItems" class="g-select w-full sm:w-auto">
                 <option value="createdAt-asc">建立時間 (舊→新)</option>
                 <option value="createdAt-desc">建立時間 (新→舊)</option>
                 <option value="name-asc">名稱 (A→Z)</option>
@@ -323,20 +608,20 @@
                 <option value="price-desc">價格 (高→低)</option>
               </select>
             </div>
-            <button @click="openAddItemModal" class="bg-brand-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-brand-700 transition shadow-lg flex items-center justify-center gap-2">
+            <button @click="openAddItemModal" class="g-btn g-btn-brand flex items-center justify-center gap-2">
               <i class="fas fa-plus"></i><span>新增產品</span>
             </button>
           </div>
           
           <div v-if="loading" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
           
-          <div v-else-if="adminData.itemsList.length === 0" class="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-stone-200">
-            <i class="fas fa-box text-6xl mb-4 text-stone-300"></i>
+          <div v-else-if="adminData.itemsList.length === 0" class="text-center py-20 g-card">
+            <i class="fas fa-box text-5xl mb-4 text-stone-200"></i>
             <p class="font-bold text-stone-400">目前沒有產品資料</p>
           </div>
           
           <div v-else class="space-y-3">
-            <div v-for="item in adminData.itemsList" :key="item.id" class="bg-white rounded-xl p-4 shadow-sm border border-stone-100 hover:shadow-md transition">
+            <div v-for="item in adminData.itemsList" :key="item.id" class="g-card px-5 py-4 hover:translate-y-[-1px]">
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div class="flex-1 min-w-0">
                   <div class="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3 mb-1">
@@ -353,11 +638,11 @@
                 </div>
                 
                 <div class="flex gap-2 sm:flex-shrink-0">
-                  <button @click="editItem(item)" class="flex-1 sm:flex-none px-4 py-2 bg-blue-50 text-blue-600 rounded-lg font-bold hover:bg-blue-100 transition text-sm">
-                    <i class="fas fa-edit mr-1"></i>編輯
+                  <button @click="editItem(item)" class="g-btn g-btn-glass g-btn-sm flex-1 sm:flex-none text-blue-600">
+                    <i class="fas fa-edit"></i>編輯
                   </button>
-                  <button @click="deleteItem(item)" class="flex-1 sm:flex-none px-4 py-2 bg-red-50 text-red-800 rounded-lg font-bold hover:bg-red-100 transition text-sm">
-                    <i class="fas fa-trash mr-1"></i>刪除
+                  <button @click="deleteItem(item)" class="g-btn g-btn-danger g-btn-sm flex-1 sm:flex-none">
+                    <i class="fas fa-trash"></i>刪除
                   </button>
                 </div>
               </div>
@@ -369,7 +654,7 @@
         <div v-if="adminTab === 'review'" class="space-y-4">
           <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
             <h2 class="text-2xl font-black text-stone-800">待審核訂單</h2>
-            <select v-model="reviewSort" class="w-full sm:w-auto px-4 py-2 bg-white border-2 border-stone-200 rounded-xl font-bold text-stone-700 text-sm hover:border-brand-500 transition">
+            <select v-model="reviewSort" class="g-select w-full sm:w-auto">
               <option value="createdAt-desc">建立時間 (新→舊)</option>
               <option value="createdAt-asc">建立時間 (舊→新)</option>
               <option value="deliveryTime-desc">配送時間 (新→舊)</option>
@@ -379,12 +664,12 @@
             </select>
           </div>
           <div v-if="loading" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
-          <div v-else-if="adminData.reviewList.length === 0" class="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-stone-200">
-            <i class="fas fa-check-circle text-6xl mb-4 text-stone-300"></i>
+          <div v-else-if="adminData.reviewList.length === 0" class="text-center py-20 g-card">
+            <i class="fas fa-check-circle text-5xl mb-4 text-stone-200"></i>
             <p class="font-bold text-stone-400">目前沒有待審核的團購</p>
           </div>
           <div v-else class="space-y-4">
-              <div v-for="g in sortedReviewList" :key="g.id" class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 hover:shadow-md transition">
+              <div v-for="g in sortedReviewList" :key="g.id" class="g-card p-5 hover:translate-y-[-1px]">
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
                   <div class="flex-1">
                     <h3 class="text-xl font-black text-stone-800 mb-2">{{ g.companyName }}</h3>
@@ -412,25 +697,25 @@
                       <i class="fas fa-dollar-sign mr-1"></i>總金額：${{ groupTotalAmountMap[g.id].toLocaleString() }}
                     </div>
                   </div>
-                  <span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold inline-block sm:flex-shrink-0 border border-amber-200">待審核</span>
+                  <span class="g-badge g-badge-pending inline-block sm:flex-shrink-0">待審核</span>
                 </div>
-                <div class="flex flex-row gap-1 mt-4 pt-4 border-t border-stone-100">
-                  <button @click="toggleOrders(g.id)" class="flex-1 bg-white text-stone-700 py-2.5 rounded-xl font-bold border border-stone-300 hover:bg-stone-100 transition flex flex-col sm:flex-row items-center justify-center gap-1 text-xs sm:text-base">
+                <div class="flex flex-row gap-1.5 mt-4 pt-4 border-t border-stone-100/60">
+                  <button @click="toggleOrders(g.id)" class="g-btn g-btn-glass flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 text-xs sm:text-sm">
                     <i class="fas fa-receipt"></i>
                     <span class="hidden sm:inline">訂單明細</span>
                     <span class="sm:hidden">訂單</span>
                   </button>
-                  <button @click="toggleStock(g.id)" class="flex-1 bg-white text-stone-700 py-2.5 rounded-xl font-bold border border-stone-300 hover:bg-stone-100 transition flex flex-col sm:flex-row items-center justify-center gap-1 text-xs sm:text-base">
+                  <button @click="toggleStock(g.id)" class="g-btn g-btn-glass flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 text-xs sm:text-sm">
                     <i class="fas fa-boxes"></i>
                     <span class="hidden sm:inline">備貨統計</span>
                     <span class="sm:hidden">備貨</span>
                   </button>
-                  <button @click="confirmGroup(g)" class="flex-1 bg-white text-stone-700 py-2.5 rounded-xl font-bold border border-stone-300 hover:bg-stone-200 transition flex flex-col sm:flex-row items-center justify-center gap-1 text-xs sm:text-base">
+                  <button @click="confirmGroup(g)" class="g-btn g-btn-success flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 text-xs sm:text-sm">
                     <i class="fas fa-check"></i>
                     <span class="hidden sm:inline">確認接單</span>
                     <span class="sm:hidden">接單</span>
                   </button>
-                  <button @click="rejectGroup(g)" class="flex-1 bg-white text-stone-700 py-2.5 rounded-xl font-bold border border-stone-300 hover:bg-stone-200 transition flex flex-col sm:flex-row items-center justify-center gap-1 text-xs sm:text-base">
+                  <button @click="rejectGroup(g)" class="g-btn g-btn-danger flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 text-xs sm:text-sm">
                     <i class="fas fa-times"></i>
                     <span class="hidden sm:inline">拒絕接單</span>
                     <span class="sm:hidden">拒絕</span>
@@ -506,84 +791,84 @@
         <div v-if="adminTab === 'details'" class="space-y-4">
           <div class="flex items-center justify-between mb-4 gap-2">
             <h2 class="text-xl font-black text-stone-800 whitespace-nowrap">訂單管理</h2>
-            <button @click="openCreateOrderModal" class="inline-flex items-center gap-1.5 px-3 py-2 bg-stone-800 text-white rounded-xl text-sm font-bold hover:bg-black transition whitespace-nowrap flex-shrink-0">
+            <button @click="openCreateOrderModal" class="g-btn g-btn-primary flex items-center gap-1.5 flex-shrink-0">
               <i class="fas fa-plus"></i>新增訂單
             </button>
           </div>
 
           <div v-if="loading" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
-          <div v-else-if="adminData.detailsList.length === 0" class="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-stone-200">
-            <i class="fas fa-inbox text-6xl mb-4 text-stone-300"></i>
+          <div v-else-if="adminData.detailsList.length === 0" class="text-center py-20 g-card">
+            <i class="fas fa-inbox text-5xl mb-4 text-stone-200"></i>
             <p class="font-bold text-stone-400">沒有符合條件的訂單</p>
           </div>
           <div v-else>
             <!-- 批次匯出按鈕 -->
             <div class="mb-3 flex flex-wrap gap-2 items-center justify-center">
-              <button @click="batchExportStock" :disabled="selectedOrderIds.length === 0" class="flex-1 sm:flex-none px-4 py-2 bg-stone-800 text-white rounded-lg text-sm font-bold hover:bg-black transition disabled:opacity-40 whitespace-nowrap">
-                <i class="fas fa-boxes mr-1"></i><span class="hidden sm:inline">列印</span>備貨單
+              <button @click="batchExportStock" :disabled="selectedOrderIds.length === 0" class="g-btn g-btn-primary g-btn-sm flex-1 sm:flex-none">
+                <i class="fas fa-boxes"></i><span class="hidden sm:inline">列印</span>備貨單
               </button>
-              <button @click="batchExportLabels" :disabled="selectedOrderIds.length === 0" class="flex-1 sm:flex-none px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-bold hover:bg-green-800 transition disabled:opacity-40 whitespace-nowrap">
-                <i class="fas fa-shipping-fast mr-1"></i><span class="hidden sm:inline">列印</span>出貨單 ({{ selectedOrderIds.length }})
+              <button @click="batchExportLabels" :disabled="selectedOrderIds.length === 0" class="g-btn g-btn-success flex-1 sm:flex-none">
+                <i class="fas fa-shipping-fast"></i><span class="hidden sm:inline">列印</span>出貨單 ({{ selectedOrderIds.length }})
               </button>
             </div>
             <!-- Dashboard 總金額區塊 -->
-            <div v-if="detailsStart && detailsEnd" class="grid grid-cols-3 gap-2 md:gap-4 mb-2">
-              <div class="bg-white rounded-2xl shadow-sm border border-stone-100 p-3 md:p-5 flex flex-col items-center">
-                <span class="text-[10px] md:text-xs font-bold text-stone-400 mb-1 text-center leading-tight">全部金額<span class="hidden sm:inline"> (不含已拒絕/已過期)</span></span>
+            <div v-if="detailsStart && detailsEnd" class="grid grid-cols-3 gap-2 md:gap-4 mb-3">
+              <div class="g-card p-3 md:p-5 flex flex-col items-center">
+                <span class="g-label mb-1 text-center leading-tight">全部金額<span class="hidden sm:inline"> (不含已拒絕/已過期)</span></span>
                 <span class="text-base md:text-2xl font-black text-red-700">${{ detailsDashboardTotal.toLocaleString() }}</span>
-                <span class="text-xs md:text-base font-bold text-stone-400 mt-1 md:mt-2">{{ detailsOrderCount }}筆</span>
+                <span class="text-xs md:text-sm font-bold text-stone-400 mt-1">{{ detailsOrderCount }}筆</span>
               </div>
-              <div class="bg-white rounded-2xl shadow-sm border border-stone-100 p-3 md:p-5 flex flex-col items-center">
-                <span class="text-[10px] md:text-xs font-bold text-stone-400 mb-1 text-center leading-tight">已接單金額</span>
+              <div class="g-card p-3 md:p-5 flex flex-col items-center">
+                <span class="g-label mb-1 text-center leading-tight">已接單金額</span>
                 <span class="text-base md:text-2xl font-black text-green-700">${{ detailsApprovedTotal.toLocaleString() }}</span>
-                <span class="text-xs md:text-base font-bold text-stone-400 mt-1 md:mt-2">{{ detailsApprovedCount }}筆</span>
+                <span class="text-xs md:text-sm font-bold text-stone-400 mt-1">{{ detailsApprovedCount }}筆</span>
               </div>
-              <div class="bg-white rounded-2xl shadow-sm border border-stone-100 p-3 md:p-5 flex flex-col items-center">
-                <span class="text-[10px] md:text-xs font-bold text-stone-400 mb-1 text-center leading-tight">待審核金額</span>
+              <div class="g-card p-3 md:p-5 flex flex-col items-center">
+                <span class="g-label mb-1 text-center leading-tight">待審核金額</span>
                 <span class="text-base md:text-2xl font-black text-amber-700">${{ detailsPendingTotal.toLocaleString() }}</span>
-                <span class="text-xs md:text-base font-bold text-stone-400 mt-1 md:mt-2">{{ detailsPendingCount }}筆</span>
+                <span class="text-xs md:text-sm font-bold text-stone-400 mt-1">{{ detailsPendingCount }}筆</span>
               </div>
             </div>
-            <div class="bg-white rounded-2xl shadow-sm border border-stone-100 mb-3 px-3 sm:px-4 py-3 flex flex-wrap items-center gap-2">
-              <!-- 日期輸入：手機版同一列，sm+ 解構成直接子元素 -->
+            <div class="g-card mb-3 px-4 py-3 flex flex-wrap items-center gap-2">
+              <!-- 日期輸入 -->
               <div class="flex items-center gap-2 w-full sm:w-auto sm:contents">
                 <div class="flex items-center gap-1.5 flex-1 sm:flex-none">
-                  <label class="text-xs font-bold text-stone-400 whitespace-nowrap">開始</label>
-                  <input type="date" v-model="detailsStart" class="flex-1 sm:flex-none min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
+                  <label class="g-label whitespace-nowrap">開始</label>
+                  <input type="date" v-model="detailsStart" class="g-input flex-1 sm:flex-none min-w-0" style="height:32px;font-size:13px;">
                 </div>
                 <div class="flex items-center gap-1.5 flex-1 sm:flex-none">
-                  <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
-                  <input type="date" v-model="detailsEnd" class="flex-1 sm:flex-none min-w-0 px-1.5 py-1.5 border border-stone-200 rounded-lg text-xs text-stone-700 outline-none bg-white">
+                  <label class="g-label whitespace-nowrap">結束</label>
+                  <input type="date" v-model="detailsEnd" class="g-input flex-1 sm:flex-none min-w-0" style="height:32px;font-size:13px;">
                 </div>
               </div>
-              <!-- 快速篩選按鈕：手機滿版，sm+ 自然寬度 -->
+              <!-- 快速篩選按鈕 -->
               <div class="flex items-center gap-1.5 w-full sm:w-auto">
-                <button @click="setYesterdayFilter" :class="['flex-1 sm:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">昨日訂單</button>
-                <button @click="setTodayFilter" :class="['flex-1 sm:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTodayFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">今日訂單</button>
-                <button @click="setTomorrowFilter" :class="['flex-1 sm:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition whitespace-nowrap', isTomorrowFilter ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-800 hover:bg-stone-200']">明日訂單</button>
+                <button @click="setYesterdayFilter" :class="['g-btn g-btn-sm flex-1 sm:flex-none', detailsStart === getTaiwanDateStr(-1) && detailsEnd === getTaiwanDateStr(-1) ? 'g-btn-primary' : 'g-btn-glass']">昨日訂單</button>
+                <button @click="setTodayFilter" :class="['g-btn g-btn-sm flex-1 sm:flex-none', isTodayFilter ? 'g-btn-primary' : 'g-btn-glass']">今日訂單</button>
+                <button @click="setTomorrowFilter" :class="['g-btn g-btn-sm flex-1 sm:flex-none', isTomorrowFilter ? 'g-btn-primary' : 'g-btn-glass']">明日訂單</button>
               </div>
-              <!-- 匯出/清除按鈕：手機滿版，sm+ 靠右（空間不足自動換行至第二列，仍靠右） -->
+              <!-- 清除篩選 -->
               <div v-if="detailsStart || detailsEnd || detailsKeyword || detailsStatus !== 'all' || selectedOrderIds.length > 0" class="flex items-center gap-1.5 w-full sm:w-auto sm:ml-auto">
-                <button @click="clearDetailsFilter" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white border border-stone-300 text-stone-800 rounded-lg text-xs font-bold hover:bg-stone-50 transition whitespace-nowrap"><i class="fas fa-undo"></i>清除篩選</button>
+                <button @click="clearDetailsFilter" class="g-btn g-btn-glass g-btn-sm flex-1 sm:flex-none"><i class="fas fa-undo"></i>清除篩選</button>
               </div>
             </div>
             <!-- 篩選 + 表格：一體卡片 -->
-            <div class="bg-white rounded-2xl shadow-sm border border-stone-100">
+            <div class="g-card-solid">
               <!-- Row 1: 狀態按鈕 + 搜尋欄 + 每頁筆數 -->
               <div class="flex flex-col md:flex-row md:items-center gap-2 px-4 pt-3 pb-2">
-                <div class="flex rounded-lg border border-stone-200 overflow-hidden flex-shrink-0 self-start">
-                  <button @click="detailsStatus = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', detailsStatus === 'all' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">全部</button>
-                  <button @click="detailsStatus = 'approved'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'approved' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已接單</button>
-                  <button @click="detailsStatus = 'pending'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'pending' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">待審核</button>
-                  <button @click="detailsStatus = 'rejected'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'rejected' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已拒絕</button>
-                  <button @click="detailsStatus = 'expired'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200 transition', detailsStatus === 'expired' ? 'bg-stone-800 text-white' : 'bg-white text-stone-500 hover:bg-stone-50']">已過期</button>
+                <div class="flex overflow-hidden flex-shrink-0 self-start" style="border-radius:var(--glass-radius-xs);border:1px solid var(--glass-border-strong);">
+                  <button @click="detailsStatus = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', detailsStatus === 'all' ? 'bg-stone-800 text-white' : 'bg-white/60 text-stone-500 hover:bg-white/80']">全部</button>
+                  <button @click="detailsStatus = 'approved'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsStatus === 'approved' ? 'bg-green-600 text-white' : 'bg-white/60 text-green-700 hover:bg-green-50']">已接單</button>
+                  <button @click="detailsStatus = 'pending'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsStatus === 'pending' ? 'bg-amber-500 text-white' : 'bg-white/60 text-amber-600 hover:bg-amber-50']">待審核</button>
+                  <button @click="detailsStatus = 'rejected'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsStatus === 'rejected' ? 'bg-red-600 text-white' : 'bg-white/60 text-red-600 hover:bg-red-50']">已拒絕</button>
+                  <button @click="detailsStatus = 'expired'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsStatus === 'expired' ? 'bg-stone-500 text-white' : 'bg-white/60 text-stone-400 hover:bg-stone-50']">已過期</button>
                 </div>
                 <div class="flex items-center gap-2 md:flex-1 md:min-w-0">
                   <div class="relative flex-1 min-w-0">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-xs"></i>
-                    <input type="text" v-model="detailsKeyword" placeholder="關鍵字搜尋..." class="w-full pl-8 pr-3 py-1.5 border border-stone-200 rounded-lg text-sm outline-none text-stone-700">
+                    <input type="text" v-model="detailsKeyword" placeholder="關鍵字搜尋..." class="g-input w-full pl-8" style="height:32px;">
                   </div>
-                  <select v-model.number="detailsPageSize" class="px-2 py-1.5 border border-stone-200 rounded-lg text-xs font-bold text-stone-700 bg-white outline-none flex-shrink-0">
+                  <select v-model.number="detailsPageSize" class="g-select flex-shrink-0" style="height:32px;font-size:12px;padding-right:28px;">
                     <option :value="10">每頁10筆</option>
                     <option :value="20">每頁20筆</option>
                     <option :value="50">每頁50筆</option>
@@ -591,12 +876,12 @@
                   </select>
                   <!-- 欄位設定按鈕 -->
                   <div class="relative flex-shrink-0">
-                    <button @click="showColumnSettings = !showColumnSettings" :class="['w-8 h-8 flex items-center justify-center rounded-lg border transition', showColumnSettings ? 'bg-stone-800 text-white border-stone-800' : 'bg-white border-stone-200 text-stone-500 hover:bg-stone-100']" title="欄位設定">
+                    <button @click="showColumnSettings = !showColumnSettings" :class="['w-8 h-8 flex items-center justify-center border transition', showColumnSettings ? 'bg-stone-800 text-white border-stone-800' : 'bg-white/60 border-stone-200/60 text-stone-500 hover:bg-white/80']" style="border-radius:var(--glass-radius-xs);" title="欄位設定">
                       <i class="fas fa-columns text-xs"></i>
                     </button>
                     <div v-if="showColumnSettings" class="fixed inset-0 z-40" @click="showColumnSettings = false"></div>
-                    <div v-if="showColumnSettings" class="absolute right-0 top-10 z-50 bg-white border border-stone-200 rounded-xl shadow-xl p-3 min-w-[140px]" @click.stop>
-                      <p class="text-xs font-black text-stone-500 mb-1.5 px-1">欄位顯示與排序</p>
+                    <div v-if="showColumnSettings" class="absolute right-0 top-10 z-50 g-card-solid p-3 min-w-[140px] animate-slide-down" @click.stop>
+                      <p class="g-label mb-1.5 px-1">欄位顯示與排序</p>
                       <p class="text-[10px] text-stone-400 mb-2 px-1">拖曳 <i class="fas fa-grip-vertical"></i> 調整順序</p>
                       <div v-for="(key, idx) in columnOrder" :key="key"
                            class="flex items-center gap-1.5 px-1 py-1.5 rounded select-none"
@@ -619,17 +904,17 @@
               <div class="flex items-center justify-between px-4 pb-3">
                 <span class="text-xs text-stone-400 font-bold">第 {{ detailsPage }} / {{ totalDetailsPages }} 頁　共 {{ sortedDetailsList.length }} 筆</span>
                 <div class="flex items-center gap-1">
-                  <button @click="detailsPage = 1" :disabled="detailsPage === 1" class="w-7 h-7 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center">«</button>
-                  <button @click="detailsPage--" :disabled="detailsPage === 1" class="w-7 h-7 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center">‹</button>
-                  <button @click="detailsPage++" :disabled="detailsPage === totalDetailsPages" class="w-7 h-7 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center">›</button>
-                  <button @click="detailsPage = totalDetailsPages" :disabled="detailsPage === totalDetailsPages" class="w-7 h-7 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold flex items-center justify-center">»</button>
+                  <button @click="detailsPage = 1" :disabled="detailsPage === 1" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">«</button>
+                  <button @click="detailsPage--" :disabled="detailsPage === 1" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">‹</button>
+                  <button @click="detailsPage++" :disabled="detailsPage === totalDetailsPages" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">›</button>
+                  <button @click="detailsPage = totalDetailsPages" :disabled="detailsPage === totalDetailsPages" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">»</button>
                 </div>
               </div>
               <!-- 表格 -->
-              <div class="overflow-x-auto border-t border-stone-100">
-              <table class="w-full text-sm">
+              <div class="overflow-x-auto border-t border-stone-100/60">
+              <table class="g-table">
                 <thead>
-                  <tr class="border-b border-stone-100 text-xs font-black text-stone-400 uppercase tracking-wider">
+                  <tr>
                     <th class="px-4 py-3 text-center"><input type="checkbox" :checked="isAllOrderSelected" @change="toggleAllOrderSelection" class="w-4 h-4 accent-stone-800"></th>
                     <th class="px-4 py-3 text-left">狀態</th>
                     <template v-for="col in orderedVisibleColumns" :key="col.key">
@@ -648,12 +933,12 @@
                 </thead>
                 <tbody>
                   <template v-for="order in pagedDetailsList" :key="order.id">
-                  <tr class="border-b sm:border-b border-stone-50 hover:bg-stone-50 transition">
+                  <tr class="transition">
                     <td class="px-4 py-3 text-center">
                       <input type="checkbox" :checked="selectedOrderIds.includes(order.id)" @change="toggleOrderSelection(order.id)" class="w-4 h-4 accent-stone-800">
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap">
-                      <button @click="statusEditOrder = order" :class="['inline-block px-2 py-1 rounded-full text-xs font-bold cursor-pointer hover:opacity-80 transition', statusClass(order.status)]">
+                      <button @click="statusEditOrder = order" :class="['g-badge cursor-pointer hover:opacity-80 transition', statusClass(order.status)]">
                         {{ statusLabel(order.status) }}
                       </button>
                     </td>
@@ -674,24 +959,24 @@
                     </template>
                     <td class="hidden sm:table-cell px-4 py-3 text-center whitespace-nowrap">
                       <div class="flex gap-2 justify-center">
-                        <button @click="printSingleStock(order)" :disabled="printingSingleId === order.id" class="px-3 py-1 bg-stone-100 text-stone-500 rounded-lg hover:bg-stone-200 transition text-xs font-bold" title="列印備料單">備貨單</button>
-                        <button @click="printSingleLabel(order)" :disabled="printingSingleId === order.id" class="px-3 py-1 bg-stone-100 text-stone-500 rounded-lg hover:bg-stone-200 transition text-xs font-bold" title="列印出貨單">出貨單</button>
-                        <button @click="openDetailModal(order)" class="px-3 py-1 bg-stone-800 text-white rounded-lg hover:bg-black transition text-xs font-bold">詳細</button>
+                        <button @click="printSingleStock(order)" :disabled="printingSingleId === order.id" class="g-btn g-btn-glass g-btn-sm" title="列印備料單">備貨單</button>
+                        <button @click="printSingleLabel(order)" :disabled="printingSingleId === order.id" class="g-btn g-btn-glass g-btn-sm" title="列印出貨單">出貨單</button>
+                        <button @click="openDetailModal(order)" class="g-btn g-btn-primary g-btn-sm">詳細</button>
                       </div>
                     </td>
                   </tr>
                   <!-- 手機版操作列：橫跨全部欄位，桌面版隱藏 -->
-                  <tr class="sm:hidden border-b border-stone-100">
+                  <tr class="sm:hidden border-b border-stone-100/50">
                     <td colspan="4" class="px-3 pb-2.5 pt-0">
                       <div class="flex gap-2">
-                        <button @click="printSingleStock(order)" :disabled="printingSingleId === order.id" class="flex-1 py-1.5 bg-stone-100 text-stone-500 rounded-lg hover:bg-stone-200 transition text-xs font-bold text-center disabled:opacity-40">
-                          <i class="fas fa-boxes mr-1"></i>備貨單
+                        <button @click="printSingleStock(order)" :disabled="printingSingleId === order.id" class="g-btn g-btn-glass g-btn-sm flex-1 justify-center">
+                          <i class="fas fa-boxes"></i>備貨單
                         </button>
-                        <button @click="printSingleLabel(order)" :disabled="printingSingleId === order.id" class="flex-1 py-1.5 bg-stone-100 text-stone-500 rounded-lg hover:bg-stone-200 transition text-xs font-bold text-center disabled:opacity-40">
-                          <i class="fas fa-shipping-fast mr-1"></i>出貨單
+                        <button @click="printSingleLabel(order)" :disabled="printingSingleId === order.id" class="g-btn g-btn-glass g-btn-sm flex-1 justify-center">
+                          <i class="fas fa-shipping-fast"></i>出貨單
                         </button>
-                        <button @click="openDetailModal(order)" class="flex-1 py-1.5 bg-stone-800 text-white rounded-lg hover:bg-black transition text-xs font-bold text-center">
-                          <i class="fas fa-search mr-1"></i>詳細
+                        <button @click="openDetailModal(order)" class="g-btn g-btn-primary g-btn-sm flex-1 justify-center">
+                          <i class="fas fa-search"></i>詳細
                         </button>
                       </div>
                     </td>
@@ -704,31 +989,31 @@
           </div>
 
           <!-- 訂單狀態修改 Modal -->
-          <div v-if="statusEditOrder" class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 animate-fade-in" style="z-index:2147483646;" @click.self="statusEditOrder = null">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 animate-zoom-in" style="z-index:2147483647; position:relative;">
+          <div v-if="statusEditOrder" class="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" style="z-index:2147483646;" @click.self="statusEditOrder = null">
+            <div class="g-modal w-full max-w-xs p-6 animate-zoom-in" style="z-index:2147483647; position:relative;">
               <h3 class="text-base font-black mb-1">變更訂單狀態</h3>
               <p class="text-sm text-stone-500 mb-5">{{ statusEditOrder.companyName }}</p>
               <div class="flex flex-col gap-2">
-                <button @click="changeOrderStatus('approved')" :class="['w-full py-2.5 rounded-xl text-sm font-bold transition', statusEditOrder.status === 'approved' ? 'bg-green-600 text-white cursor-default' : 'bg-green-50 text-green-700 hover:bg-green-100']">
+                <button @click="changeOrderStatus('approved')" :class="['w-full py-2.5 text-sm font-bold transition', statusEditOrder.status === 'approved' ? 'bg-green-600 text-white cursor-default' : 'bg-green-50/80 text-green-700 hover:bg-green-100']" style="border-radius:var(--glass-radius-xs);">
                   <i class="fas fa-check-circle mr-2" style="color:#22c55e !important;"></i>已接單
                 </button>
-                <button @click="changeOrderStatus('pending')" :class="['w-full py-2.5 rounded-xl text-sm font-bold transition', statusEditOrder.status === 'pending' ? 'bg-amber-500 text-white cursor-default' : 'bg-amber-50 text-amber-700 hover:bg-amber-100']">
+                <button @click="changeOrderStatus('pending')" :class="['w-full py-2.5 text-sm font-bold transition', statusEditOrder.status === 'pending' ? 'bg-amber-500 text-white cursor-default' : 'bg-amber-50/80 text-amber-700 hover:bg-amber-100']" style="border-radius:var(--glass-radius-xs);">
                   <i class="fas fa-clock mr-2"></i>待審核
                 </button>
-                <button @click="changeOrderStatus('rejected')" :class="['w-full py-2.5 rounded-xl text-sm font-bold transition', statusEditOrder.status === 'rejected' ? 'bg-red-600 text-white cursor-default' : 'bg-red-50 text-red-700 hover:bg-red-100']">
+                <button @click="changeOrderStatus('rejected')" :class="['w-full py-2.5 text-sm font-bold transition', statusEditOrder.status === 'rejected' ? 'bg-red-600 text-white cursor-default' : 'bg-red-50/80 text-red-700 hover:bg-red-100']" style="border-radius:var(--glass-radius-xs);">
                   <i class="fas fa-times-circle mr-2"></i>已拒絕
                 </button>
-                <button @click="changeOrderStatus('expired')" :class="['w-full py-2.5 rounded-xl text-sm font-bold transition', statusEditOrder.status === 'expired' ? 'bg-gray-600 text-white cursor-default' : 'bg-gray-50 text-gray-500 hover:bg-gray-100']">
+                <button @click="changeOrderStatus('expired')" :class="['w-full py-2.5 text-sm font-bold transition', statusEditOrder.status === 'expired' ? 'bg-gray-600 text-white cursor-default' : 'bg-gray-50/80 text-gray-500 hover:bg-gray-100']" style="border-radius:var(--glass-radius-xs);">
                   <i class="fas fa-history mr-2"></i>已過期
                 </button>
               </div>
-              <button @click="statusEditOrder = null" class="mt-4 w-full py-2 rounded-xl text-sm font-bold bg-stone-100 text-stone-500 hover:bg-stone-200 transition">取消</button>
+              <button @click="statusEditOrder = null" class="g-btn g-btn-glass mt-4 w-full justify-center">取消</button>
             </div>
           </div>
 
           <!-- 詳細資訊 Modal -->
-          <div v-if="detailModalOrder" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 animate-fade-in" @click.self="closeDetailModal">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[88vh] flex flex-col animate-zoom-in">
+          <div v-if="detailModalOrder" class="fixed inset-0 bg-black/30 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in" @click.self="closeDetailModal">
+            <div class="g-modal w-full max-w-xl max-h-[88vh] flex flex-col animate-zoom-in">
 
               <!-- Modal Header -->
               <div class="flex items-start justify-between px-6 pt-5 pb-4">
@@ -741,17 +1026,17 @@
                     </span>
                   </div>
                   <div class="mt-2 flex items-center">
-                    <button @click="statusEditOrder = detailModalOrder" :class="['px-4 py-1 rounded-lg font-bold text-sm focus:outline-none', statusClass(detailModalOrder.status)]" style="display:inline-block;">{{ statusLabel(detailModalOrder.status) }}</button>
+                    <button @click="statusEditOrder = detailModalOrder" :class="['g-badge cursor-pointer hover:opacity-80 transition', statusClass(detailModalOrder.status)]" style="display:inline-block;">{{ statusLabel(detailModalOrder.status) }}</button>
                   </div>
                 </div>
-                <button @click="closeDetailModal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition mt-0.5 flex-shrink-0"><i class="fas fa-times text-sm"></i></button>
+                <button @click="closeDetailModal" class="g-btn g-btn-glass g-btn-sm" style="width:32px;height:32px;padding:0;"><i class="fas fa-times text-sm"></i></button>
               </div>
 
               <!-- Modal Tabs -->
-              <div class="flex border-b border-stone-100 px-6">
-                <button @click="detailModalTab = 'info'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', detailModalTab === 'info' ? 'border-stone-800 text-stone-800' : 'border-transparent text-stone-400 hover:text-stone-600']">基本資訊</button>
-                <button @click="detailModalTab = 'orders'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', detailModalTab === 'orders' ? 'border-stone-800 text-stone-800' : 'border-transparent text-stone-400 hover:text-stone-600']">訂單明細</button>
-                <button @click="detailModalTab = 'stock'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', detailModalTab === 'stock' ? 'border-stone-800 text-stone-800' : 'border-transparent text-stone-400 hover:text-stone-600']">備貨統計</button>
+              <div class="flex border-b border-stone-200/40 px-6">
+                <button @click="detailModalTab = 'info'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', detailModalTab === 'info' ? 'border-brand-500 text-brand-600' : 'border-transparent text-stone-400 hover:text-stone-600']">基本資訊</button>
+                <button @click="detailModalTab = 'orders'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', detailModalTab === 'orders' ? 'border-brand-500 text-brand-600' : 'border-transparent text-stone-400 hover:text-stone-600']">訂單明細</button>
+                <button @click="detailModalTab = 'stock'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', detailModalTab === 'stock' ? 'border-brand-500 text-brand-600' : 'border-transparent text-stone-400 hover:text-stone-600']">備貨統計</button>
               </div>
 
               <!-- Modal Body -->
@@ -762,7 +1047,7 @@
                   <!-- 唯讀模式 -->
                   <template v-if="!detailInfoEditing">
                     <div class="flex justify-end mb-4">
-                      <button @click="detailInfoEditing = true" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition">
+                      <button @click="detailInfoEditing = true" class="g-btn g-btn-glass g-btn-sm">
                         <i class="fas fa-edit"></i>編輯
                       </button>
                     </div>
@@ -798,7 +1083,7 @@
                       </div>
                     </div>
                     <!-- 總金額 -->
-                    <div v-if="groupTotalAmountMap[detailModalOrder.id] > 0" class="mt-4 flex items-center justify-between bg-stone-50 rounded-xl px-4 py-3 border border-stone-100">
+                    <div v-if="groupTotalAmountMap[detailModalOrder.id] > 0" class="mt-4 flex items-center justify-between rounded-xl px-4 py-3" style="background:var(--glass-bg-light);border:1px solid var(--glass-border-subtle);border-radius:var(--glass-radius-xs);">
                       <span class="text-sm text-stone-500 font-medium">總金額</span>
                       <span class="text-2xl font-black text-stone-900">${{ groupTotalAmountMap[detailModalOrder.id].toLocaleString() }}</span>
                     </div>
@@ -808,30 +1093,30 @@
                     <div class="space-y-3">
                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label class="text-xs font-bold text-stone-400 mb-1 block">公司名稱</label>
-                          <input v-model="editFormData.companyName" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                          <label class="g-label mb-1 block">公司名稱</label>
+                          <input v-model="editFormData.companyName" type="text" class="g-input w-full">
                         </div>
                         <div>
-                          <label class="text-xs font-bold text-stone-400 mb-1 block">聯絡人</label>
-                          <input v-model="editFormData.contactName" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                          <label class="g-label mb-1 block">聯絡人</label>
+                          <input v-model="editFormData.contactName" type="text" class="g-input w-full">
                         </div>
                         <div>
-                          <label class="text-xs font-bold text-stone-400 mb-1 block">聯絡電話</label>
-                          <input v-model="editFormData.contactPhone" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                          <label class="g-label mb-1 block">聯絡電話</label>
+                          <input v-model="editFormData.contactPhone" type="text" class="g-input w-full">
                         </div>
                         <div>
-                          <label class="text-xs font-bold text-stone-400 mb-1 block">配送時間</label>
-                          <input v-model="editFormData.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                          <label class="g-label mb-1 block">配送時間</label>
+                          <input v-model="editFormData.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="g-input w-full">
                         </div>
                       </div>
                       <div>
-                        <label class="text-xs font-bold text-stone-400 mb-1 block">配送地址</label>
-                        <input v-model="editFormData.address" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50 focus:bg-white transition">
+                        <label class="g-label mb-1 block">配送地址</label>
+                        <input v-model="editFormData.address" type="text" class="g-input w-full">
                       </div>
                       <div>
-                        <label class="text-xs font-bold text-stone-400 mb-1 block">來源</label>
+                        <label class="g-label mb-1 block">來源</label>
                         <div v-if="detailModalOrder.resource === '網路'" class="py-1">
-                          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-stone-100 text-stone-500 rounded-lg text-sm">
+                          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-stone-500 text-sm" style="background:var(--glass-bg-light);border:1px solid var(--glass-border-subtle);border-radius:var(--glass-radius-xs);">
                             <i class="fas fa-lock text-xs"></i>{{ detailModalOrder.resource }}（不可修改）
                           </span>
                         </div>
@@ -848,16 +1133,16 @@
                         </div>
                       </div>
                       <div>
-                        <label class="text-xs font-bold text-stone-400 mb-1 block">狀態</label>
-                        <select v-model="editFormData.status" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-stone-50">
+                        <label class="g-label mb-1 block">狀態</label>
+                        <select v-model="editFormData.status" class="g-select w-full">
                           <option value="pending">待審核</option>
                           <option value="approved">已接單</option>
                           <option value="rejected">已拒絕</option>
                         </select>
                       </div>
                       <div class="flex gap-2 pt-1">
-                        <button @click="saveBasicInfo" class="px-4 py-2 bg-stone-800 text-white rounded-lg text-sm font-bold hover:bg-stone-900 transition"><i class="fas fa-save mr-1.5"></i>保存</button>
-                        <button @click="detailInfoEditing = false" class="px-4 py-2 bg-stone-100 text-stone-600 rounded-lg text-sm font-bold hover:bg-stone-200 transition">取消</button>
+                        <button @click="saveBasicInfo" class="g-btn g-btn-primary"><i class="fas fa-save mr-1.5"></i>保存</button>
+                        <button @click="detailInfoEditing = false" class="g-btn g-btn-glass">取消</button>
                       </div>
                     </div>
                   </template>
@@ -869,29 +1154,29 @@
                   <div v-else>
                     <!-- 操作列 -->
                     <div class="flex items-center justify-between mb-4">
-                      <button @click="printSingleLabel(detailModalOrder)" :disabled="printingSingleId === detailModalOrder.id" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-print"></i>列印全部出貨單</button>
-                      <button @click="addNewCustomerOrderInline" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-800 text-white rounded-lg text-xs font-bold hover:bg-stone-900 transition"><i class="fas fa-plus"></i>新增訂購人</button>
+                      <button @click="printSingleLabel(detailModalOrder)" :disabled="printingSingleId === detailModalOrder.id" class="g-btn g-btn-glass g-btn-sm"><i class="fas fa-print"></i>列印全部出貨單</button>
+                      <button @click="addNewCustomerOrderInline" class="g-btn g-btn-primary g-btn-sm"><i class="fas fa-plus"></i>新增訂購人</button>
                     </div>
                     <div v-if="groupOrders.length === 0 && !editingNewCustomerOrder" class="text-center py-10 text-stone-400 text-sm">暫無訂單數據</div>
                     <div class="space-y-2">
-                      <div v-for="(customerOrder, idx) in groupOrders.slice().sort((a, b) => (b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0) - (a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0))" :key="customerOrder.id" class="rounded-xl border border-stone-100 overflow-hidden">
+                      <div v-for="(customerOrder, idx) in groupOrders.slice().sort((a, b) => (b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0) - (a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0))" :key="customerOrder.id" class="overflow-hidden" style="border:1px solid var(--glass-border-subtle);border-radius:var(--glass-radius-xs);">
                         <!-- 唯讀 -->
                         <template v-if="editingCustomerOrderId !== customerOrder.id">
                           <!-- 訂購人標題列 -->
-                          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 bg-stone-50 border-b border-stone-100 gap-2">
+                          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-b gap-2" style="background:var(--glass-bg-light);border-color:var(--glass-border-subtle);">
                             <div class="flex items-center justify-between sm:justify-start gap-2 min-w-0">
                               <div class="flex items-center gap-2 min-w-0">
-                                <span class="text-xs font-bold text-stone-400 bg-stone-200 px-1.5 py-0.5 rounded flex-shrink-0">#{{ idx + 1 }}</span>
+                                <span class="text-xs font-bold text-stone-400 bg-stone-200/60 px-1.5 py-0.5 rounded flex-shrink-0">#{{ idx + 1 }}</span>
                                 <span class="font-bold text-stone-800 text-sm">{{ customerOrder.customerName }}</span>
-                                <span v-if="customerOrder.customerUnit" class="text-xs text-stone-400 bg-stone-200 px-2 py-0.5 rounded-md flex-shrink-0">{{ customerOrder.customerUnit }}</span>
+                                <span v-if="customerOrder.customerUnit" class="text-xs text-stone-400 bg-stone-200/60 px-2 py-0.5 rounded-md flex-shrink-0">{{ customerOrder.customerUnit }}</span>
                               </div>
                               <span class="text-sm font-bold text-stone-700 flex-shrink-0 sm:hidden">${{ (customerOrder.totalAmount || 0).toLocaleString() }}</span>
                             </div>
                             <div class="flex items-center gap-1.5">
                               <span class="hidden sm:inline text-sm font-bold text-stone-700 mr-1">${{ (customerOrder.totalAmount || 0).toLocaleString() }}</span>
-                              <button @click="printSingleCustomerLabel(customerOrder)" class="flex-1 sm:flex-none px-3 py-1 bg-stone-100 text-stone-700 rounded-lg border border-stone-200 text-xs font-bold hover:bg-stone-200 transition text-center" title="列印出貨單">印出貨單</button>
-                              <button @click="startInlineEditCustomerOrder(customerOrder)" class="flex-1 sm:flex-none px-3 py-1 bg-stone-100 text-stone-700 rounded-lg border border-stone-200 text-xs font-bold hover:bg-stone-200 transition text-center" title="編輯">編輯</button>
-                              <button @click="deleteCustomerOrder(customerOrder.id, idx)" class="flex-1 sm:flex-none px-3 py-1 bg-stone-100 text-stone-700 rounded-lg border border-stone-200 text-xs font-bold hover:bg-stone-200 transition text-center" title="刪除">刪除</button>
+                              <button @click="printSingleCustomerLabel(customerOrder)" class="g-btn g-btn-glass g-btn-sm flex-1 sm:flex-none justify-center" title="列印出貨單">印出貨單</button>
+                              <button @click="startInlineEditCustomerOrder(customerOrder)" class="g-btn g-btn-glass g-btn-sm flex-1 sm:flex-none justify-center" title="編輯">編輯</button>
+                              <button @click="deleteCustomerOrder(customerOrder.id, idx)" class="g-btn g-btn-danger g-btn-sm flex-1 sm:flex-none justify-center" title="刪除">刪除</button>
                             </div>
                           </div>
                           <!-- 品項列表 -->
@@ -905,19 +1190,19 @@
                         </template>
                         <!-- 編輯中 -->
                         <template v-else>
-                          <div class="p-4 space-y-3 bg-stone-50">
+                          <div class="p-4 space-y-3" style="background:var(--glass-bg-light);">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               <div>
-                                <label class="text-xs font-bold text-stone-400 mb-1 block">訂購人</label>
-                                <input v-model="editingCustomerOrderData.customerName" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                                <label class="g-label mb-1 block">訂購人</label>
+                                <input v-model="editingCustomerOrderData.customerName" type="text" class="g-input w-full">
                               </div>
                               <div>
-                                <label class="text-xs font-bold text-stone-400 mb-1 block">單位</label>
-                                <input v-model="editingCustomerOrderData.customerUnit" type="text" placeholder="部門、公司..." class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                                <label class="g-label mb-1 block">單位</label>
+                                <input v-model="editingCustomerOrderData.customerUnit" type="text" placeholder="部門、公司..." class="g-input w-full">
                               </div>
                             </div>
                             <div>
-                              <label class="text-xs font-bold text-stone-400 mb-2 block">訂購項目</label>
+                              <label class="g-label mb-2 block">訂購項目</label>
                               <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
                                 <div v-for="(item, iidx) in editingCustomerOrderData.items" :key="iidx" class="flex items-center gap-1.5">
                                   <span class="flex-1 text-sm text-stone-700 truncate">{{ item.itemName }}</span>
@@ -930,33 +1215,33 @@
                               </div>
                             </div>
                             <div>
-                              <label class="text-xs font-bold text-stone-400 mb-1 block">備註</label>
-                              <input v-model="editingCustomerOrderData.note" type="text" placeholder="不要辣、備品..." class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                              <label class="g-label mb-1 block">備註</label>
+                              <input v-model="editingCustomerOrderData.note" type="text" placeholder="不要辣、備品..." class="g-input w-full">
                             </div>
                             <div class="flex items-center gap-2 pt-1">
-                              <button @click="saveInlineEditCustomerOrder(customerOrder.id, idx)" class="px-3 py-1.5 bg-stone-800 text-white rounded-lg text-xs font-bold hover:bg-stone-900 transition"><i class="fas fa-save mr-1"></i>保存</button>
-                              <button @click="editingCustomerOrderId = null" class="px-3 py-1.5 bg-white border border-stone-200 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-100 transition">取消</button>
-                              <button @click="deleteCustomerOrder(customerOrder.id, idx)" class="ml-auto px-3 py-1.5 bg-white border border-stone-200 text-stone-500 rounded-lg text-xs font-bold hover:bg-stone-100 transition"><i class="fas fa-trash-alt mr-1"></i>刪除</button>
+                              <button @click="saveInlineEditCustomerOrder(customerOrder.id, idx)" class="g-btn g-btn-primary g-btn-sm"><i class="fas fa-save mr-1"></i>保存</button>
+                              <button @click="editingCustomerOrderId = null" class="g-btn g-btn-glass g-btn-sm">取消</button>
+                              <button @click="deleteCustomerOrder(customerOrder.id, idx)" class="g-btn g-btn-danger g-btn-sm ml-auto"><i class="fas fa-trash-alt mr-1"></i>刪除</button>
                             </div>
                           </div>
                         </template>
                       </div>
                       <!-- 新增訂購人表單 -->
-                      <div v-if="editingNewCustomerOrder" class="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4 animate-fade-in" @click.self="editingNewCustomerOrder = false">
-                        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-zoom-in">
+                      <div v-if="editingNewCustomerOrder" class="fixed inset-0 bg-black/30 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in" @click.self="editingNewCustomerOrder = false">
+                        <div class="g-modal w-full max-w-lg p-6 animate-zoom-in">
                           <h3 class="text-lg font-black text-stone-800 mb-4">新增訂單</h3>
                           <div class="grid grid-cols-2 gap-3 mb-4">
                             <div>
-                              <label class="text-xs font-bold text-stone-400 mb-1 block">訂購人</label>
-                              <input v-model="newCustomerOrderData.customerName" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                              <label class="g-label mb-1 block">訂購人</label>
+                              <input v-model="newCustomerOrderData.customerName" type="text" class="g-input w-full">
                             </div>
                             <div>
-                              <label class="text-xs font-bold text-stone-400 mb-1 block">單位</label>
-                              <input v-model="newCustomerOrderData.customerUnit" type="text" placeholder="部門、公司..." class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                              <label class="g-label mb-1 block">單位</label>
+                              <input v-model="newCustomerOrderData.customerUnit" type="text" placeholder="部門、公司..." class="g-input w-full">
                             </div>
                           </div>
                           <div class="mb-4">
-                            <label class="text-xs font-bold text-stone-400 mb-2 block">訂購項目</label>
+                            <label class="g-label mb-2 block">訂購項目</label>
                             <div class="grid grid-cols-2 gap-x-6 gap-y-2">
                               <div v-for="(item, iidx) in newCustomerOrderData.items" :key="iidx" class="flex items-center justify-between gap-2">
                                 <span class="flex-1 text-sm text-stone-700">{{ item.itemName }}</span>
@@ -969,12 +1254,12 @@
                             </div>
                           </div>
                           <div class="mb-4">
-                            <label class="text-xs font-bold text-stone-400 mb-1 block">備註</label>
-                            <input v-model="newCustomerOrderData.note" type="text" placeholder="不要辣、備品..." class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                            <label class="g-label mb-1 block">備註</label>
+                            <input v-model="newCustomerOrderData.note" type="text" placeholder="不要辣、備品..." class="g-input w-full">
                           </div>
                           <div class="flex gap-2 justify-end mt-6">
-                            <button @click="saveNewCustomerOrder" class="px-5 py-2 bg-stone-800 text-white rounded-lg text-sm font-bold hover:bg-black transition flex items-center gap-2"><i class="fas fa-check"></i>確定</button>
-                            <button @click="editingNewCustomerOrder = false" class="px-5 py-2 bg-stone-100 text-stone-800 rounded-lg text-sm font-bold hover:bg-stone-200 transition flex items-center gap-2">取消</button>
+                            <button @click="saveNewCustomerOrder" class="g-btn g-btn-primary"><i class="fas fa-check mr-1"></i>確定</button>
+                            <button @click="editingNewCustomerOrder = false" class="g-btn g-btn-glass">取消</button>
                           </div>
                         </div>
                       </div>
@@ -988,10 +1273,10 @@
                   <div v-else-if="groupStock.length === 0" class="text-center py-10 text-stone-400 text-sm">暫無商品數據</div>
                   <div v-else>
                     <div class="flex justify-end mb-4">
-                      <button @click="printSingleStock(detailModalOrder)" :disabled="printingSingleId === detailModalOrder.id" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition disabled:opacity-40"><i class="fas fa-print"></i>列印備貨統計</button>
+                      <button @click="printSingleStock(detailModalOrder)" :disabled="printingSingleId === detailModalOrder.id" class="g-btn g-btn-glass g-btn-sm"><i class="fas fa-print"></i>列印備貨統計</button>
                     </div>
-                    <div class="rounded-xl border border-stone-100 overflow-hidden">
-                      <div v-for="stock in groupStock" :key="stock.name" class="flex items-center justify-between px-4 py-3 border-b border-stone-50 last:border-b-0 hover:bg-stone-50 transition">
+                    <div class="overflow-hidden" style="border:1px solid var(--glass-border-subtle);border-radius:var(--glass-radius-xs);">
+                      <div v-for="stock in groupStock" :key="stock.name" class="flex items-center justify-between px-4 py-3 border-b border-stone-100/50 last:border-b-0 hover:bg-white/40 transition">
                         <span class="text-sm text-stone-700">{{ stock.name }}</span>
                         <span class="text-sm font-bold text-stone-900 tabular-nums">{{ stock.quantity }}</span>
                       </div>
@@ -1004,18 +1289,18 @@
           </div>
 
           <!-- 新增訂單 Modal -->
-          <div v-if="showCreateOrderModal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 animate-fade-in" @click.self="showCreateOrderModal = false">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col animate-zoom-in">
+          <div v-if="showCreateOrderModal" class="fixed inset-0 bg-black/30 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in" @click.self="showCreateOrderModal = false">
+            <div class="g-modal w-full max-w-xl max-h-[90vh] flex flex-col animate-zoom-in">
               <!-- Header -->
               <div class="flex items-center justify-between px-6 pt-5 pb-4">
                 <h3 class="text-xl font-black text-stone-900">新增訂單</h3>
-                <button @click="showCreateOrderModal = false" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition"><i class="fas fa-times text-sm"></i></button>
+                <button @click="showCreateOrderModal = false" class="g-btn g-btn-glass g-btn-sm" style="width:32px;height:32px;padding:0;"><i class="fas fa-times text-sm"></i></button>
               </div>
               <!-- Tabs -->
-              <div class="flex border-b border-stone-100 px-6">
-                <button @click="createOrderTab = 'info'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', createOrderTab === 'info' ? 'border-stone-800 text-stone-800' : 'border-transparent text-stone-400 hover:text-stone-600']">基本資訊</button>
-                <button @click="createOrderTab = 'orders'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', createOrderTab === 'orders' ? 'border-stone-800 text-stone-800' : 'border-transparent text-stone-400 hover:text-stone-600']">
-                  訂購明細<span v-if="createOrderCustomers.length > 0" class="ml-1 bg-stone-800 text-white text-[10px] px-1.5 rounded-full">{{ createOrderCustomers.length }}</span>
+              <div class="flex border-b border-stone-200/40 px-6">
+                <button @click="createOrderTab = 'info'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', createOrderTab === 'info' ? 'border-brand-500 text-brand-600' : 'border-transparent text-stone-400 hover:text-stone-600']">基本資訊</button>
+                <button @click="createOrderTab = 'orders'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', createOrderTab === 'orders' ? 'border-brand-500 text-brand-600' : 'border-transparent text-stone-400 hover:text-stone-600']">
+                  訂購明細<span v-if="createOrderCustomers.length > 0" class="ml-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] px-1.5 rounded-full">{{ createOrderCustomers.length }}</span>
                 </button>
               </div>
               <!-- Body -->
@@ -1024,8 +1309,8 @@
                   <div v-if="createOrderTab === 'info'" class="space-y-3">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div class="sm:col-span-2">
-                        <label class="text-xs font-bold text-stone-400 mb-1 block">常用聯絡人</label>
-                        <button type="button" @click="showContactPicker = true" class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm bg-stone-50 hover:bg-stone-100 transition text-left flex items-center justify-between gap-2">
+                        <label class="g-label mb-1 block">常用聯絡人</label>
+                        <button type="button" @click="showContactPicker = true" class="g-input w-full text-left flex items-center justify-between gap-2 cursor-pointer">
                           <span :class="selectedContactId ? 'text-stone-800 font-bold' : 'text-stone-400'">
                             {{ selectedContact ? selectedContact.companyName + ' / ' + selectedContact.contactName : selectedContactId ? '請選擇' : '點擊選擇常用聯絡人...' }}
                           </span>
@@ -1033,27 +1318,27 @@
                         </button>
                       </div>
                       <div>
-                        <label class="text-xs font-bold text-stone-400 mb-1 block">公司名稱 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.companyName" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="fieldErr('companyName') ? 'border-red-300' : 'border-stone-200'">
+                        <label class="g-label mb-1 block">公司名稱 <span class="text-red-500">*</span></label>
+                        <input v-model="createOrderForm.companyName" type="text" class="g-input w-full" :class="fieldErr('companyName') ? 'border-red-300' : ''">
                         <p v-if="fieldErr('companyName')" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                       <div>
-                        <label class="text-xs font-bold text-stone-400 mb-1 block">聯絡人 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.contactName" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="fieldErr('contactName') ? 'border-red-300' : 'border-stone-200'">
+                        <label class="g-label mb-1 block">聯絡人 <span class="text-red-500">*</span></label>
+                        <input v-model="createOrderForm.contactName" type="text" class="g-input w-full" :class="fieldErr('contactName') ? 'border-red-300' : ''">
                         <p v-if="fieldErr('contactName')" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                       <div>
-                        <label class="text-xs font-bold text-stone-400 mb-1 block">聯絡電話 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.contactPhone" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="fieldErr('contactPhone') ? 'border-red-300' : 'border-stone-200'">
+                        <label class="g-label mb-1 block">聯絡電話 <span class="text-red-500">*</span></label>
+                        <input v-model="createOrderForm.contactPhone" type="text" class="g-input w-full" :class="fieldErr('contactPhone') ? 'border-red-300' : ''">
                         <p v-if="fieldErr('contactPhone')" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                       <div>
-                        <label class="text-xs font-bold text-stone-400 mb-1 block">配送時間 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="fieldErr('deliveryTime') ? 'border-red-300' : 'border-stone-200'">
+                        <label class="g-label mb-1 block">配送時間 <span class="text-red-500">*</span></label>
+                        <input v-model="createOrderForm.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="g-input w-full" :class="fieldErr('deliveryTime') ? 'border-red-300' : ''">
                         <p v-if="fieldErr('deliveryTime')" class="text-xs text-red-400 mt-1">必填</p>
                       </div>
                        <div>
-                         <label class="text-xs font-bold text-stone-400 mb-1 block">來源<span class="text-red-500 ml-0.5">*</span></label>
+                         <label class="g-label mb-1 block">來源<span class="text-red-500 ml-0.5">*</span></label>
                          <div class="flex gap-4 py-2" :class="fieldErr('resource') ? 'rounded-lg border border-red-300 px-2' : ''">
                            <label class="inline-flex items-center gap-2"><input type="radio" v-model="createOrderForm.resource" value="Line" class="accent-brand-600"><span>Line</span></label>
                            <label class="inline-flex items-center gap-2"><input type="radio" v-model="createOrderForm.resource" value="電話" class="accent-brand-600"><span>電話</span></label>
@@ -1063,8 +1348,8 @@
                        </div>
                     </div>
                     <div>
-                      <label class="text-xs font-bold text-stone-400 mb-1 block">配送地址<span class="text-red-500 ml-0.5">*</span></label>
-                      <input v-model="createOrderForm.address" type="text" class="w-full px-3 py-2 border rounded-lg focus:border-stone-400 outline-none text-sm bg-white transition" :class="fieldErr('address') ? 'border-red-300' : 'border-stone-200'">
+                      <label class="g-label mb-1 block">配送地址<span class="text-red-500 ml-0.5">*</span></label>
+                      <input v-model="createOrderForm.address" type="text" class="g-input w-full" :class="fieldErr('address') ? 'border-red-300' : ''">
                       <p v-if="fieldErr('address')" class="text-xs text-red-400 mt-1">必填</p>
                     </div>
                   </div>
@@ -1072,22 +1357,22 @@
                 <div v-if="createOrderTab === 'orders'">
                   <div class="flex items-center justify-between mb-4">
                     <span class="text-sm font-bold text-stone-500">共 {{ createOrderCustomers.length }} 位訂購人</span>
-                    <button v-if="!addingCreateCustomer" @click="addingCreateCustomer = true" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-800 text-white rounded-lg text-xs font-bold hover:bg-stone-900 transition"><i class="fas fa-plus"></i>新增訂購人</button>
+                    <button v-if="!addingCreateCustomer" @click="addingCreateCustomer = true" class="g-btn g-btn-primary g-btn-sm"><i class="fas fa-plus"></i>新增訂購人</button>
                   </div>
                   <!-- 新增訂購人表單 -->
-                  <div v-if="addingCreateCustomer" class="mb-4 p-4 bg-stone-50 rounded-xl border border-stone-200 space-y-3">
+                  <div v-if="addingCreateCustomer" class="mb-4 p-4 rounded-xl space-y-3" style="background:var(--glass-bg-light);border:1px solid var(--glass-border-subtle);border-radius:var(--glass-radius-sm);">
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="text-xs font-bold text-stone-400 mb-1 block">訂購人 *</label>
-                        <input v-model="newCreateCustomerData.customerName" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                        <label class="g-label mb-1 block">訂購人 *</label>
+                        <input v-model="newCreateCustomerData.customerName" type="text" class="g-input w-full">
                       </div>
                       <div>
-                        <label class="text-xs font-bold text-stone-400 mb-1 block">單位</label>
-                        <input v-model="newCreateCustomerData.customerUnit" type="text" placeholder="部門、公司..." class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                        <label class="g-label mb-1 block">單位</label>
+                        <input v-model="newCreateCustomerData.customerUnit" type="text" placeholder="部門、公司..." class="g-input w-full">
                       </div>
                     </div>
                     <div>
-                      <label class="text-xs font-bold text-stone-400 mb-2 block">訂購項目</label>
+                      <label class="g-label mb-2 block">訂購項目</label>
                       <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
                         <div v-for="(item, iidx) in newCreateCustomerData.items" :key="iidx" class="flex items-center gap-1.5">
                           <span class="flex-1 text-sm text-stone-700 truncate">{{ item.itemName }}</span>
@@ -1100,33 +1385,33 @@
                       </div>
                     </div>
                     <div>
-                      <label class="text-xs font-bold text-stone-400 mb-1 block">備註</label>
-                      <input v-model="newCreateCustomerData.note" type="text" placeholder="不要辣、備品..." class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                      <label class="g-label mb-1 block">備註</label>
+                      <input v-model="newCreateCustomerData.note" type="text" placeholder="不要辣、備品..." class="g-input w-full">
                     </div>
                     <div class="flex gap-2">
-                      <button @click="confirmAddCreateCustomer" class="px-3 py-1.5 bg-stone-800 text-white rounded-lg text-xs font-bold hover:bg-stone-900 transition">新增</button>
-                      <button @click="addingCreateCustomer = false" class="px-3 py-1.5 bg-white border border-stone-200 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-100 transition">取消</button>
+                      <button @click="confirmAddCreateCustomer" class="g-btn g-btn-primary g-btn-sm">新增</button>
+                      <button @click="addingCreateCustomer = false" class="g-btn g-btn-glass g-btn-sm">取消</button>
                     </div>
                   </div>
                   <!-- 訂購人清單 -->
                   <div v-if="createOrderCustomers.length === 0 && !addingCreateCustomer" class="text-center py-10 text-stone-400 text-sm">尚未新增訂購人</div>
                   <div class="space-y-2">
-                    <div v-for="(customer, cidx) in createOrderCustomers" :key="cidx" class="rounded-xl border border-stone-100 overflow-hidden">
+                    <div v-for="(customer, cidx) in createOrderCustomers" :key="cidx" class="overflow-hidden" style="border:1px solid var(--glass-border-subtle);border-radius:var(--glass-radius-xs);">
                       <!-- 編輯中 -->
                       <template v-if="editingCreateCustomerIdx === cidx">
-                        <div class="p-4 bg-stone-50 space-y-3">
+                        <div class="p-4 space-y-3" style="background:var(--glass-bg-light);">
                           <div class="grid grid-cols-2 gap-2">
                             <div>
-                              <label class="text-xs font-bold text-stone-400 mb-1 block">訂購人</label>
-                              <input v-model="editingCreateCustomerData.customerName" type="text" class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                              <label class="g-label mb-1 block">訂購人</label>
+                              <input v-model="editingCreateCustomerData.customerName" type="text" class="g-input w-full">
                             </div>
                             <div>
-                              <label class="text-xs font-bold text-stone-400 mb-1 block">單位</label>
-                              <input v-model="editingCreateCustomerData.customerUnit" type="text" placeholder="部門、公司..." class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                              <label class="g-label mb-1 block">單位</label>
+                              <input v-model="editingCreateCustomerData.customerUnit" type="text" placeholder="部門、公司..." class="g-input w-full">
                             </div>
                           </div>
                           <div>
-                            <label class="text-xs font-bold text-stone-400 mb-2 block">訂購項目</label>
+                            <label class="g-label mb-2 block">訂購項目</label>
                             <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
                               <div v-for="(item, iidx) in editingCreateCustomerData.items" :key="iidx" class="flex items-center gap-1.5">
                                 <span class="flex-1 text-sm text-stone-700 truncate">{{ item.itemName }}</span>
@@ -1139,26 +1424,26 @@
                             </div>
                           </div>
                           <div>
-                            <label class="text-xs font-bold text-stone-400 mb-1 block">備註</label>
-                            <input v-model="editingCreateCustomerData.note" type="text" placeholder="不要辣、備品..." class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-stone-400 outline-none text-sm bg-white">
+                            <label class="g-label mb-1 block">備註</label>
+                            <input v-model="editingCreateCustomerData.note" type="text" placeholder="不要辣、備品..." class="g-input w-full">
                           </div>
                           <div class="flex gap-2 pt-1">
-                            <button @click="saveEditCreateCustomer" class="px-3 py-1.5 bg-stone-800 text-white rounded-lg text-xs font-bold hover:bg-stone-900 transition"><i class="fas fa-save mr-1"></i>保存</button>
-                            <button @click="editingCreateCustomerIdx = null" class="px-3 py-1.5 bg-white border border-stone-200 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-100 transition">取消</button>
-                            <button @click="createOrderCustomers.splice(cidx,1); editingCreateCustomerIdx=null" class="ml-auto px-3 py-1.5 bg-white border border-stone-200 text-stone-500 rounded-lg text-xs font-bold hover:bg-stone-100 transition"><i class="fas fa-trash-alt mr-1"></i>刪除</button>
+                            <button @click="saveEditCreateCustomer" class="g-btn g-btn-primary g-btn-sm"><i class="fas fa-save mr-1"></i>保存</button>
+                            <button @click="editingCreateCustomerIdx = null" class="g-btn g-btn-glass g-btn-sm">取消</button>
+                            <button @click="createOrderCustomers.splice(cidx,1); editingCreateCustomerIdx=null" class="g-btn g-btn-danger g-btn-sm ml-auto"><i class="fas fa-trash-alt mr-1"></i>刪除</button>
                           </div>
                         </div>
                       </template>
                       <!-- 唯讀 -->
                       <template v-else>
-                        <div class="flex items-center justify-between px-4 py-3 bg-stone-50 border-b border-stone-100">
+                        <div class="flex items-center justify-between px-4 py-3 border-b" style="background:var(--glass-bg-light);border-color:var(--glass-border-subtle);">
                           <div class="flex items-center gap-2">
                             <span class="font-bold text-stone-800 text-sm">{{ customer.customerName }}</span>
-                            <span v-if="customer.customerUnit" class="text-xs text-stone-400 bg-stone-200 px-2 py-0.5 rounded-md">{{ customer.customerUnit }}</span>
+                            <span v-if="customer.customerUnit" class="text-xs text-stone-400 bg-stone-200/60 px-2 py-0.5 rounded-md">{{ customer.customerUnit }}</span>
                           </div>
                           <div class="flex gap-1.5">
-                            <button @click="startEditCreateCustomer(cidx)" class="px-3 py-1 bg-stone-100 text-stone-700 rounded-lg border border-stone-200 text-xs font-bold hover:bg-stone-200 transition">編輯</button>
-                            <button @click="createOrderCustomers.splice(cidx,1)" class="px-3 py-1 bg-stone-100 text-stone-700 rounded-lg border border-stone-200 text-xs font-bold hover:bg-stone-200 transition">刪除</button>
+                            <button @click="startEditCreateCustomer(cidx)" class="g-btn g-btn-glass g-btn-sm">編輯</button>
+                            <button @click="createOrderCustomers.splice(cidx,1)" class="g-btn g-btn-danger g-btn-sm">刪除</button>
                           </div>
                         </div>
                         <div class="px-4 py-2">
@@ -1174,9 +1459,9 @@
                 </div>
               </div>
               <!-- Footer -->
-              <div class="flex gap-2 px-6 py-4 border-t border-stone-100">
-                <button @click="saveCreateGroupOrder" :disabled="loading" class="flex-1 py-2.5 bg-stone-800 text-white rounded-xl text-sm font-bold hover:bg-black transition disabled:opacity-50"><i class="fas fa-save mr-1.5"></i>建立訂單</button>
-                <button @click="showCreateOrderModal = false" class="px-5 py-2.5 bg-stone-100 text-stone-600 rounded-xl text-sm font-bold hover:bg-stone-200 transition">取消</button>
+              <div class="flex gap-2 px-6 py-4 border-t" style="border-color:var(--glass-border-subtle);">
+                <button @click="saveCreateGroupOrder" :disabled="loading" class="g-btn g-btn-brand flex-1 justify-center"><i class="fas fa-save mr-1.5"></i>建立訂單</button>
+                <button @click="showCreateOrderModal = false" class="g-btn g-btn-glass">取消</button>
               </div>
             </div>
           </div>
@@ -1187,24 +1472,24 @@
         <div v-if="adminTab === 'stock'" class="space-y-4">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-black text-stone-800">備貨統計</h2>
-            <button v-if="adminData.stockList.length > 0" @click="printStockLabels" class="no-print bg-stone-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-stone-700 transition shadow-lg flex items-center gap-2 whitespace-nowrap">
+            <button v-if="adminData.stockList.length > 0" @click="printStockLabels" class="no-print g-btn g-btn-primary">
               <i class="fas fa-print"></i>列印備貨單
             </button>
           </div>
-          <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 mb-6">
+          <div class="g-card p-4 mb-6">
             <div class="flex flex-col gap-4">
               <div class="flex flex-col sm:flex-row gap-4">
                 <div class="flex-1">
-                  <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">起始日期</label>
-                  <input type="date" v-model="stockStart" class="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none">
+                  <label class="g-label mb-2 block">起始日期</label>
+                  <input type="date" v-model="stockStart" class="g-input w-full">
                 </div>
                 <div class="flex-1">
-                  <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">結束日期</label>
-                  <input type="date" v-model="stockEnd" class="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none">
+                  <label class="g-label mb-2 block">結束日期</label>
+                  <input type="date" v-model="stockEnd" class="g-input w-full">
                 </div>
                 <div class="flex-1">
-                  <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">訂單狀態</label>
-                  <select v-model="stockStatus" class="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none bg-white">
+                  <label class="g-label mb-2 block">訂單狀態</label>
+                  <select v-model="stockStatus" class="g-select w-full">
                     <option value="all">全部</option>
                     <option value="pending">待審核</option>
                     <option value="approved">已接單</option>
@@ -1215,7 +1500,7 @@
             </div>
           </div>
           <div v-if="loading" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
-          <div v-else-if="adminData.stockList.length === 0" class="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-stone-200">
+          <div v-else-if="adminData.stockList.length === 0" class="text-center py-20 g-card">
             <i class="fas fa-box-open text-6xl mb-4 text-stone-300"></i>
             <p class="font-bold text-stone-400">此日期範圍內沒有備貨資料</p>
           </div>
@@ -1225,7 +1510,7 @@
               <span class="text-sm text-stone-400">共 {{ adminData.stockList.length }} 項產品</span>
             </div>
 
-            <div v-for="item in adminData.stockList" :key="item.name" class="bg-white rounded-xl px-5 py-4 shadow-sm border border-stone-100 hover:shadow-md transition flex justify-between items-center">
+            <div v-for="item in adminData.stockList" :key="item.name" class="g-card px-5 py-4 hover:translate-y-[-1px] flex justify-between items-center">
               <span class="font-black text-stone-800">{{ item.name }}</span>
               <span class="text-lg font-black text-brand-600 tabular-nums">× {{ item.qty }}</span>
             </div>
@@ -1237,27 +1522,27 @@
             <h2 class="text-xl font-black text-stone-800 mb-3">出貨單</h2>
             <div class="flex flex-wrap items-center gap-2">
               <div class="flex items-center gap-1.5 flex-1 min-w-0">
-                <label class="text-xs font-bold text-stone-400 whitespace-nowrap">起始</label>
-                <input type="date" v-model="labelStart" class="flex-1 min-w-0 px-2 py-2 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none font-bold text-stone-700 text-sm">
+                <label class="g-label whitespace-nowrap">起始</label>
+                <input type="date" v-model="labelStart" class="g-input flex-1 min-w-0" style="height:36px;">
               </div>
               <div class="flex items-center gap-1.5 flex-1 min-w-0">
-                <label class="text-xs font-bold text-stone-400 whitespace-nowrap">結束</label>
-                <input type="date" v-model="labelEnd" class="flex-1 min-w-0 px-2 py-2 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none font-bold text-stone-700 text-sm">
+                <label class="g-label whitespace-nowrap">結束</label>
+                <input type="date" v-model="labelEnd" class="g-input flex-1 min-w-0" style="height:36px;">
               </div>
-              <button v-if="labelSelectedIds.length > 0" @click="printLabels" class="bg-green-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-green-700 transition flex items-center gap-2 whitespace-nowrap shadow-lg text-sm">
+              <button v-if="labelSelectedIds.length > 0" @click="printLabels" class="g-btn g-btn-success">
                 <i class="fas fa-print"></i>列印 ({{ labelSelectedIds.length }})
               </button>
             </div>
           </div>
 
           <div v-if="loading" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
-          <div v-else-if="labelGroupsWithOrders.length === 0" class="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-stone-200">
+          <div v-else-if="labelGroupsWithOrders.length === 0" class="text-center py-20 g-card">
             <i class="fas fa-file-invoice text-6xl mb-4 text-stone-300"></i>
             <p class="font-bold text-stone-400">該日期沒有已接單的訂單</p>
           </div>
           <div v-else class="space-y-3">
             <!-- 全選 bar -->
-            <div class="bg-white rounded-2xl px-5 py-3 shadow-sm border border-stone-100 flex items-center justify-between">
+            <div class="g-card px-5 py-3 flex items-center justify-between">
               <label class="flex items-center gap-3 cursor-pointer select-none">
                 <input type="checkbox" :checked="isAllLabelSelected" @change="toggleAllLabels" class="w-5 h-5 rounded accent-stone-800 cursor-pointer">
                 <span class="font-bold text-stone-700">全選 / 全取消</span>
@@ -1267,9 +1552,9 @@
 
             <!-- 每個 GroupOrder -->
             <div v-for="(group, gIdx) in labelGroupsWithOrders" :key="group.id"
-              class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+              class="g-card-solid overflow-hidden">
               <!-- Group 標題列 -->
-              <div class="flex items-center gap-3 px-5 py-4 border-b border-stone-200 bg-stone-100">
+              <div class="flex items-center gap-3 px-5 py-4 border-b" style="background:var(--glass-bg-light);border-color:var(--glass-border-subtle);">
                 <input type="checkbox" :checked="isGroupAllSelected(group)" @change="toggleGroupLabels(group)" class="w-5 h-5 rounded accent-stone-800 cursor-pointer flex-shrink-0">
                 <div class="flex-1 min-w-0">
                   <p class="font-black text-stone-800 truncate">{{ group.companyName }}</p>
@@ -1278,7 +1563,7 @@
                     <span class="text-xs text-stone-500"><i class="fas fa-user mr-1"></i>{{ group.contactName }}<span v-if="group.contactPhone"> {{ group.contactPhone }}</span></span>
                   </div>
                 </div>
-                <span class="text-xs font-bold text-stone-500 flex-shrink-0 bg-stone-200 px-2 py-1 rounded-lg">{{ group.orders.length }} 人</span>
+                <span class="text-xs font-bold text-stone-500 flex-shrink-0 px-2 py-1" style="background:var(--glass-bg-light);border:1px solid var(--glass-border-subtle);border-radius:var(--glass-radius-xs);">{{ group.orders.length }} 人</span>
               </div>
 
               <!-- 個人訂單 -->
@@ -1411,28 +1696,28 @@
     </div>
 
     <!-- 產品編輯對話框 -->
-    <div v-if="showItemModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
-      <div class="bg-white w-full max-w-lg rounded-[2rem] p-8 shadow-2xl max-h-[90vh] overflow-y-auto border border-white/20">
+    <div v-if="showItemModal" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[60] flex items-center justify-center p-6 animate-fade-in">
+      <div class="g-modal w-full max-w-lg p-8 max-h-[90vh] overflow-y-auto animate-zoom-in">
         <h3 class="text-xl font-black mb-6 text-stone-800">{{ editingItem.id ? '編輯產品' : '新增產品' }}</h3>
         
         <div class="space-y-4">
           <div>
-            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">產品名稱 <span class="text-red-500">*</span></label>
-            <input v-model="itemForm.name" type="text" placeholder="例如：蘋果、香蕉" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+            <label class="g-label mb-2 block">產品名稱 <span class="text-red-500">*</span></label>
+            <input v-model="itemForm.name" type="text" placeholder="例如：蘋果、香蕉" class="g-input g-input-lg w-full">
           </div>
           
           <div>
-            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">價格 <span class="text-red-500">*</span></label>
-            <input v-model.number="itemForm.price" type="number" placeholder="0" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+            <label class="g-label mb-2 block">價格 <span class="text-red-500">*</span></label>
+            <input v-model.number="itemForm.price" type="number" placeholder="0" class="g-input g-input-lg w-full">
           </div>
           
           <div>
-            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">產品描述</label>
-            <textarea v-model="itemForm.description" rows="3" placeholder="產品詳細說明..." class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700 resize-none"></textarea>
+            <label class="g-label mb-2 block">產品描述</label>
+            <textarea v-model="itemForm.description" rows="3" placeholder="產品詳細說明..." class="g-input w-full resize-none" style="height:auto;"></textarea>
           </div>
 
           <!-- 組合品項設定 -->
-          <div class="border-2 border-stone-200 rounded-xl p-4">
+          <div style="border:1px solid var(--glass-border-subtle);border-radius:var(--glass-radius-sm);padding:1rem;">
             <label class="flex items-center gap-2 cursor-pointer mb-1">
               <input type="checkbox" v-model="itemForm.isCombo" class="w-4 h-4 accent-brand-600">
               <span class="text-sm font-bold text-stone-700">此為組合品項（如：大綜合、小綜合）</span>
@@ -1459,10 +1744,10 @@
         </div>
         
         <div class="flex gap-3 mt-8">
-          <button @click="closeItemModal" class="flex-1 py-3 bg-stone-100 text-stone-500 rounded-xl font-bold hover:bg-stone-200 transition">
+          <button @click="closeItemModal" class="g-btn g-btn-glass flex-1 justify-center py-3">
             取消
           </button>
-          <button @click="saveItem" class="flex-1 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition">
+          <button @click="saveItem" class="g-btn g-btn-brand flex-1 justify-center py-3">
             {{ editingItem.id ? '更新資料' : '確認新增' }}
           </button>
         </div>
@@ -1470,40 +1755,40 @@
     </div>
 
     <!-- 帳號編輯對話框 -->
-    <div v-if="showAccountModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
-      <div class="bg-white w-full max-w-lg rounded-[2rem] p-8 shadow-2xl max-h-[90vh] overflow-y-auto border border-white/20">
+    <div v-if="showAccountModal" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[60] flex items-center justify-center p-6 animate-fade-in">
+      <div class="g-modal w-full max-w-lg p-8 max-h-[90vh] overflow-y-auto animate-zoom-in">
         <h3 class="text-xl font-black mb-6 text-stone-800">{{ editingAccount.id ? '編輯帳號' : '新增帳號' }}</h3>
         
         <div class="space-y-4">
           <div>
-            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">帳號 <span class="text-red-500">*</span></label>
-            <input v-model="accountForm.accountId" :disabled="!!editingAccount.id" type="text" placeholder="例如：admin、User001" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700 disabled:bg-stone-100 disabled:cursor-not-allowed">
+            <label class="g-label mb-2 block">帳號 <span class="text-red-500">*</span></label>
+            <input v-model="accountForm.accountId" :disabled="!!editingAccount.id" type="text" placeholder="例如：admin、User001" class="g-input g-input-lg w-full disabled:opacity-50 disabled:cursor-not-allowed">
           </div>
           
           <div>
-            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">密碼 <span class="text-red-500">*</span></label>
-            <input v-model="accountForm.password" type="text" placeholder="請輸入密碼" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+            <label class="g-label mb-2 block">密碼 <span class="text-red-500">*</span></label>
+            <input v-model="accountForm.password" type="text" placeholder="請輸入密碼" class="g-input g-input-lg w-full">
             <p class="text-xs text-stone-400 mt-1 ml-1">{{ editingAccount.id ? '留空表示不修改密碼' : '必填欄位' }}</p>
           </div>
           
           <div>
-            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">姓名</label>
-            <input v-model="accountForm.name" type="text" placeholder="真實姓名" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+            <label class="g-label mb-2 block">姓名</label>
+            <input v-model="accountForm.name" type="text" placeholder="真實姓名" class="g-input g-input-lg w-full">
           </div>
           
           <div>
-            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">電話</label>
-            <input v-model="accountForm.phone" type="tel" placeholder="0912-345-678" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+            <label class="g-label mb-2 block">電話</label>
+            <input v-model="accountForm.phone" type="tel" placeholder="0912-345-678" class="g-input g-input-lg w-full">
           </div>
           
           <div>
-            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">Email</label>
-            <input v-model="accountForm.email" type="email" placeholder="example@email.com" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+            <label class="g-label mb-2 block">Email</label>
+            <input v-model="accountForm.email" type="email" placeholder="example@email.com" class="g-input g-input-lg w-full">
           </div>
           
           <div>
-            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">權限身份 <span class="text-red-500">*</span></label>
-            <select v-model="accountForm.role" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+            <label class="g-label mb-2 block">權限身份 <span class="text-red-500">*</span></label>
+            <select v-model="accountForm.role" class="g-select w-full" style="height:44px;">
               <option value="user">一般使用者</option>
               <option value="admin">管理者</option>
             </select>
@@ -1511,10 +1796,10 @@
         </div>
         
         <div class="flex gap-3 mt-8">
-          <button @click="closeAccountModal" class="flex-1 py-3 bg-stone-100 text-stone-500 rounded-xl font-bold hover:bg-stone-200 transition">
+          <button @click="closeAccountModal" class="g-btn g-btn-glass flex-1 justify-center py-3">
             取消
           </button>
-          <button @click="saveAccount" class="flex-1 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition">
+          <button @click="saveAccount" class="g-btn g-btn-brand flex-1 justify-center py-3">
             {{ editingAccount.id ? '更新資料' : '確認新增' }}
           </button>
         </div>
@@ -1522,16 +1807,16 @@
     </div>
 
     <!-- 常用聯絡人選擇 Picker -->
-    <div v-if="showContactPicker" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4 animate-fade-in" @click.self="showContactPicker = false">
-      <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl flex flex-col max-h-[80vh] animate-zoom-in">
-        <div class="flex items-center justify-between px-6 pt-5 pb-3 border-b border-stone-100">
+    <div v-if="showContactPicker" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[70] flex items-center justify-center p-4 animate-fade-in" @click.self="showContactPicker = false">
+      <div class="g-modal w-full max-w-md flex flex-col max-h-[80vh] animate-zoom-in">
+        <div class="flex items-center justify-between px-6 pt-5 pb-3 border-b" style="border-color:var(--glass-border-subtle);">
           <h3 class="text-lg font-black text-stone-900">選擇常用聯絡人</h3>
-          <button @click="showContactPicker = false" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition"><i class="fas fa-times text-sm"></i></button>
+          <button @click="showContactPicker = false" class="g-btn g-btn-glass g-btn-sm" style="width:32px;height:32px;padding:0;"><i class="fas fa-times text-sm"></i></button>
         </div>
-        <div class="px-4 py-3 border-b border-stone-100">
+        <div class="px-4 py-3 border-b" style="border-color:var(--glass-border-subtle);">
           <div class="relative">
             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-sm"></i>
-            <input v-model="contactPickerKeyword" type="text" placeholder="搜尋公司名稱、聯絡人..." class="w-full pl-9 pr-3 py-2 border border-stone-200 rounded-lg text-sm outline-none text-stone-700">
+            <input v-model="contactPickerKeyword" type="text" placeholder="搜尋公司名稱、聯絡人..." class="g-input w-full" style="padding-left:2.25rem;">
           </div>
         </div>
         <div class="flex-1 overflow-y-auto px-3 py-2">
@@ -1554,30 +1839,30 @@
     </div>
 
     <!-- 常用聯絡人 Modal -->
-    <div v-if="showContactModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
-      <div class="bg-white w-full max-w-lg rounded-[2rem] p-8 shadow-2xl max-h-[90vh] overflow-y-auto border border-white/20 animate-zoom-in">
+    <div v-if="showContactModal" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[60] flex items-center justify-center p-6 animate-fade-in">
+      <div class="g-modal w-full max-w-lg p-8 max-h-[90vh] overflow-y-auto animate-zoom-in">
         <h3 class="text-xl font-black mb-6 text-stone-800">{{ editingContact.id ? '編輯聯絡人' : '新增聯絡人' }}</h3>
         <div class="space-y-4">
           <div>
-            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">公司名稱 <span class="text-red-500">*</span></label>
-            <input v-model="contactForm.companyName" type="text" placeholder="例如：健美科技有限公司" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+            <label class="g-label mb-2 block">公司名稱 <span class="text-red-500">*</span></label>
+            <input v-model="contactForm.companyName" type="text" placeholder="例如：健美科技有限公司" class="g-input g-input-lg w-full">
           </div>
           <div>
-            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">聯絡人 <span class="text-red-500">*</span></label>
-            <input v-model="contactForm.contactName" type="text" placeholder="例如：王小明" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+            <label class="g-label mb-2 block">聯絡人 <span class="text-red-500">*</span></label>
+            <input v-model="contactForm.contactName" type="text" placeholder="例如：王小明" class="g-input g-input-lg w-full">
           </div>
           <div>
-            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">連絡電話</label>
-            <input v-model="contactForm.contactPhone" type="tel" placeholder="0912-345-678" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+            <label class="g-label mb-2 block">連絡電話</label>
+            <input v-model="contactForm.contactPhone" type="tel" placeholder="0912-345-678" class="g-input g-input-lg w-full">
           </div>
           <div>
-            <label class="text-xs font-bold text-stone-400 ml-1 mb-2 block">配送地址</label>
-            <input v-model="contactForm.address" type="text" placeholder="台北市中正區XX路XX號" class="w-full p-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:border-brand-500 outline-none transition font-bold text-stone-700">
+            <label class="g-label mb-2 block">配送地址</label>
+            <input v-model="contactForm.address" type="text" placeholder="台北市中正區XX路XX號" class="g-input g-input-lg w-full">
           </div>
         </div>
         <div class="flex gap-3 mt-8">
-          <button @click="closeContactModal" class="flex-1 py-3 bg-stone-100 text-stone-500 rounded-xl font-bold hover:bg-stone-200 transition">取消</button>
-          <button @click="saveContact" :disabled="loading" class="flex-1 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition disabled:opacity-50">
+          <button @click="closeContactModal" class="g-btn g-btn-glass flex-1 justify-center py-3">取消</button>
+          <button @click="saveContact" :disabled="loading" class="g-btn g-btn-brand flex-1 justify-center py-3 disabled:opacity-50">
             {{ editingContact.id ? '更新資料' : '確認新增' }}
           </button>
         </div>
@@ -1585,9 +1870,9 @@
     </div>
 
     <!-- 新訂單彈跳通知 -->
-    <div v-if="newOrderNotif.show" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-6 animate-fade-in">
-      <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative overflow-hidden animate-zoom-in">
-        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 to-orange-500"></div>
+    <div v-if="newOrderNotif.show" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[200] flex items-center justify-center p-6 animate-fade-in">
+      <div class="g-modal p-8 max-w-sm w-full relative overflow-hidden animate-zoom-in">
+        <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-500 to-orange-500"></div>
         <div class="flex flex-col items-center text-center">
           <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4 relative">
             <i class="fas fa-bell text-2xl text-red-500"></i>
@@ -1607,23 +1892,23 @@
             </div>
           </div>
           <div class="flex gap-3 w-full">
-            <button @click="newOrderNotif.show = false" class="flex-1 bg-stone-100 text-stone-500 py-3 rounded-xl font-bold hover:bg-stone-200 transition">關閉</button>
-            <button @click="newOrderNotif.show = false; adminTab = 'review'; fetchReviewList()" class="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600 transition shadow-lg shadow-red-500/30"><i class="fas fa-clock mr-2"></i>前往審核</button>
+            <button @click="newOrderNotif.show = false" class="g-btn g-btn-glass flex-1 justify-center py-3">關閉</button>
+            <button @click="newOrderNotif.show = false; adminTab = 'review'; fetchReviewList()" class="g-btn g-btn-brand flex-1 justify-center py-3"><i class="fas fa-clock mr-2"></i>前往審核</button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 自訂提示對話框 -->
-    <div v-if="customAlert.show" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-fade-in">
-      <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative border border-white overflow-hidden animate-zoom-in">
-        <div :class="['absolute top-0 left-0 w-full h-2', customAlert.type === 'success' ? 'bg-green-500' : customAlert.type === 'error' ? 'bg-red-500' : 'bg-brand-500']"></div>
+    <div v-if="customAlert.show" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[100] flex items-center justify-center p-6 animate-fade-in">
+      <div class="g-modal p-8 max-w-sm w-full relative overflow-hidden animate-zoom-in">
+        <div :class="['absolute top-0 left-0 w-full h-1.5', customAlert.type === 'success' ? 'bg-green-500' : customAlert.type === 'error' ? 'bg-red-500' : 'bg-gradient-to-r from-red-500 to-orange-500']"></div>
         <div class="flex flex-col items-center text-center">
           <div :class="['w-16 h-16 rounded-full flex items-center justify-center mb-4', customAlert.type === 'success' ? 'bg-green-100 text-red-800' : customAlert.type === 'error' ? 'bg-red-100 text-red-800' : 'bg-brand-100 text-brand-600']">
             <i :class="['text-2xl', customAlert.type === 'success' ? 'fas fa-check' : customAlert.type === 'error' ? 'fas fa-times' : 'fas fa-info']" :style="customAlert.type === 'success' ? 'color:#22c55e' : ''"></i>
           </div>
           <p class="font-bold text-lg text-stone-800 mb-6">{{ customAlert.message }}</p>
-          <button @click="customAlert.show = false" :class="['w-full text-white py-3 rounded-xl font-bold transition shadow-lg', customAlert.type === 'success' ? 'bg-green-500 hover:bg-green-600 shadow-green-500/30' : customAlert.type === 'error' ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' : 'bg-brand-500 hover:bg-brand-600 shadow-brand-500/30']">
+          <button @click="customAlert.show = false" :class="['w-full text-white py-3 font-bold transition shadow-lg', customAlert.type === 'success' ? 'bg-green-500 hover:bg-green-600 shadow-green-500/30' : customAlert.type === 'error' ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' : 'bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 shadow-red-500/20']" style="border-radius:var(--glass-radius-xs);">
             確定
           </button>
         </div>
@@ -1631,9 +1916,9 @@
     </div>
 
     <!-- 自訂確認對話框 -->
-    <div v-if="customConfirm.show" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[101] flex items-center justify-center p-6 animate-fade-in">
-      <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative overflow-hidden animate-zoom-in">
-        <div :class="['absolute top-0 left-0 w-full h-2', customConfirm.type === 'danger' ? 'bg-red-500' : 'bg-amber-400']"></div>
+    <div v-if="customConfirm.show" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[101] flex items-center justify-center p-6 animate-fade-in">
+      <div class="g-modal p-8 max-w-sm w-full relative overflow-hidden animate-zoom-in">
+        <div :class="['absolute top-0 left-0 w-full h-1.5', customConfirm.type === 'danger' ? 'bg-red-500' : 'bg-amber-400']"></div>
         <div class="flex flex-col items-center text-center">
           <div :class="['w-16 h-16 rounded-full flex items-center justify-center mb-4', customConfirm.type === 'danger' ? 'bg-red-100' : 'bg-amber-50']">
             <i :class="['text-2xl', customConfirm.type === 'danger' ? 'fas fa-trash text-red-500' : 'fas fa-exclamation-triangle text-amber-400']"></i>
@@ -1641,8 +1926,8 @@
           <p class="font-bold text-lg text-stone-800 mb-2">{{ customConfirm.type === 'danger' ? '確認刪除' : '確認操作' }}</p>
           <p class="text-sm text-stone-500 mb-6 leading-relaxed">{{ customConfirm.message }}</p>
           <div class="flex gap-3 w-full">
-            <button @click="confirmCancel" class="flex-1 py-3 bg-stone-100 text-stone-600 rounded-xl font-bold hover:bg-stone-200 transition">取消</button>
-            <button @click="confirmOk" :class="['flex-1 py-3 text-white rounded-xl font-bold transition shadow-lg', customConfirm.type === 'danger' ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' : 'bg-stone-800 hover:bg-black']">{{ customConfirm.type === 'danger' ? '確定刪除' : '確定' }}</button>
+            <button @click="confirmCancel" class="g-btn g-btn-glass flex-1 justify-center py-3">取消</button>
+            <button @click="confirmOk" :class="['flex-1 py-3 text-white font-bold transition shadow-lg', customConfirm.type === 'danger' ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' : 'bg-stone-800 hover:bg-black']" style="border-radius:var(--glass-radius-xs);">{{ customConfirm.type === 'danger' ? '確定刪除' : '確定' }}</button>
           </div>
         </div>
       </div>
@@ -1828,7 +2113,7 @@
         };
         // 狀態標籤 / 樣式
         const statusLabel = s => ({approved:'已接單',rejected:'已拒絕',expired:'已過期',pending:'待審核'}[s] || '待審核');
-        const statusClass = s => s==='approved'?'bg-green-100 text-green-700':s==='rejected'?'bg-red-100 text-red-800':s==='expired'?'bg-gray-100 text-gray-500':'bg-amber-100 text-amber-700';
+        const statusClass = s => s==='approved'?'g-badge-approved':s==='rejected'?'g-badge-rejected':s==='expired'?'g-badge-expired':'g-badge-pending';
         const selectedContact = computed(() => frequentContacts.value.find(c => c.id === selectedContactId.value) || null);
         const createOrderCustomers = ref([]);
         const addingCreateCustomer = ref(false);
