@@ -3026,7 +3026,7 @@
         const checkAndExpireOrders = async () => {
           try {
             const now = new Date();
-            for (const status of ['pending', 'approved']) {
+            for (const status of ['pending']) {
               const q = query(collection(db, "GroupOrders"), where("status", "==", status));
               const snap = await getDocs(q);
               for (const docSnap of snap.docs) {
