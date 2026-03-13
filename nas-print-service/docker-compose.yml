@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  print-service:
+    build: .
+    container_name: jianmei-print-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"          # 前端呼叫 http://192.168.50.103:8000/api/print-label
+    environment:
+      - PRINTER_USB_DEV=/dev/usb_printer   # mknod c 180 0 建立的真實字元裝置
+    devices:
+      - "/dev/usb_printer:/dev/usb_printer:rw"  # 掛入真實字元裝置
+    privileged: true
+    user: root

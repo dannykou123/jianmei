@@ -1,0 +1,442 @@
+#!/usr/bin/env python3
+"""
+健美滷味 NAS 列印微服務 v3.1 – Pillow BITMAP 模式
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+中文字透過 Noto CJK 字型在 Python 側 rasterize → TSPL BITMAP → 印表機
+字型大小與間距完全對齊 index.html CSS：
+  .label-company   14pt bold   line-height 1.25
+  .label-delivery  10pt        margin-top 0.5mm
+  .label-customer  14pt bold   margin-bottom 2mm (from border)
+  .label-item-name 10pt bold   line-height 1.2   padding 0.8mm
+  .label-item-right 9.5pt      line-height 1.2
+  compact mode     9.5pt/9pt                     padding 0.3mm
+  .label-total     15pt bold   right-aligned
+  .label-note      9pt         margin-top 0.3mm
+  footer           8pt         border-top 2px    margin-top 1.2mm
+"""
+
+import os
+import io
+from datetime import datetime
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
+from pydantic import BaseModel
+from typing import List, Optional
+from PIL import Image, ImageDraw, ImageFont
+
+# ======================================================================
+#  硬體常數
+# ======================================================================
+PRINTER_USB_DEV = os.getenv("PRINTER_USB_DEV", "/dev/usb/lp0")
+ITEMS_PER_PAGE  = 10
+
+DPI = 203
+W   = round(75  * DPI / 25.4)   # 600 dots
+H   = round(100 * DPI / 25.4)   # 813 dots
+
+
+def mm(m: float) -> int:
+    """mm → dots @203 DPI"""
+    return round(m * DPI / 25.4)
+
+
+def pt(p: float) -> int:
+    """pt → dots @203 DPI"""
+    return round(p * DPI / 72)
+
+
+def lh(size: int, factor: float = 1.0) -> int:
+    """line-height block height"""
+    return round(size * factor)
+
+
+# ── Outer padding: HTML padding: 3mm ─────────────────────────────────
+PAD     = mm(3)         # 24
+
+# ── Items column layout: HTML column-gap: 3mm, grid 1fr 1fr ──────────
+COL_GAP = mm(3)         # 24
+COL_W   = (W - 2 * PAD - COL_GAP) // 2   # 264
+
+# ======================================================================
+#  字型大小 (pt → dots)
+# ======================================================================
+FS_COMPANY     = pt(14)    # 40  bold
+FS_DELIVERY    = pt(10)    # 28
+FS_CUSTOMER    = pt(14)    # 40  bold
+FS_UNIT        = pt(11)    # 31  normal  (部門)
+FS_ITEM_NAME   = pt(10)    # 28  bold
+FS_ITEM_QTY    = pt(9.5)   # 27
+FS_TOTAL       = pt(15)    # 42  bold
+FS_NOTE        = pt(9)     # 25
+FS_FOOTER      = pt(8)     # 23
+FS_ITEM_NAME_C = pt(9.5)   # 27  bold  (compact)
+FS_ITEM_QTY_C  = pt(9)     # 25        (compact)
+
+# ======================================================================
+#  Y 座標（從上到下，對齊 HTML layout）
+# ======================================================================
+# HTML: padding-top 3mm
+Y_COMPANY     = PAD                                             # 24
+
+# HTML: company line-height 1.25 + delivery margin-top 0.5mm
+Y_DELIVERY    = Y_COMPANY + lh(FS_COMPANY, 1.25) + mm(0.5)
+#               24 + 50 + 4 = 78
+
+# HTML: header padding-bottom 2mm → 分隔線
+Y_HEADER_LINE = Y_DELIVERY + FS_DELIVERY + mm(2)
+#               78 + 28 + 16 = 122
+
+# HTML: header border 2px + margin-bottom 2mm
+Y_CUSTOMER    = Y_HEADER_LINE + 2 + mm(2)
+#               122 + 2 + 16 = 140
+
+# HTML: customer row height + margin-bottom 2mm
+Y_ITEMS_START = Y_CUSTOMER + lh(FS_CUSTOMER) + mm(2)
+#               140 + 40 + 16 = 196
+
+# ── Footer（從下錨定，對應 HTML margin-top:auto）──────────────────────
+Y_BOTTOM    = H - PAD                                          # 789
+
+# HTML footer 8pt text row
+Y_ORDER     = Y_BOTTOM - FS_FOOTER                            # 766
+
+# HTML border-top 2px, margin-bottom 0.3mm above border
+Y_DIV_LINE  = Y_ORDER - 2 - mm(0.3)                           # 762
+
+# HTML border 2px + margin-top 1.2mm above border
+Y_ABOVE_FTR = Y_DIV_LINE - 2 - mm(1.2)                        # 750
+
+# 合計 (15pt bold, right-aligned)
+Y_TOTAL     = Y_ABOVE_FTR - lh(FS_TOTAL)                      # 708
+
+# 備註 (9pt, margin-top 0.3mm above total)
+Y_NOTE      = Y_TOTAL - mm(0.3) - lh(FS_NOTE)                 # 681
+
+# ======================================================================
+#  品項列高
+# ======================================================================
+# Normal: padding 0.8mm/row, name lh1.2, qty lh1.2
+ITEM_ROW_H   = (mm(0.8)
+                + lh(FS_ITEM_NAME, 1.2)
+                + lh(FS_ITEM_QTY,  1.2)
+                + mm(0.8))
+# = 6 + 34 + 32 + 6 = 78
+
+# Compact: padding 0.3mm, smaller fonts
+ITEM_ROW_H_C = (mm(0.3)
+                + lh(FS_ITEM_NAME_C, 1.2)
+                + lh(FS_ITEM_QTY_C,  1.2)
+                + mm(0.3))
+# = 2 + 32 + 30 + 2 = 66
+
+# ======================================================================
+#  字型路徑
+# ======================================================================
+_BOLD_FONTS = [
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+    "/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc",
+    "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSansCJKtc-Bold.otf",
+    "/usr/share/fonts/truetype/noto/NotoSansCJKtc-Bold.ttf",
+]
+_REG_FONTS = [
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSansCJKtc-Regular.otf",
+    "/usr/share/fonts/truetype/noto/NotoSansCJKtc-Regular.ttf",
+]
+
+
+def _load(candidates: list, size: int) -> ImageFont.FreeTypeFont:
+    for p in candidates:
+        if os.path.exists(p):
+            return ImageFont.truetype(p, size=size)
+    return ImageFont.load_default()
+
+
+def _fonts() -> dict:
+    return {
+        # bold
+        "company":    _load(_BOLD_FONTS, FS_COMPANY),
+        "customer":   _load(_BOLD_FONTS, FS_CUSTOMER),
+        "unit":       _load(_REG_FONTS,  FS_UNIT),
+        "item_name":  _load(_BOLD_FONTS, FS_ITEM_NAME),
+        "item_name_c":_load(_BOLD_FONTS, FS_ITEM_NAME_C),
+        "total":      _load(_BOLD_FONTS, FS_TOTAL),
+        # regular
+        "delivery":   _load(_REG_FONTS,  FS_DELIVERY),
+        "item_qty":   _load(_REG_FONTS,  FS_ITEM_QTY),
+        "item_qty_c": _load(_REG_FONTS,  FS_ITEM_QTY_C),
+        "note":       _load(_REG_FONTS,  FS_NOTE),
+        "footer":     _load(_REG_FONTS,  FS_FOOTER),
+    }
+
+
+# ======================================================================
+#  Pydantic 資料模型
+# ======================================================================
+class Item(BaseModel):
+    name:  str
+    qty:   int
+    price: int
+
+
+class PrintRequest(BaseModel):
+    orderNo:    str
+    date:       str
+    company:    str
+    department: Optional[str] = ""
+    name:       str
+    items:      List[Item]
+    remark:     Optional[str] = ""
+    total:      int
+
+
+# ======================================================================
+#  Pillow 繪圖：中文字透過 Noto CJK 字型 rasterize 到 bitmap
+# ======================================================================
+def _tw(draw: ImageDraw.ImageDraw, text: str, font) -> int:
+    bb = draw.textbbox((0, 0), text, font=font)
+    return bb[2] - bb[0]
+
+
+def draw_label(req: PrintRequest, page_items: List[Item],
+               page_num: int, total_pages: int, is_last: bool,
+               fnt: dict) -> Image.Image:
+    """Pillow 繪製單張標籤，白底黑字 L mode Image"""
+    img  = Image.new("L", (W, H), 255)
+    draw = ImageDraw.Draw(img)
+    BK   = 0
+
+    # ── 公司名 (14pt bold, line-height 1.25) ─────────────────────────
+    draw.text((PAD, Y_COMPANY), req.company, font=fnt["company"], fill=BK)
+
+    # ── 配送日期 (10pt, margin-top 0.5mm) ────────────────────────────
+    try:
+        ds = datetime.strptime(req.date, "%Y-%m-%d").strftime("%m/%d")
+    except Exception:
+        ds = req.date
+    delivery_line = f"配送：{ds} {datetime.now().strftime('%H:%M')}"
+    draw.text((PAD, Y_DELIVERY), delivery_line, font=fnt["delivery"], fill=BK)
+
+    # ── Header 分隔線 (border-bottom 2px) ────────────────────────────
+    draw.line([(PAD, Y_HEADER_LINE), (W - PAD, Y_HEADER_LINE)],
+              fill=BK, width=2)
+
+    # ── 客戶名 (14pt bold) ＋ 部門 (11pt) ────────────────────────────
+    draw.text((PAD, Y_CUSTOMER), req.name, font=fnt["customer"], fill=BK)
+    if req.department:
+        x_unit = PAD + _tw(draw, req.name, fnt["customer"]) + mm(1.5)
+        y_unit = Y_CUSTOMER + mm(0.5)   # 輕微下移對齊 baseline
+        draw.text((x_unit, y_unit), req.department, font=fnt["unit"], fill=BK)
+
+    # 頁碼（右上角 8pt，多頁才顯示）
+    pi = f"{page_num}/{total_pages}"
+    if total_pages > 1:
+        draw.text((W - PAD - _tw(draw, pi, fnt["footer"]),
+                   Y_CUSTOMER + mm(1)),
+                  pi, font=fnt["footer"], fill=BK)
+
+    # ── 品項 grid（2 欄，column-gap 3mm）─────────────────────────────
+    compact  = is_last and bool(req.remark) and len(page_items) >= ITEMS_PER_PAGE
+    fn       = fnt["item_name_c"] if compact else fnt["item_name"]
+    fq       = fnt["item_qty_c"]  if compact else fnt["item_qty"]
+    rh       = ITEM_ROW_H_C       if compact else ITEM_ROW_H
+    pad_row  = mm(0.3)            if compact else mm(0.8)
+    fs_n     = FS_ITEM_NAME_C     if compact else FS_ITEM_NAME
+    fs_q     = FS_ITEM_QTY_C      if compact else FS_ITEM_QTY
+
+    for i, item in enumerate(page_items):
+        col  = i % 2
+        row  = i // 2
+        x    = PAD + col * (COL_W + COL_GAP)
+        y    = Y_ITEMS_START + row * rh
+
+        y_name = y + pad_row
+        y_qty  = y_name + lh(fs_n, 1.2)
+
+        draw.text((x, y_name), item.name, font=fn, fill=BK)
+        qty_str = f"×{item.qty}　${item.qty * item.price:,}"
+        draw.text((x, y_qty),  qty_str,   font=fq, fill=BK)
+
+    # ── 最後一頁：備註 + 合計 ─────────────────────────────────────────
+    if is_last and req.remark:
+        draw.text((PAD, Y_NOTE), f"備註：{req.remark}",
+                  font=fnt["note"], fill=BK)
+
+    if is_last:
+        total_str = f"合計 ${req.total:,}"
+        draw.text((W - PAD - _tw(draw, total_str, fnt["total"]), Y_TOTAL),
+                  total_str, font=fnt["total"], fill=BK)
+
+    # ── Footer 分隔線 (border-top 2px) ───────────────────────────────
+    draw.line([(PAD, Y_DIV_LINE), (W - PAD, Y_DIV_LINE)], fill=BK, width=2)
+
+    # ── 訂單編號（左）＋ 頁碼（右）─────────────────────────────────
+    draw.text((PAD, Y_ORDER), f"訂單編號：{req.orderNo}",
+              font=fnt["footer"], fill=BK)
+    draw.text((W - PAD - _tw(draw, pi, fnt["footer"]), Y_ORDER),
+              pi, font=fnt["footer"], fill=BK)
+
+    return img
+
+
+# ======================================================================
+#  Image → TSPL BITMAP bytes
+# ======================================================================
+def image_to_tspl(img: Image.Image) -> bytes:
+    """
+    PIL Image (白底黑字) → TSPL BITMAP 指令 bytes
+
+    BITMAP x,y,width_bytes,height,mode,<raw_data>
+    mode=0: bit 0=黑點(印)  bit 1=白(不印)
+    PIL '1' tobytes: pixel 0(黑)->bit 0, pixel 255(白)->bit 1  ✓ 直接符合，無需反轉
+    """
+    if img.size != (W, H):
+        img = img.resize((W, H), Image.LANCZOS)
+
+    raw  = img.convert("1").tobytes()
+    wb   = (W + 7) // 8    # 600 bits / 8 = 75 bytes per row
+
+    header = (
+        "SIZE 75 mm, 100 mm\r\n"
+        "GAP 3 mm, 0 mm\r\n"
+        "DIRECTION 0\r\n"
+        "REFERENCE 0,0\r\n"
+        "CLS\r\n"
+    ).encode("ascii")
+    bitmap = f"BITMAP 0,0,{wb},{H},0,".encode("ascii")
+    footer = b"\r\nPRINT 1,1\r\n"
+
+    return header + bitmap + raw + footer
+
+
+# ======================================================================
+#  整張訂單分頁
+# ======================================================================
+def _pages(req: PrintRequest) -> List[List[Item]]:
+    items = req.items
+    if not items:
+        return [[]]
+    return [items[i: i + ITEMS_PER_PAGE]
+            for i in range(0, len(items), ITEMS_PER_PAGE)]
+
+
+def build_tspl(req: PrintRequest) -> bytes:
+    """所有頁合併成完整 TSPL bytes"""
+    fnt   = _fonts()
+    pages = _pages(req)
+    out   = b""
+    for idx, chunk in enumerate(pages):
+        img  = draw_label(req, chunk, idx+1, len(pages), idx == len(pages)-1, fnt)
+        out += image_to_tspl(img)
+    return out
+
+
+def build_previews(req: PrintRequest) -> List[Image.Image]:
+    fnt   = _fonts()
+    pages = _pages(req)
+    return [draw_label(req, chunk, idx + 1, len(pages), idx == len(pages) - 1, fnt)
+            for idx, chunk in enumerate(pages)]
+
+
+# ======================================================================
+#  USB 寫入
+# ======================================================================
+def send_to_printer(data: bytes) -> None:
+    try:
+        with open(PRINTER_USB_DEV, "wb") as dev:
+            dev.write(data)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"找不到 USB 裝置 {PRINTER_USB_DEV}")
+    except PermissionError:
+        raise PermissionError(f"無權限存取 {PRINTER_USB_DEV}")
+
+
+# ======================================================================
+#  FastAPI App
+# ======================================================================
+app = FastAPI(title="健美滷味 NAS 列印 v3.1", version="3.1.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["POST", "GET", "OPTIONS"],
+    allow_headers=["*"],
+)
+
+
+@app.post("/api/print-label")
+def print_label(req: PrintRequest):
+    """JSON → Pillow 繪圖 → TSPL BITMAP → USB"""
+    try:
+        send_to_printer(build_tspl(req))
+        return {
+            "ok":      True,
+            "message": f"已列印：{req.name}（{req.orderNo}），共 {len(_pages(req))} 張",
+        }
+    except FileNotFoundError as e:
+        raise HTTPException(503, detail=str(e))
+    except PermissionError as e:
+        raise HTTPException(503, detail=str(e))
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+
+
+@app.post("/api/preview-image")
+def preview_image(req: PrintRequest, page: int = 1):
+    """預覽指定頁標籤的 PNG 圖片（page 從 1 起算）
+    回應 header：
+      X-Total-Pages  總頁數
+      X-Current-Page 本頁頁碼
+    """
+    try:
+        imgs  = build_previews(req)
+        total = len(imgs)
+        page  = max(1, min(page, total))   # 夾入合法範圍
+        buf   = io.BytesIO()
+        imgs[page - 1].save(buf, format="PNG")
+        return Response(
+            content=buf.getvalue(),
+            media_type="image/png",
+            headers={
+                "X-Total-Pages":  str(total),
+                "X-Current-Page": str(page),
+                "Access-Control-Expose-Headers": "X-Total-Pages, X-Current-Page",
+            },
+        )
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+
+
+@app.post("/api/preview-all")
+def preview_all(req: PrintRequest):
+    """所有頁合併成一張長圖（PNG）"""
+    try:
+        imgs   = build_previews(req)
+        canvas = Image.new("L", (W, sum(i.height for i in imgs)), 255)
+        y = 0
+        for im in imgs:
+            canvas.paste(im, (0, y)); y += im.height
+        buf = io.BytesIO()
+        canvas.save(buf, format="PNG")
+        return Response(content=buf.getvalue(), media_type="image/png")
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+
+
+@app.get("/health")
+def health():
+    usb_ok    = os.path.exists(PRINTER_USB_DEV)
+    bold_font = next((p for p in _BOLD_FONTS if os.path.exists(p)), "NOT FOUND")
+    reg_font  = next((p for p in _REG_FONTS  if os.path.exists(p)), "NOT FOUND")
+    return {
+        "status":       "ok" if usb_ok else "printer_not_found",
+        "device":       PRINTER_USB_DEV,
+        "usb_ready":    usb_ok,
+        "font_bold":    bold_font,
+        "font_regular": reg_font,
+        "canvas":       f"{W}×{H} @ {DPI} DPI",
+        "mode":         "pillow-bitmap v3.1",
+    }
