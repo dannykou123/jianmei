@@ -400,6 +400,22 @@
           <button type="submit" :disabled="loading" class="g-btn g-btn-brand g-btn-lg w-full mt-2">
             {{ loading ? '驗證中...' : '確認登入' }}
           </button>
+          <!-- Google 登入 -->
+          <div class="relative flex items-center gap-3 my-1">
+            <div class="flex-1 h-px bg-stone-200"></div>
+            <span class="text-xs text-stone-400">or</span>
+            <div class="flex-1 h-px bg-stone-200"></div>
+          </div>
+          <button type="button" @click="handleGoogleLogin" :disabled="loading"
+            class="w-full flex items-center justify-center gap-3 py-3 px-4 border border-stone-200 rounded-xl bg-white hover:bg-stone-50 transition font-medium text-stone-700 text-sm shadow-sm">
+            <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            {{ loading ? '登入中...' : '使用 Google 帳號登入' }}
+          </button>
         </div>
       </form>
     </div>
@@ -2009,6 +2025,7 @@
     import { createApp, ref, computed, watch, onMounted, nextTick } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, query, where, setDoc, orderBy, Timestamp, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyDb3xTmnkscf9tC5znTBzkCfSzD0zLJTYk",
@@ -2021,6 +2038,8 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
+    const googleProvider = new GoogleAuthProvider();
 
     createApp({
       setup() {
@@ -3105,6 +3124,64 @@
         };
 
         // 登入處理
+        // Google 登入
+        const handleGoogleLogin = async () => {
+          loading.value = true;
+          try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const gUser  = result.user;
+            const email  = gUser.email || '';
+
+            // 查詢 Accounts 是否已有此 email
+            const q    = query(collection(db, 'Accounts'), where('email', '==', email));
+            const snap = await getDocs(q);
+
+            let accData;
+            if (snap.empty) {
+              // 尚未註冊，自動建立帳號
+              const newAcc = {
+                accountId:  email.split('@')[0],
+                email,
+                name:       gUser.displayName || email.split('@')[0],
+                phone:      '',
+                password:   '',
+                role:       'user',
+                createdAt:  new Date().toISOString(),
+                updatedAt:  new Date().toISOString(),
+              };
+              const docRef = await addDoc(collection(db, 'Accounts'), newAcc);
+              accData = { id: docRef.id, ...newAcc };
+              showAlert('已自動建立帳號，歡迎！', 'success');
+            } else {
+              accData = { id: snap.docs[0].id, ...snap.docs[0].data() };
+            }
+
+            user.value = { id: accData.accountId, name: accData.name, role: accData.role || 'user', ...accData };
+            currentView.value = 'admin';
+            sessionStorage.setItem('user', JSON.stringify(user.value));
+            sessionStorage.setItem('currentView', 'admin');
+            showAlert(`歡迎回來，${user.value.name}！`, 'success');
+
+            if (user.value.role === 'admin') {
+              await fetchAdminAccounts();
+              await checkAndExpireOrders();
+              await fetchReviewList();
+              startReviewListener();
+              adminTab.value = adminData.value.reviewList.length > 0 ? 'review' : 'details';
+            } else {
+              adminTab.value = 'details';
+              fetchOrderDetails();
+            }
+            sessionStorage.setItem('adminTab', adminTab.value);
+          } catch (e) {
+            if (e.code !== 'auth/popup-closed-by-user') {
+              showAlert('Google 登入失敗：' + e.message, 'error');
+            }
+          } finally {
+            loading.value = false;
+          }
+        };
+
         const handleLogin = async () => {
           if (!loginForm.value.id || !loginForm.value.pass) {
             showAlert('請輸入帳號和密碼', 'error');
@@ -4675,6 +4752,7 @@
           saveEditCreateCustomer,
           saveCreateGroupOrder,
           showAlert,
+          handleGoogleLogin,
           handleLogin,
           logout,
           fetchAdminAccounts,
