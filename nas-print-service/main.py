@@ -194,6 +194,52 @@ class PrintRequest(BaseModel):
     total:      int
 
 
+# ── 備貨單資料模型 ─────────────────────────────────────────────────────
+class StockItem(BaseModel):
+    name: str
+    qty:  int
+
+
+class StockPrintRequest(BaseModel):
+    orderNo: str
+    date:    str
+    company: str
+    items:   List[StockItem]
+
+
+# ======================================================================
+#  備貨單字型大小（對齊 CSS .stock-ticket-* 規格）
+# ======================================================================
+# .stock-ticket-title  15pt bold
+# .stock-ticket-meta   10pt regular  margin-top 0.3mm
+# .stock-ticket-name   11pt bold     line-height 1.2
+# .stock-ticket-qty    11pt bold     line-height 1.2  padding 0.4mm
+# .stock-ticket-footer 10pt regular  margin-top auto  border-top 1px
+FS_STITLE   = pt(15)    # 42  bold
+FS_SMETA    = pt(10)    # 28  regular
+FS_SNAME    = pt(11)    # 31  bold
+FS_SQTY     = pt(11)    # 31  bold
+FS_SFOOTER  = pt(10)    # 28  regular
+
+# ── 備貨單 Y 座標 ─────────────────────────────────────────────────────
+# CSS: padding 3mm (same PAD=24)
+Y_STITLE       = PAD                                              # 24
+Y_SMETA        = Y_STITLE + lh(FS_STITLE, 1.0) + mm(0.3)         # 24+42+2 = 68
+Y_SHEADER_LINE = Y_SMETA  + FS_SMETA + mm(1.0)                    # 68+28+8 = 104
+Y_SITEMS       = Y_SHEADER_LINE + 2 + mm(1.2)                     # 104+2+10 = 116
+
+# Footer 從下錨定
+Y_SFOOTER      = H - PAD - FS_SFOOTER                             # 813-24-28 = 761
+Y_SF_LINE      = Y_SFOOTER - mm(1) - 2                            # 761-8-2 = 751
+
+# ── 備貨單品項行高 ────────────────────────────────────────────────────
+SROW_PAD   = mm(0.4)                                               # 3
+SROW_H     = SROW_PAD + lh(FS_SNAME, 1.2) + lh(FS_SQTY, 1.2) + SROW_PAD
+# 3 + round(31*1.2)=37 + 37 + 3 = 80
+
+STOCK_ITEMS_PER_PAGE = 12   # 2 欄 × 6 列
+
+
 # ======================================================================
 #  Pillow 繪圖：中文字透過 Noto CJK 字型 rasterize 到 bitmap
 # ======================================================================
@@ -343,6 +389,115 @@ def build_previews(req: PrintRequest) -> List[Image.Image]:
 
 
 # ======================================================================
+#  備貨單字型載入
+# ======================================================================
+def _stock_fonts() -> dict:
+    return {
+        "title":  _load(_BOLD_FONTS, FS_STITLE),
+        "meta":   _load(_REG_FONTS,  FS_SMETA),
+        "name":   _load(_BOLD_FONTS, FS_SNAME),
+        "qty":    _load(_BOLD_FONTS, FS_SQTY),
+        "footer": _load(_REG_FONTS,  FS_SFOOTER),
+    }
+
+
+# ======================================================================
+#  備貨單 Pillow 繪圖
+# ======================================================================
+def draw_stock_label(req: StockPrintRequest, page_items: List[StockItem],
+                     page_num: int, total_pages: int,
+                     fnt: dict) -> Image.Image:
+    """
+    繪製單張備貨單 75×100mm。
+    對齊 CSS：
+      .stock-ticket-title  15pt bold
+      .stock-ticket-meta   10pt  color #444
+      .stock-ticket-name   11pt bold  line-height 1.2
+      .stock-ticket-qty    11pt bold  line-height 1.2  padding 0.4mm
+      .stock-ticket-footer 10pt  border-top 1px  padding-top 1mm  margin-top auto
+    """
+    img  = Image.new("L", (W, H), 255)
+    draw = ImageDraw.Draw(img)
+    BK   = 0
+    GRAY = 160   # #ddd border on item rows
+
+    # ── 標題 (15pt bold) ─────────────────────────────────────────────
+    draw.text((PAD, Y_STITLE), "健美滷味 備料清單",
+              font=fnt["title"], fill=BK)
+
+    # ── Meta：公司名 + 配送日期 (10pt, color #444 → gray 80) ─────────
+    try:
+        ds = datetime.strptime(req.date, "%Y-%m-%d").strftime("%m/%d")
+    except Exception:
+        ds = req.date
+    meta_txt = f"{req.company}　{ds}"
+    draw.text((PAD, Y_SMETA), meta_txt, font=fnt["meta"], fill=80)
+
+    # ── Header 分隔線 (border-bottom 1.5px) ──────────────────────────
+    draw.line([(PAD, Y_SHEADER_LINE), (W - PAD, Y_SHEADER_LINE)],
+              fill=BK, width=2)
+
+    # ── 品項 grid (2 欄，column-gap 3mm) ─────────────────────────────
+    for i, item in enumerate(page_items):
+        col = i % 2
+        row = i // 2
+        x   = PAD + col * (COL_W + COL_GAP)
+        y   = Y_SITEMS + row * SROW_H
+
+        y_name = y + SROW_PAD
+        y_qty  = y_name + lh(FS_SNAME, 1.2)
+
+        draw.text((x, y_name), item.name, font=fnt["name"], fill=BK)
+        draw.text((x, y_qty),  f"×{item.qty}", font=fnt["qty"], fill=BK)
+
+        # 每行底部虛分隔（border-bottom 0.5px #ddd）
+        y_sep = y + SROW_H - 1
+        draw.line([(x, y_sep), (x + COL_W - mm(1), y_sep)],
+                  fill=GRAY, width=1)
+
+    # ── Footer 分隔線 (border-top 1px) ───────────────────────────────
+    draw.line([(PAD, Y_SF_LINE), (W - PAD, Y_SF_LINE)],
+              fill=BK, width=1)
+
+    # ── Footer 文字：左"健美滷味"，右"頁/總頁" ───────────────────────
+    page_str = f"{page_num}/{total_pages}"
+    draw.text((PAD, Y_SFOOTER), "健美滷味",
+              font=fnt["footer"], fill=100)
+    draw.text((W - PAD - _tw(draw, page_str, fnt["footer"]), Y_SFOOTER),
+              page_str, font=fnt["footer"], fill=100)
+
+    return img
+
+
+# ======================================================================
+#  備貨單分頁 / 建立 TSPL / 建立預覽
+# ======================================================================
+def _pages_stock(req: StockPrintRequest) -> List[List[StockItem]]:
+    items = req.items
+    if not items:
+        return [[]]
+    return [items[i: i + STOCK_ITEMS_PER_PAGE]
+            for i in range(0, len(items), STOCK_ITEMS_PER_PAGE)]
+
+
+def build_stock_tspl(req: StockPrintRequest) -> bytes:
+    fnt   = _stock_fonts()
+    pages = _pages_stock(req)
+    out   = b""
+    for idx, chunk in enumerate(pages):
+        img  = draw_stock_label(req, chunk, idx + 1, len(pages), fnt)
+        out += image_to_tspl(img)
+    return out
+
+
+def build_stock_previews(req: StockPrintRequest) -> List[Image.Image]:
+    fnt   = _stock_fonts()
+    pages = _pages_stock(req)
+    return [draw_stock_label(req, chunk, idx + 1, len(pages), fnt)
+            for idx, chunk in enumerate(pages)]
+
+
+# ======================================================================
 #  USB 寫入
 # ======================================================================
 def send_to_printer(data: bytes) -> None:
@@ -415,6 +570,69 @@ def preview_all(req: PrintRequest):
     """所有頁合併成一張長圖（PNG）"""
     try:
         imgs   = build_previews(req)
+        canvas = Image.new("L", (W, sum(i.height for i in imgs)), 255)
+        y = 0
+        for im in imgs:
+            canvas.paste(im, (0, y)); y += im.height
+        buf = io.BytesIO()
+        canvas.save(buf, format="PNG")
+        return Response(content=buf.getvalue(), media_type="image/png")
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+
+
+# ======================================================================
+#  備貨單 API
+# ======================================================================
+@app.post("/api/print-stock")
+def print_stock(req: StockPrintRequest):
+    """備貨單 JSON → Pillow 繪圖 → TSPL BITMAP → USB"""
+    try:
+        send_to_printer(build_stock_tspl(req))
+        pages = len(_pages_stock(req))
+        return {
+            "ok":      True,
+            "message": f"備貨單已列印：{req.company}（{req.orderNo}），共 {pages} 張",
+        }
+    except FileNotFoundError as e:
+        raise HTTPException(503, detail=str(e))
+    except PermissionError as e:
+        raise HTTPException(503, detail=str(e))
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+
+
+@app.post("/api/preview-stock")
+def preview_stock(req: StockPrintRequest, page: int = 1):
+    """預覽備貨單指定頁 PNG（page 從 1 起算）
+    回應 header：
+      X-Total-Pages  總頁數
+      X-Current-Page 本頁頁碼
+    """
+    try:
+        imgs  = build_stock_previews(req)
+        total = len(imgs)
+        page  = max(1, min(page, total))
+        buf   = io.BytesIO()
+        imgs[page - 1].save(buf, format="PNG")
+        return Response(
+            content=buf.getvalue(),
+            media_type="image/png",
+            headers={
+                "X-Total-Pages":  str(total),
+                "X-Current-Page": str(page),
+                "Access-Control-Expose-Headers": "X-Total-Pages, X-Current-Page",
+            },
+        )
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+
+
+@app.post("/api/preview-stock-all")
+def preview_stock_all(req: StockPrintRequest):
+    """備貨單所有頁合併成一張長圖（PNG）"""
+    try:
+        imgs   = build_stock_previews(req)
         canvas = Image.new("L", (W, sum(i.height for i in imgs)), 255)
         y = 0
         for im in imgs:

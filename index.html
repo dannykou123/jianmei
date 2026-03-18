@@ -822,11 +822,11 @@
           <div v-else>
             <!-- 批次匯出按鈕 -->
             <div class="mb-3 flex flex-wrap gap-2 items-center justify-center">
-              <button @click="batchExportStock" :disabled="selectedOrderIds.length === 0" class="g-btn g-btn-primary g-btn-sm flex-1 sm:flex-none">
-                <i class="fas fa-boxes"></i><span class="hidden sm:inline">列印</span>備貨單
+              <button @click="batchExportStock" :disabled="selectedOrderIds.length === 0 || nasPrintingId === 'batch'" class="g-btn g-btn-primary g-btn-sm flex-1 sm:flex-none">
+                <i :class="nasPrintingId === 'batch' ? 'fas fa-circle-notch fa-spin' : 'fas fa-network-wired'"></i><span class="hidden sm:inline">{{ nasPrintingId === 'batch' ? '傳送中…' : '列印' }}</span>備貨單
               </button>
-              <button @click="batchExportLabels" :disabled="selectedOrderIds.length === 0" class="g-btn g-btn-success flex-1 sm:flex-none">
-                <i class="fas fa-shipping-fast"></i><span class="hidden sm:inline">列印</span>出貨單 ({{ selectedOrderIds.length }})
+              <button @click="batchExportLabels" :disabled="selectedOrderIds.length === 0 || nasPrintingId === 'batch'" class="g-btn g-btn-success flex-1 sm:flex-none">
+                <i :class="nasPrintingId === 'batch' ? 'fas fa-circle-notch fa-spin' : 'fas fa-network-wired'"></i><span class="hidden sm:inline">{{ nasPrintingId === 'batch' ? '傳送中…' : '列印' }}</span>出貨單 ({{ selectedOrderIds.length }})
               </button>
             </div>
             <!-- Dashboard 總金額區塊 -->
@@ -977,9 +977,8 @@
                     </template>
                     <td class="hidden sm:table-cell px-4 py-3 text-center whitespace-nowrap">
                       <div class="flex gap-2 justify-center">
-                        <button @click="printSingleStock(order)" :disabled="printingSingleId === order.id" class="g-btn g-btn-glass g-btn-sm" title="列印備料單">備貨單</button>
-                        <button @click="printSingleLabel(order)" :disabled="printingSingleId === order.id" class="g-btn g-btn-glass g-btn-sm" title="列印出貨單">出貨單</button>
-                        <button @click="printGroupViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-glass g-btn-sm" title="從 NAS 列印出貨單"><i class="fas fa-network-wired mr-1"></i>{{ nasPrintingId === order.id ? '傳送中…' : 'NAS印' }}</button>
+                        <button @click="printStockViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-glass g-btn-sm" title="透過 NAS 列印備貨單"><i class="fas fa-network-wired mr-1"></i>{{ nasPrintingId === order.id ? '傳送中…' : '備貨單' }}</button>
+                        <button @click="printGroupViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-glass g-btn-sm" title="透過 NAS 列印出貨單"><i class="fas fa-network-wired mr-1"></i>{{ nasPrintingId === order.id ? '傳送中…' : '出貨單' }}</button>
                         <button @click="openDetailModal(order)" class="g-btn g-btn-primary g-btn-sm">詳細</button>
                       </div>
                     </td>
@@ -988,14 +987,11 @@
                   <tr class="sm:hidden border-b border-stone-100/50">
                     <td colspan="4" class="px-3 pb-2.5 pt-0">
                       <div class="flex gap-2">
-                        <button @click="printSingleStock(order)" :disabled="printingSingleId === order.id" class="g-btn g-btn-glass g-btn-sm flex-1 justify-center">
-                          <i class="fas fa-boxes"></i>備貨單
-                        </button>
-                        <button @click="printSingleLabel(order)" :disabled="printingSingleId === order.id" class="g-btn g-btn-glass g-btn-sm flex-1 justify-center">
-                          <i class="fas fa-shipping-fast"></i>出貨單
+                        <button @click="printStockViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-glass g-btn-sm flex-1 justify-center">
+                          <i class="fas fa-network-wired"></i>{{ nasPrintingId === order.id ? '傳送中…' : '備貨單' }}
                         </button>
                         <button @click="printGroupViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-glass g-btn-sm flex-1 justify-center">
-                          <i class="fas fa-network-wired"></i>{{ nasPrintingId === order.id ? '傳送中…' : 'NAS印' }}
+                          <i class="fas fa-network-wired"></i>{{ nasPrintingId === order.id ? '傳送中…' : '出貨單' }}
                         </button>
                         <button @click="openDetailModal(order)" class="g-btn g-btn-primary g-btn-sm flex-1 justify-center">
                           <i class="fas fa-search"></i>詳細
@@ -1177,8 +1173,7 @@
                     <!-- 操作列 -->
                     <div class="flex items-center justify-between mb-4">
                       <div class="flex items-center gap-2">
-                        <button @click="printSingleLabel(detailModalOrder)" :disabled="printingSingleId === detailModalOrder.id" class="g-btn g-btn-glass g-btn-sm"><i class="fas fa-print"></i>列印全部出貨單</button>
-                        <button @click="printGroupViaNas(detailModalOrder)" :disabled="nasPrintingId === detailModalOrder.id" class="g-btn g-btn-glass g-btn-sm"><i class="fas fa-network-wired mr-1"></i>{{ nasPrintingId === detailModalOrder.id ? '傳送中…' : 'NAS印全部' }}</button>
+                        <button @click="printGroupViaNas(detailModalOrder)" :disabled="nasPrintingId === detailModalOrder.id" class="g-btn g-btn-glass g-btn-sm"><i class="fas fa-network-wired mr-1"></i>{{ nasPrintingId === detailModalOrder.id ? '傳送中…' : '列印全部出貨單' }}</button>
                       </div>
                       <button @click="addNewCustomerOrderInline" class="g-btn g-btn-primary g-btn-sm"><i class="fas fa-plus"></i>新增訂購人</button>
                     </div>
@@ -1199,8 +1194,7 @@
                             </div>
                             <div class="flex items-center gap-1.5">
                               <span class="hidden sm:inline text-sm font-bold text-stone-700 mr-1">${{ (customerOrder.totalAmount || 0).toLocaleString() }}</span>
-                              <button @click="printSingleCustomerLabel(customerOrder)" class="g-btn g-btn-glass g-btn-sm flex-1 sm:flex-none justify-center" title="列印出貨單">印出貨單</button>
-                              <button @click="printCustomerViaNas(customerOrder)" :disabled="nasPrintingId === customerOrder.id" class="g-btn g-btn-glass g-btn-sm flex-1 sm:flex-none justify-center" title="從 NAS 列印"><i class="fas fa-network-wired mr-1"></i>{{ nasPrintingId === customerOrder.id ? '傳送中…' : 'NAS印' }}</button>
+                              <button @click="printCustomerViaNas(customerOrder)" :disabled="nasPrintingId === customerOrder.id" class="g-btn g-btn-glass g-btn-sm flex-1 sm:flex-none justify-center" title="透過 NAS 列印出貨單"><i class="fas fa-network-wired mr-1"></i>{{ nasPrintingId === customerOrder.id ? '傳送中…' : '出貨單' }}</button>
                               <button @click="startInlineEditCustomerOrder(customerOrder)" class="g-btn g-btn-glass g-btn-sm flex-1 sm:flex-none justify-center" title="編輯">編輯</button>
                               <button @click="deleteCustomerOrder(customerOrder.id, idx)" class="g-btn g-btn-danger g-btn-sm flex-1 sm:flex-none justify-center" title="刪除">刪除</button>
                             </div>
@@ -1299,7 +1293,7 @@
                   <div v-else-if="groupStock.length === 0" class="text-center py-10 text-stone-400 text-sm">暫無商品數據</div>
                   <div v-else>
                     <div class="flex justify-end mb-4">
-                      <button @click="printSingleStock(detailModalOrder)" :disabled="printingSingleId === detailModalOrder.id" class="g-btn g-btn-glass g-btn-sm"><i class="fas fa-print"></i>列印備貨統計</button>
+                      <button @click="printStockViaNas(detailModalOrder)" :disabled="nasPrintingId === detailModalOrder.id" class="g-btn g-btn-glass g-btn-sm"><i class="fas fa-network-wired mr-1"></i>{{ nasPrintingId === detailModalOrder.id ? '傳送中…' : '列印備貨統計' }}</button>
                     </div>
                     <div class="overflow-hidden" style="border:1px solid var(--glass-border-subtle);border-radius:var(--glass-radius-xs);">
                       <div v-for="stock in groupStock" :key="stock.name" class="flex items-center justify-between px-4 py-3 border-b border-stone-100/50 last:border-b-0 hover:bg-white/40 transition">
@@ -2043,81 +2037,150 @@
 
     createApp({
       setup() {
-                        // 批次匯出備貨單
+                        // 批次備貨單（NAS）
                         const batchExportStock = async () => {
                           if (!selectedOrderIds.value.length) return;
-                          // 取得所有選取訂單的 groupOrderId
-                          const selectedOrders = adminData.value.detailsList.filter(o => selectedOrderIds.value.includes(o.id));
-                          // 取得所有商品項目
-                          const itemTotals = {};
-                          for (const order of selectedOrders) {
-                            const q = query(collection(db, 'Orders'), where('groupOrderId', '==', order.id));
-                            const snap = await getDocs(q);
-                            snap.docs.forEach(d => {
-                              (d.data().items || []).forEach(item => {
-                                if (item.itemName && parseInt(item.qty) > 0)
-                                  itemTotals[item.itemName] = (itemTotals[item.itemName] || 0) + (parseInt(item.qty) || 0);
+                          nasPrintingId.value = 'batch';
+                          try {
+                            if (adminData.value.itemsList.length === 0) await fetchAdminItems();
+                            adminData.value.itemsList.forEach(item => { labelPriceMap.value[item.name] = item.price || 0; });
+                            const selectedOrders = adminData.value.detailsList.filter(o => selectedOrderIds.value.includes(o.id));
+                            // 聚合原始品項
+                            const rawStockMap = {};
+                            for (const order of selectedOrders) {
+                              const q = query(collection(db, 'Orders'), where('groupOrderId', '==', order.id));
+                              const snap = await getDocs(q);
+                              snap.docs.forEach(d => {
+                                (d.data().items || []).forEach(item => {
+                                  if (item.itemName && parseInt(item.qty) > 0)
+                                    rawStockMap[item.itemName] = (rawStockMap[item.itemName] || 0) + (parseInt(item.qty) || 0);
+                                });
                               });
+                            }
+                            if (!Object.keys(rawStockMap).length) { showAlert('沒有備貨項目', 'error'); return; }
+                            // 展開組合品項
+                            const expandedMap = expandStockItems(rawStockMap);
+                            const expandedItems = Object.entries(expandedMap).map(([name, qty]) => ({ name, qty }));
+                            // 組成 payload
+                            const companyNames = [...new Set(selectedOrders.map(o => o.companyName).filter(Boolean))];
+                            const companyLabel = companyNames.length === 1 ? companyNames[0] : `批次 ${selectedOrders.length} 筆`;
+                            const payload = {
+                              orderNo: 'BATCH',
+                              date:    new Date().toISOString().slice(0, 10),
+                              company: companyLabel,
+                              items:   expandedItems,
+                            };
+                            // 預覽
+                            const previewRes = await fetch(`${NAS_API_BASE}/api/preview-stock?page=1`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify(payload),
                             });
-                          }
-                          const items = Object.entries(itemTotals).map(([name, qty]) => ({ name, qty }));
-                          if (!items.length) { showAlert('沒有備貨項目', 'error'); return; }
-                          const size = 12;
-                          stockPrintChunks.value = [];
-                          for (let i = 0; i < items.length; i += size) stockPrintChunks.value.push(items.slice(i, i + size));
-                          await nextTick();
-                          const style = document.createElement('style');
-                          style.id = 'stock-page-size';
-                          style.textContent = '@page { size: 75mm 100mm; margin: 0; }';
-                          document.head.appendChild(style);
-                          document.body.classList.add('printing-stock');
-                          setTimeout(() => {
-                            window.print();
-                            setTimeout(() => {
-                              const s = document.getElementById('stock-page-size');
-                              if (s) document.head.removeChild(s);
-                              document.body.classList.remove('printing-stock');
-                            }, 500);
-                          }, 50);
+                            if (!previewRes.ok) throw new Error('預覽失敗：' + await previewRes.text());
+                            const totalPages = parseInt(previewRes.headers.get('X-Total-Pages') || '1');
+                            const blob = await previewRes.blob();
+                            nasPreview.value = {
+                              show:            true,
+                              imgUrl:          URL.createObjectURL(blob),
+                              title:           `批次備貨單 — ${companyLabel}`,
+                              subtitle:        `共 ${expandedItems.length} 項，${selectedOrders.length} 筆訂單，${totalPages} 張`,
+                              loading:         false,
+                              page:            1,
+                              totalPages,
+                              pageLoading:     false,
+                              payload,
+                              payloads:        [payload],
+                              personIdx:       0,
+                              previewEndpoint: '/api/preview-stock',
+                              printEndpoint:   '/api/print-stock',
+                              confirmFn: async () => {
+                                nasPreview.value.loading = true;
+                                try {
+                                  const r = await fetch(`${NAS_API_BASE}/api/print-stock`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(payload),
+                                  });
+                                  if (r.ok) {
+                                    const data = await r.json();
+                                    nasPreviewClose();
+                                    showAlert(data.message || '批次備貨單 NAS 列印完成', 'success');
+                                  } else { throw new Error(await r.text()); }
+                                } catch (e2) {
+                                  nasPreview.value.loading = false;
+                                  showAlert('批次備貨單 NAS 列印失敗：' + e2.message, 'error');
+                                }
+                              },
+                            };
+                          } catch (e) {
+                            showAlert('批次備貨單 NAS 列印發生錯誤：' + e.message, 'error');
+                            console.error(e);
+                          } finally { nasPrintingId.value = null; }
                         };
-                        // 批次匯出出貨單
+                        // 批次出貨單（NAS）
                         const batchExportLabels = async () => {
                           if (!selectedOrderIds.value.length) return;
-                          // 確保品項已載入並建立價格對照表
-                          if (adminData.value.itemsList.length === 0) await fetchAdminItems();
-                          adminData.value.itemsList.forEach(item => { labelPriceMap.value[item.name] = item.price || 0; });
-                          // 取得所有選取訂單的 groupOrderId
-                          const selectedOrders = adminData.value.detailsList.filter(o => selectedOrderIds.value.includes(o.id));
-                          const groups = [];
-                          for (const order of selectedOrders) {
-                            const q = query(collection(db, 'Orders'), where('groupOrderId', '==', order.id));
-                            const snap = await getDocs(q);
-                            const orders = snap.docs.map(d => {
-                              const data = d.data(); let totalAmount = 0;
-                              const items = (data.items || []).map(item => {
-                                const price = item.price || labelPriceMap.value[item.itemName] || 0;
-                                const qty = parseInt(item.qty) || 0;
-                                totalAmount += price * qty; return { ...item, price };
-                              });
-                              return { id: d.id, ...data, items, totalAmount: data.totalAmount || totalAmount };
-                            }).sort((a, b) => (a.customerName || '').localeCompare(b.customerName || '', 'zh-TW'));
-                            if (orders.length) groups.push({ ...order, orders });
-                          }
-                          if (!groups.length) { showAlert('沒有訂單資料', 'error'); return; }
-                          labelGroupsWithOrders.value = groups;
-                          labelSelectedIds.value = groups.flatMap(g => g.orders.map(o => o.id));
-                          await nextTick();
-                          const style = document.createElement('style');
-                          style.id = 'label-page-size';
-                          style.textContent = '@page { size: 75mm 100mm; margin: 0; }';
-                          document.head.appendChild(style);
-                          document.body.classList.add('printing-labels');
-                          window.print();
-                          setTimeout(() => {
-                            const s = document.getElementById('label-page-size');
-                            if (s) document.head.removeChild(s);
-                            document.body.classList.remove('printing-labels');
-                          }, 500);
+                          nasPrintingId.value = 'batch';
+                          try {
+                            if (adminData.value.itemsList.length === 0) await fetchAdminItems();
+                            adminData.value.itemsList.forEach(item => { labelPriceMap.value[item.name] = item.price || 0; });
+                            const selectedOrders = adminData.value.detailsList.filter(o => selectedOrderIds.value.includes(o.id));
+                            // 收集所有人的 NAS payload
+                            const payloads = [];
+                            for (const groupOrder of selectedOrders) {
+                              const q = query(collection(db, 'Orders'), where('groupOrderId', '==', groupOrder.id));
+                              const snap = await getDocs(q);
+                              snap.docs
+                                .map(d => ({ id: d.id, ...d.data() }))
+                                .sort((a, b) => (a.customerName || '').localeCompare(b.customerName || '', 'zh-TW'))
+                                .forEach(o => payloads.push(_buildNasPayload(o, groupOrder)));
+                            }
+                            if (!payloads.length) { showAlert('沒有訂單資料', 'error'); return; }
+                            // 預覽第 1 個 payload
+                            const previewRes = await fetch(`${NAS_API_BASE}/api/preview-image?page=1`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify(payloads[0]),
+                            });
+                            if (!previewRes.ok) throw new Error('預覽失敗：' + await previewRes.text());
+                            const totalPages = parseInt(previewRes.headers.get('X-Total-Pages') || '1');
+                            const blob = await previewRes.blob();
+                            nasPreview.value = {
+                              show:            true,
+                              imgUrl:          URL.createObjectURL(blob),
+                              title:           `批次出貨單 — ${selectedOrders.length} 筆訂單`,
+                              subtitle:        `共 ${payloads.length} 個標籤，點選左右箭頭切換`,
+                              loading:         false,
+                              page:            1,
+                              totalPages,
+                              pageLoading:     false,
+                              payload:         payloads[0],
+                              payloads,
+                              personIdx:       0,
+                              previewEndpoint: '/api/preview-image',
+                              printEndpoint:   '/api/print-label',
+                              confirmFn: async () => {
+                                nasPreview.value.loading = true;
+                                let ok = 0, fail = 0;
+                                for (const p of payloads) {
+                                  try {
+                                    const r = await fetch(`${NAS_API_BASE}/api/print-label`, {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify(p),
+                                    });
+                                    if (r.ok) ok++; else fail++;
+                                  } catch (_) { fail++; }
+                                }
+                                nasPreview.value.loading = false;
+                                nasPreviewClose();
+                                showAlert(fail ? `列印完成：${ok} 成功 / ${fail} 失敗` : `已傳送 ${ok} 張標籤至印表機`, fail ? 'error' : 'success');
+                              },
+                            };
+                          } catch (e) {
+                            showAlert('批次出貨單 NAS 列印發生錯誤：' + e.message, 'error');
+                            console.error(e);
+                          } finally { nasPrintingId.value = null; }
                         };
                 // 批次選取訂單
                 const selectedOrderIds = ref([]);
@@ -4101,11 +4164,11 @@
         const nasPrintingId = ref(null);
 
         // NAS 預覽 Modal 狀態
-        const nasPreview = ref({ show: false, imgUrl: '', title: '', subtitle: '', loading: false, confirmFn: null, page: 1, totalPages: 1, pageLoading: false, payload: null, payloads: [], personIdx: 0 });
+        const nasPreview = ref({ show: false, imgUrl: '', title: '', subtitle: '', loading: false, confirmFn: null, page: 1, totalPages: 1, pageLoading: false, payload: null, payloads: [], personIdx: 0, previewEndpoint: '/api/preview-image', printEndpoint: '/api/print-label' });
 
         const nasPreviewClose = () => {
           if (nasPreview.value.imgUrl) URL.revokeObjectURL(nasPreview.value.imgUrl);
-          nasPreview.value = { show: false, imgUrl: '', title: '', subtitle: '', loading: false, confirmFn: null, page: 1, totalPages: 1, pageLoading: false, payload: null, payloads: [], personIdx: 0 };
+          nasPreview.value = { show: false, imgUrl: '', title: '', subtitle: '', loading: false, confirmFn: null, page: 1, totalPages: 1, pageLoading: false, payload: null, payloads: [], personIdx: 0, previewEndpoint: '/api/preview-image', printEndpoint: '/api/print-label' };
         };
 
         // NAS 預覽人員切換（團單）
@@ -4117,7 +4180,7 @@
           try {
             if (np.imgUrl) URL.revokeObjectURL(np.imgUrl);
             const newPayload = np.payloads[newIdx];
-            const res = await fetch(`${NAS_API_BASE}/api/preview-image?page=1`, {
+            const res = await fetch(`${NAS_API_BASE}${np.previewEndpoint}?page=1`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(newPayload),
@@ -4145,7 +4208,7 @@
           np.pageLoading = true;
           try {
             if (np.imgUrl) URL.revokeObjectURL(np.imgUrl);
-            const res = await fetch(`${NAS_API_BASE}/api/preview-image?page=${newPage}`, {
+            const res = await fetch(`${NAS_API_BASE}${np.previewEndpoint}?page=${newPage}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(np.payload),
@@ -4380,17 +4443,19 @@
             const url  = URL.createObjectURL(blob);
 
             nasPreview.value = {
-              show:       true,
-              imgUrl:     url,
-              title:      `NAS 列印 — ${groupOrder.companyName || ''}`,
-              subtitle:   `共 ${payloads.length} 個標籤，點選左右箭頭切換人員`,
-              loading:    false,
-              page:       1,
+              show:            true,
+              imgUrl:          url,
+              title:           `NAS 列印 — ${groupOrder.companyName || ''}`,
+              subtitle:        `共 ${payloads.length} 個標籤，點選左右箭頭切換人員`,
+              loading:         false,
+              page:            1,
               totalPages,
-              pageLoading: false,
-              payload:    payloads[0],
+              pageLoading:     false,
+              payload:         payloads[0],
               payloads,
-              personIdx:  0,
+              personIdx:       0,
+              previewEndpoint: '/api/preview-image',
+              printEndpoint:   '/api/print-label',
               confirmFn: async () => {
                 nasPreview.value.loading = true;
                 let ok = 0, fail = 0;
@@ -4436,17 +4501,19 @@
             const url  = URL.createObjectURL(blob);
 
             nasPreview.value = {
-              show:       true,
-              imgUrl:     url,
-              title:      `NAS 列印 — ${customerOrder.customerName || ''}`,
-              subtitle:   `${payload.items.length} 項商品　合計 $${payload.total.toLocaleString()}`,
-              loading:    false,
-              page:       1,
+              show:            true,
+              imgUrl:          url,
+              title:           `NAS 列印 — ${customerOrder.customerName || ''}`,
+              subtitle:        `${payload.items.length} 項商品　合計 $${payload.total.toLocaleString()}`,
+              loading:         false,
+              page:            1,
               totalPages,
-              pageLoading: false,
+              pageLoading:     false,
               payload,
-              payloads:   [payload],
-              personIdx:  0,
+              payloads:        [payload],
+              personIdx:       0,
+              previewEndpoint: '/api/preview-image',
+              printEndpoint:   '/api/print-label',
               confirmFn: async () => {
                 nasPreview.value.loading = true;
                 try {
@@ -4470,6 +4537,95 @@
             };
           } catch (e) {
             showAlert('NAS 列印發生錯誤：' + e.message, 'error');
+            console.error(e);
+          } finally { nasPrintingId.value = null; }
+        };
+
+        // ── 備貨單：建立 NAS payload ─────────────────────────────────────
+        const _buildNasStockPayload = (groupOrder, expandedItems) => {
+          let dateStr = new Date().toISOString().slice(0, 10);
+          try {
+            const dt = groupOrder.deliveryTime;
+            if (dt && dt.seconds) dateStr = new Date(dt.seconds * 1000).toISOString().slice(0, 10);
+            else if (dt) dateStr = new Date(dt).toISOString().slice(0, 10);
+          } catch (_) {}
+          return {
+            orderNo: groupOrder.id || '',
+            date:    dateStr,
+            company: groupOrder.companyName || '',
+            items:   expandedItems,   // [{ name, qty }]
+          };
+        };
+
+        // ── 備貨單 NAS 列印（單筆 GroupOrder）────────────────────────────
+        const printStockViaNas = async (groupOrder) => {
+          nasPrintingId.value = groupOrder.id;
+          try {
+            if (adminData.value.itemsList.length === 0) await fetchAdminItems();
+            const orders = await _fetchSubOrders(groupOrder);
+            if (!orders.length) { showAlert('此團單沒有訂購人資料', 'error'); nasPrintingId.value = null; return; }
+
+            // 聚合並展開品項（同瀏覽器備貨單邏輯）
+            const rawStockMap = {};
+            orders.forEach(order => {
+              (order.items || []).forEach(item => {
+                const qty = parseInt(item.qty) || 0;
+                if (qty > 0) rawStockMap[item.itemName] = (rawStockMap[item.itemName] || 0) + qty;
+              });
+            });
+            const expandedMap = expandStockItems(rawStockMap);
+            const expandedItems = Object.entries(expandedMap).map(([name, qty]) => ({ name, qty }));
+
+            const payload = _buildNasStockPayload(groupOrder, expandedItems);
+
+            // 預覽第 1 頁
+            const previewRes = await fetch(`${NAS_API_BASE}/api/preview-stock?page=1`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+            if (!previewRes.ok) throw new Error('預覽失敗：' + await previewRes.text());
+            const totalPages = parseInt(previewRes.headers.get('X-Total-Pages') || '1');
+            const blob = await previewRes.blob();
+            const url  = URL.createObjectURL(blob);
+
+            nasPreview.value = {
+              show:            true,
+              imgUrl:          url,
+              title:           `備貨單 — ${groupOrder.companyName || ''}`,
+              subtitle:        `共 ${expandedItems.length} 項商品，${totalPages} 張備貨單`,
+              loading:         false,
+              page:            1,
+              totalPages,
+              pageLoading:     false,
+              payload,
+              payloads:        [payload],
+              personIdx:       0,
+              previewEndpoint: '/api/preview-stock',
+              printEndpoint:   '/api/print-stock',
+              confirmFn: async () => {
+                nasPreview.value.loading = true;
+                try {
+                  const r = await fetch(`${NAS_API_BASE}/api/print-stock`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                  });
+                  if (r.ok) {
+                    const data = await r.json();
+                    nasPreviewClose();
+                    showAlert(data.message || '備貨單 NAS 列印完成', 'success');
+                  } else {
+                    throw new Error(await r.text());
+                  }
+                } catch (e2) {
+                  nasPreview.value.loading = false;
+                  showAlert('備貨單 NAS 列印失敗：' + e2.message, 'error');
+                }
+              },
+            };
+          } catch (e) {
+            showAlert('備貨單 NAS 列印發生錯誤：' + e.message, 'error');
             console.error(e);
           } finally { nasPrintingId.value = null; }
         };
@@ -4813,6 +4969,7 @@
           nasChangePage,
           printGroupViaNas,
           printCustomerViaNas,
+          printStockViaNas,
           detailsApprovedTotal,
           detailsPendingTotal,
           detailsDashboardTotal,
