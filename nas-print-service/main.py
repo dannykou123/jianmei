@@ -261,10 +261,15 @@ def draw_label(req: PrintRequest, page_items: List[Item],
 
     # ── 配送日期 (10pt, margin-top 0.5mm) ────────────────────────────
     try:
-        ds = datetime.strptime(req.date, "%Y-%m-%d").strftime("%m/%d")
+        if 'T' in req.date:
+            date_part, time_part = req.date.split('T')
+            ds = datetime.strptime(date_part, "%Y-%m-%d").strftime("%Y/%m/%d")
+            delivery_line = f"配送：{ds} {time_part}"
+        else:
+            ds = datetime.strptime(req.date, "%Y-%m-%d").strftime("%Y/%m/%d")
+            delivery_line = f"配送：{ds}"
     except Exception:
-        ds = req.date
-    delivery_line = f"配送：{ds} {datetime.now().strftime('%H:%M')}"
+        delivery_line = f"配送：{req.date}"
     draw.text((PAD, Y_DELIVERY), delivery_line, font=fnt["delivery"], fill=BK)
 
     # ── Header 分隔線 (border-bottom 2px) ────────────────────────────

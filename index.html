@@ -4410,11 +4410,18 @@
             total += price * qty;
             return { name: item.itemName, qty, price };
           });
-          let dateStr = new Date().toISOString().slice(0, 10);
+          let dateStr = '';
           try {
             const dt = groupOrder.deliveryTime;
-            if (dt && dt.seconds) dateStr = new Date(dt.seconds * 1000).toISOString().slice(0, 10);
-            else if (dt) dateStr = new Date(dt).toISOString().slice(0, 10);
+            let utcDate;
+            if (dt && dt.seconds) utcDate = new Date(dt.seconds * 1000);
+            else if (dt) utcDate = new Date(dt);
+            else throw new Error('no delivery time');
+            const taipeiTime = new Date(utcDate.getTime() + 8 * 60 * 60 * 1000);
+            const isoStr = taipeiTime.toISOString();
+            const datePart = isoStr.slice(0, 10);
+            const timePart = isoStr.slice(11, 16);
+            dateStr = `${datePart}T${timePart}`;
           } catch (_) {}
           return {
             orderNo:    groupOrder.id || '',
