@@ -829,24 +829,7 @@
                 <i :class="nasPrintingId === 'batch' ? 'fas fa-circle-notch fa-spin' : 'fas fa-network-wired'"></i><span class="hidden sm:inline">{{ nasPrintingId === 'batch' ? '傳送中…' : '列印' }}</span>出貨單 ({{ selectedOrderIds.length }})
               </button>
             </div>
-            <!-- Dashboard 總金額區塊 -->
-            <div v-if="detailsStart && detailsEnd" class="grid grid-cols-3 gap-2 md:gap-4 mb-3">
-              <div class="g-card p-3 md:p-5 flex flex-col items-center">
-                <span class="g-label mb-1 text-center leading-tight">全部金額<span class="hidden sm:inline"> (不含已拒絕/已過期)</span></span>
-                <span class="text-base md:text-2xl font-black text-red-700">${{ detailsDashboardTotal.toLocaleString() }}</span>
-                <span class="text-xs md:text-sm font-bold text-stone-400 mt-1">{{ detailsOrderCount }}筆</span>
-              </div>
-              <div class="g-card p-3 md:p-5 flex flex-col items-center">
-                <span class="g-label mb-1 text-center leading-tight">已接單金額</span>
-                <span class="text-base md:text-2xl font-black text-green-700">${{ detailsApprovedTotal.toLocaleString() }}</span>
-                <span class="text-xs md:text-sm font-bold text-stone-400 mt-1">{{ detailsApprovedCount }}筆</span>
-              </div>
-              <div class="g-card p-3 md:p-5 flex flex-col items-center">
-                <span class="g-label mb-1 text-center leading-tight">待審核金額</span>
-                <span class="text-base md:text-2xl font-black text-amber-700">${{ detailsPendingTotal.toLocaleString() }}</span>
-                <span class="text-xs md:text-sm font-bold text-stone-400 mt-1">{{ detailsPendingCount }}筆</span>
-              </div>
-            </div>
+            <!-- Dashboard 總金額區塊已移至分頁列 -->
             <div class="g-card mb-3 px-4 py-3 flex flex-wrap items-center gap-2">
               <!-- 日期輸入 -->
               <div class="flex items-center gap-2 w-full sm:w-auto sm:contents">
@@ -918,9 +901,30 @@
                   </div>
                 </div>
               </div>
-              <!-- Row 2: 頁碼資訊 + 分頁按鈕 -->
-              <div class="flex items-center justify-between px-4 pb-3">
-                <span class="text-xs text-stone-400 font-bold">第 {{ detailsPage }} / {{ totalDetailsPages }} 頁　共 {{ sortedDetailsList.length }} 筆</span>
+              <!-- Row 2: 統計數字 + 頁碼資訊 + 分頁按鈕 -->
+              <div class="flex items-center justify-between px-4 pb-3 gap-2 flex-wrap">
+                <div class="flex items-center gap-3 flex-wrap">
+                  <span class="text-xs text-stone-400 font-bold">第 {{ detailsPage }} / {{ totalDetailsPages }} 頁　共 {{ sortedDetailsList.length }} 筆</span>
+                  <span v-if="detailsStart && detailsEnd" class="hidden sm:flex items-center gap-2 text-xs">
+                    <span class="flex items-center gap-1">
+                      <span class="text-stone-400">總金額</span>
+                      <span class="font-black text-red-600">${{ detailsDashboardTotal.toLocaleString() }}</span>
+                      <span class="text-stone-300">({{ detailsOrderCount }})</span>
+                    </span>
+                    <span class="text-stone-200">│</span>
+                    <span class="flex items-center gap-1">
+                      <span class="text-stone-400">已接單</span>
+                      <span class="font-black text-green-600">${{ detailsApprovedTotal.toLocaleString() }}</span>
+                      <span class="text-stone-300">({{ detailsApprovedCount }})</span>
+                    </span>
+                    <span class="text-stone-200">│</span>
+                    <span class="flex items-center gap-1">
+                      <span class="text-stone-400">待審核</span>
+                      <span class="font-black text-amber-600">${{ detailsPendingTotal.toLocaleString() }}</span>
+                      <span class="text-stone-300">({{ detailsPendingCount }})</span>
+                    </span>
+                  </span>
+                </div>
                 <div class="flex items-center gap-1">
                   <button @click="detailsPage = 1" :disabled="detailsPage === 1" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">«</button>
                   <button @click="detailsPage--" :disabled="detailsPage === 1" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">‹</button>
