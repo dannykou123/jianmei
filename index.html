@@ -1151,12 +1151,25 @@
                         </div>
                       </div>
                       <div>
-                        <label class="g-label mb-1 block">狀態</label>
-                        <select v-model="editFormData.status" class="g-select w-full">
-                          <option value="pending">待審核</option>
-                          <option value="approved">已接單</option>
-                          <option value="rejected">已拒絕</option>
-                        </select>
+                        <label class="g-label mb-2 block">狀態</label>
+                        <div class="flex flex-wrap gap-1.5">
+                          <label :class="['flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border cursor-pointer transition select-none text-xs', editFormData.status === 'approved' ? 'bg-green-50 border-green-400 text-green-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-green-50/50']">
+                            <input type="radio" v-model="editFormData.status" value="approved" class="accent-green-600 w-3 h-3">
+                            <i class="fas fa-check-circle text-green-500 text-xs"></i>已接單
+                          </label>
+                          <label :class="['flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border cursor-pointer transition select-none text-xs', editFormData.status === 'pending' ? 'bg-amber-50 border-amber-400 text-amber-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-amber-50/50']">
+                            <input type="radio" v-model="editFormData.status" value="pending" class="accent-amber-500 w-3 h-3">
+                            <i class="fas fa-clock text-amber-500 text-xs"></i>待審核
+                          </label>
+                          <label :class="['flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border cursor-pointer transition select-none text-xs', editFormData.status === 'rejected' ? 'bg-red-50 border-red-400 text-red-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-red-50/50']">
+                            <input type="radio" v-model="editFormData.status" value="rejected" class="accent-red-600 w-3 h-3">
+                            <i class="fas fa-times-circle text-red-500 text-xs"></i>已拒絕
+                          </label>
+                          <label :class="['flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border cursor-pointer transition select-none text-xs', editFormData.status === 'expired' ? 'bg-stone-100 border-stone-400 text-stone-600 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
+                            <input type="radio" v-model="editFormData.status" value="expired" class="accent-stone-500 w-3 h-3">
+                            <i class="fas fa-history text-stone-400 text-xs"></i>已過期
+                          </label>
+                        </div>
                       </div>
                       <div class="flex gap-2 pt-1">
                         <button @click="saveBasicInfo" class="g-btn g-btn-primary"><i class="fas fa-save mr-1.5"></i>保存</button>
@@ -1635,7 +1648,7 @@
           </div>
           <div style="border-top:2px solid #000; margin-top:1.2mm; margin-bottom:0.3mm;"></div>
           <div class="label-footer" style="display:flex; justify-content:space-between; align-items:center; font-size:8pt; color:#888; margin-top:0; border:none;">
-            <div class="label-order-id" style="margin:0; text-align:left;">訂單編號：{{ orderId }}</div>
+            <div class="label-order-id" style="margin:0; text-align:left;">訂單編號：{{ info.groupOrderId }}</div>
             <div class="label-page-num" style="margin:0; text-align:right;">{{ info.pageNum }}/{{ info.totalPages }}</div>
           </div>
         </div>
@@ -1687,7 +1700,7 @@
             </div>
             <div style="border-top:2px solid #000; margin-top:1.2mm; margin-bottom:0.3mm;"></div>
             <div class="label-footer" style="display:flex; justify-content:space-between; align-items:center; font-size:8pt; color:#888; margin-top:0; border:none;">
-              <div class="label-order-id" style="margin:0; text-align:left;">訂單編號：{{ order.id }}</div>
+              <div class="label-order-id" style="margin:0; text-align:left;">訂單編號：{{ info.groupOrderId }}</div>
               <div class="label-page-num" style="margin:0; text-align:right;">{{ info.pageNum }}/{{ info.totalPages }}</div>
             </div>
           </div>
@@ -2362,7 +2375,15 @@
               approvedBy: user.value.id
             };
             if (f.deliveryTime) groupData.deliveryTime = new Date(f.deliveryTime);
-            const groupRef = await addDoc(collection(db, 'GroupOrders'), groupData);
+            // 產生自訂 ID：YYMMDDHHMM + 4碼隨機數（台北時區）
+            const _now = new Date();
+            const _fmt = (n, len) => String(n).padStart(len, '0');
+            const _tp = new Date(_now.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+            const datePart = _fmt(_tp.getFullYear() % 100, 2) + _fmt(_tp.getMonth() + 1, 2) + _fmt(_tp.getDate(), 2) + _fmt(_tp.getHours(), 2) + _fmt(_tp.getMinutes(), 2);
+            const randomPart = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            const customDocId = datePart + randomPart;
+            const groupRef = doc(db, 'GroupOrders', customDocId);
+            await setDoc(groupRef, groupData);
             let grandTotal = 0;
             for (const customer of createOrderCustomers.value) {
               const enrichedItems = enrichItemsWithPrice(customer.items.filter(i => i.itemName && i.qty > 0));
@@ -2658,6 +2679,7 @@
               const deliveryTimeStr = fmtTs(group.deliveryTime, 'short');
               return pages.map((chunk, idx) => ({
                 orderId: order.id + '_p' + idx,
+                groupOrderId: group.id,
                 pageNum: idx + 1,
                 totalPages,
                 isFirstPage: idx === 0,
@@ -4240,7 +4262,7 @@
             else if (dt) dateStr = new Date(dt).toISOString().slice(0, 10);
           } catch (_) {}
           return {
-            orderNo:    order.id || '',
+            orderNo:    groupOrder.id || '',
             date:       dateStr,
             company:    groupOrder.companyName || '',
             department: order.customerUnit || '',
@@ -4267,6 +4289,7 @@
           return pages.map((chunk, idx) => ({
             key: order.id + '_p' + idx, pageNum: idx + 1, totalPages,
             isFirstPage: idx === 0, isLastPage: idx === totalPages - 1,
+            groupOrderId: group.id,
             companyName: group.companyName, deliveryTimeStr,
             customerName: order.customerName, customerUnit: order.customerUnit || '',
             items: chunk, totalAmount: order.totalAmount.toLocaleString(), note: order.note || ''
