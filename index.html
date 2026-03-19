@@ -693,8 +693,9 @@
             <div class="g-card-solid">
               <!-- Row 1: 每頁筆數 + 欄位設定 -->
               <div class="flex flex-col md:flex-row md:items-center gap-2 px-4 pt-3 pb-2">
-                <div class="flex items-center gap-2 md:flex-1 md:min-w-0">
-                  <select v-model.number="reviewPageSize" class="g-select flex-shrink-0" style="height:32px;font-size:12px;padding-right:28px;">
+                <div class="md:flex-1"></div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <select v-model.number="reviewPageSize" class="g-select" style="height:32px;font-size:12px;padding-right:28px;">
                     <option :value="10">每頁10筆</option>
                     <option :value="20">每頁20筆</option>
                     <option :value="50">每頁50筆</option>
@@ -749,9 +750,6 @@
                       <th v-else-if="col.key === 'companyName'" class="px-4 py-3 text-left cursor-pointer select-none hover:text-stone-600 transition" @click="reviewSortByField('companyName')">
                         公司名稱 <i :class="['fas ml-1', reviewSort.startsWith('companyName') ? (reviewSort.endsWith('asc') ? 'fa-sort-up text-stone-700' : 'fa-sort-down text-stone-700') : 'fa-sort text-stone-300']"></i>
                       </th>
-                      <th v-else-if="col.key === 'createdAt'" class="hidden sm:table-cell px-4 py-3 text-left cursor-pointer select-none hover:text-stone-600 transition" @click="reviewSortByField('createdAt')">
-                        建立時間 <i :class="['fas ml-1', reviewSort.startsWith('createdAt') ? (reviewSort.endsWith('asc') ? 'fa-sort-up text-stone-700' : 'fa-sort-down text-stone-700') : 'fa-sort text-stone-300']"></i>
-                      </th>
                       <th v-else-if="col.key === 'totalAmount'" class="hidden sm:table-cell px-4 py-3 text-right">總金額</th>
                       <th v-else class="hidden sm:table-cell px-4 py-3 text-left">{{ col.label }}</th>
                     </template>
@@ -773,15 +771,13 @@
                       <td v-else-if="col.key === 'contactName'" class="hidden sm:table-cell px-4 py-3 text-stone-600 whitespace-nowrap">{{ g.contactName }}</td>
                       <td v-else-if="col.key === 'contactPhone'" class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ g.contactPhone || '-' }}</td>
                       <td v-else-if="col.key === 'address'" class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ g.address || '-' }}</td>
-                      <td v-else-if="col.key === 'createdAt'" class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ fmtTs(g.createdAt) }}</td>
                       <td v-else-if="col.key === 'totalAmount'" class="hidden sm:table-cell px-4 py-3 text-right font-bold text-red-800 whitespace-nowrap">
                         {{ groupTotalAmountMap[g.id] > 0 ? '$' + groupTotalAmountMap[g.id].toLocaleString() : '-' }}
                       </td>
                     </template>
                     <td class="hidden sm:table-cell px-4 py-3 text-center whitespace-nowrap">
                       <div class="flex gap-2 justify-center">
-                        <button @click="toggleOrders(g.id)" class="g-btn g-btn-glass g-btn-sm" title="訂單明細"><i class="fas fa-receipt mr-1"></i>明細</button>
-                        <button @click="toggleStock(g.id)" class="g-btn g-btn-glass g-btn-sm" title="備貨統計"><i class="fas fa-boxes mr-1"></i>備貨</button>
+                        <button @click="openReviewModal(g, 'contact')" class="g-btn g-btn-glass g-btn-sm" title="詳細資訊"><i class="fas fa-info-circle mr-1"></i>詳細</button>
                         <button @click="confirmGroup(g)" class="g-btn g-btn-success g-btn-sm" title="確認接單"><i class="fas fa-check mr-1"></i>接單</button>
                         <button @click="rejectGroup(g)" class="g-btn g-btn-danger g-btn-sm" title="拒絕接單"><i class="fas fa-times mr-1"></i>拒絕</button>
                       </div>
@@ -791,63 +787,9 @@
                   <tr class="sm:hidden border-b border-stone-100/50">
                     <td colspan="3" class="px-3 pb-2.5 pt-0">
                       <div class="flex gap-2">
-                        <button @click="toggleOrders(g.id)" class="g-btn g-btn-glass g-btn-sm flex-1 justify-center"><i class="fas fa-receipt"></i>明細</button>
-                        <button @click="toggleStock(g.id)" class="g-btn g-btn-glass g-btn-sm flex-1 justify-center"><i class="fas fa-boxes"></i>備貨</button>
+                        <button @click="openReviewModal(g, 'contact')" class="g-btn g-btn-glass g-btn-sm flex-1 justify-center"><i class="fas fa-info-circle"></i>詳細</button>
                         <button @click="confirmGroup(g)" class="g-btn g-btn-success g-btn-sm flex-1 justify-center"><i class="fas fa-check"></i>接單</button>
                         <button @click="rejectGroup(g)" class="g-btn g-btn-danger g-btn-sm flex-1 justify-center"><i class="fas fa-times"></i>拒絕</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <!-- 展開備貨統計 -->
-                  <tr v-if="expandedStockGroupId === g.id">
-                    <td :colspan="orderedVisibleReviewColumns.length + 2" class="p-0">
-                      <div class="px-6 py-4 bg-stone-50/80 border-b border-stone-100">
-                        <div v-if="loadingGroupOrders" class="text-center py-6"><i class="fas fa-circle-notch fa-spin text-2xl text-stone-300"></i></div>
-                        <div v-else>
-                          <h4 class="text-sm font-bold text-stone-700 mb-3 flex items-center gap-2"><i class="fas fa-boxes text-stone-400"></i>備貨統計</h4>
-                          <div v-if="groupStock.length === 0" class="text-sm text-stone-400 text-center py-4">暫無商品數據</div>
-                          <div v-else class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            <div v-for="stock in groupStock" :key="stock.name" class="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-stone-100">
-                              <span class="text-sm text-stone-700">{{ stock.name }}</span>
-                              <span class="text-sm font-bold text-stone-900 tabular-nums">{{ stock.quantity }}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                  <!-- 展開訂單明細 -->
-                  <tr v-if="expandedOrdersGroupId === g.id">
-                    <td :colspan="orderedVisibleReviewColumns.length + 2" class="p-0">
-                      <div class="px-6 py-4 bg-stone-50/80 border-b border-stone-100">
-                        <div v-if="loadingGroupOrders" class="text-center py-6"><i class="fas fa-circle-notch fa-spin text-2xl text-stone-300"></i></div>
-                        <div v-else>
-                          <h4 class="text-sm font-bold text-stone-700 mb-3 flex items-center gap-2"><i class="fas fa-receipt text-stone-400"></i>訂單明細 <span class="text-xs font-normal text-stone-500">(共 {{ groupOrders.length }} 筆)</span></h4>
-                          <div v-if="groupOrders.length === 0" class="text-sm text-stone-400 text-center py-4">暫無訂單數據</div>
-                          <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                            <div v-for="order in groupOrders.slice().sort((a, b) => (b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0) - (a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0))" :key="order.id" class="bg-white rounded-lg px-3 py-2 border border-stone-100 flex flex-col gap-1">
-                              <!-- 姓名 + 金額 -->
-                              <div class="flex items-center justify-between gap-1">
-                                <span class="font-bold text-stone-800 text-sm truncate">{{ order.customerName || '未知' }}</span>
-                                <span class="font-bold text-red-700 flex-shrink-0 text-sm tabular-nums">${{ (order.totalAmount || 0).toLocaleString() }}</span>
-                              </div>
-                              <!-- 單位標籤 -->
-                              <div v-if="order.customerUnit" class="text-xs text-stone-500 bg-stone-50 border border-stone-100 rounded px-1.5 py-0.5 w-fit">{{ order.customerUnit }}</div>
-                              <!-- 品項列表 -->
-                              <div v-if="order.items && order.items.length > 0" class="flex flex-col gap-0.5 text-xs">
-                                <div v-for="(item, idx) in order.items" :key="idx" class="flex items-center justify-between">
-                                  <span class="text-stone-600 truncate">{{ item.itemName }}</span>
-                                  <span class="font-bold text-stone-800 tabular-nums flex-shrink-0 ml-1">×{{ item.qty }}</span>
-                                </div>
-                              </div>
-                              <div v-else class="text-xs text-stone-400 italic">無商品項目</div>
-                              <!-- 備註 -->
-                              <div v-if="order.note" class="text-xs text-stone-400 border-t border-stone-50 pt-1 truncate" :title="order.note">
-                                <i class="fas fa-comment-dots mr-1"></i>{{ order.note }}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
                       </div>
                     </td>
                   </tr>
@@ -1036,8 +978,8 @@
                     <td class="hidden sm:table-cell px-4 py-3 text-center whitespace-nowrap">
                       <div class="flex gap-2 justify-center">
                         <button @click="openDetailModal(order)" class="g-btn g-btn-primary g-btn-sm">詳細</button>
-                        <button @click="printStockViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-glass g-btn-sm" title="透過 NAS 列印備貨單"><i class="fas fa-print mr-1"></i>{{ nasPrintingId === order.id ? '傳送中…' : '備貨單' }}</button>
-                        <button @click="printGroupViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-glass g-btn-sm" title="透過 NAS 列印出貨單"><i class="fas fa-print mr-1"></i>{{ nasPrintingId === order.id ? '傳送中…' : '出貨單' }}</button>
+                        <button @click="printStockViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-glass g-btn-sm" title="透過 NAS 列印備貨單">{{ nasPrintingId === order.id ? '傳送中…' : '備貨單' }}</button>
+                        <button @click="printGroupViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-glass g-btn-sm" title="透過 NAS 列印出貨單">{{ nasPrintingId === order.id ? '傳送中…' : '出貨單' }}</button>
                       </div>
                     </td>
                   </tr>
@@ -2066,6 +2008,173 @@
       </div>
     </div>
 
+    <!-- 待審核訂單 明細/備貨 Modal -->
+    <div v-if="reviewModal.show" class="fixed inset-0 bg-black/30 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in" @click.self="closeReviewModal">
+      <div class="g-modal w-full max-w-2xl h-[80vh] flex flex-col animate-zoom-in">
+        <!-- Header -->
+        <div class="flex items-start justify-between px-6 pt-5 pb-4">
+          <div>
+            <h3 class="text-xl font-black text-stone-900 leading-tight">{{ reviewModal.group && reviewModal.group.companyName }}</h3>
+            <p class="text-sm text-stone-400 mt-0.5">{{ reviewModal.group && fmtTs(reviewModal.group.deliveryTime) }}</p>
+          </div>
+          <button @click="closeReviewModal" class="g-btn g-btn-glass g-btn-sm" style="width:32px;height:32px;padding:0;"><i class="fas fa-times text-sm"></i></button>
+        </div>
+        <!-- Tabs -->
+        <div class="flex border-b border-stone-200/40 px-6">
+          <button @click="reviewModal.tab = 'contact'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', reviewModal.tab === 'contact' ? 'border-brand-500 text-brand-600' : 'border-transparent text-stone-400 hover:text-stone-600']">聯絡資訊</button>
+          <button @click="reviewModal.tab = 'orders'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', reviewModal.tab === 'orders' ? 'border-brand-500 text-brand-600' : 'border-transparent text-stone-400 hover:text-stone-600']">訂單明細</button>
+          <button @click="reviewModal.tab = 'stock'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', reviewModal.tab === 'stock' ? 'border-brand-500 text-brand-600' : 'border-transparent text-stone-400 hover:text-stone-600']">備貨統計</button>
+        </div>
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto px-6 py-5">
+          <div v-if="loadingGroupOrders" class="text-center py-10"><i class="fas fa-circle-notch fa-spin text-2xl text-stone-300"></i></div>
+          <!-- 訂單明細 -->
+          <div v-else-if="reviewModal.tab === 'orders'">
+            <div v-if="groupOrders.length === 0" class="text-sm text-stone-400 text-center py-8">暫無訂單數據</div>
+            <div v-else class="flex flex-col divide-y divide-stone-100">
+              <div v-for="order in groupOrders.slice().sort((a, b) => (b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0) - (a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0))" :key="order.id" class="py-4 first:pt-0 last:pb-0">
+                <!-- 姓名 + 單位 + 金額 -->
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="font-black text-stone-800">{{ order.customerName || '未知' }}</span>
+                    <span v-if="order.customerUnit" class="text-xs text-stone-500 bg-stone-100 rounded px-2 py-0.5">{{ order.customerUnit }}</span>
+                  </div>
+                  <span class="font-black text-red-700 tabular-nums">${{ (order.totalAmount || 0).toLocaleString() }}</span>
+                </div>
+                <!-- 品項列表 -->
+                <div v-if="order.items && order.items.length > 0" class="bg-white rounded-lg border border-stone-100 mt-1 overflow-hidden">
+                  <div class="grid grid-cols-2 divide-x divide-stone-100">
+                    <div class="flex flex-col divide-y divide-stone-50">
+                      <div v-for="(item, idx) in order.items.filter((_, i) => i % 2 === 0)" :key="idx" class="flex items-center justify-between text-sm px-3 py-1.5">
+                        <span class="text-stone-600">{{ item.itemName }}</span>
+                        <span class="font-bold text-stone-800 tabular-nums ml-3">×{{ item.qty }}</span>
+                      </div>
+                    </div>
+                    <div class="flex flex-col divide-y divide-stone-50">
+                      <div v-for="(item, idx) in order.items.filter((_, i) => i % 2 === 1)" :key="idx" class="flex items-center justify-between text-sm px-3 py-1.5">
+                        <span class="text-stone-600">{{ item.itemName }}</span>
+                        <span class="font-bold text-stone-800 tabular-nums ml-3">×{{ item.qty }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="text-sm text-stone-400 italic">無商品項目</div>
+                <!-- 備註 -->
+                <div v-if="order.note" class="mt-2 text-xs text-stone-400 flex items-start gap-1">
+                  <i class="fas fa-comment-dots mt-0.5"></i><span>{{ order.note }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 聯絡資訊 -->
+          <div v-else-if="reviewModal.tab === 'contact'">
+            <!-- 聯絡資料 -->
+            <div class="bg-white rounded-xl border border-stone-100 overflow-hidden">
+              <!-- 摘要行 -->
+              <div class="flex items-center gap-6 px-5 py-4 border-b border-stone-100 bg-stone-50/50">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-sack-dollar text-stone-400 text-base"></i>
+                  <div class="flex flex-col">
+                    <span class="text-xs text-stone-400 font-medium">總金額</span>
+                    <span class="text-lg font-black text-red-700">${{ (reviewModal.group && groupTotalAmountMap[reviewModal.group.id] || 0).toLocaleString() }}</span>
+                  </div>
+                </div>
+                <div class="w-px h-8 bg-stone-200"></div>
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-users text-stone-400 text-base"></i>
+                  <div class="flex flex-col">
+                    <span class="text-xs text-stone-400 font-medium">訂單數</span>
+                    <span class="text-lg font-black text-stone-800">{{ groupOrders.length }} 筆</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 詳細資料 -->
+              <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-building text-stone-500 text-xs"></i>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs text-stone-400">公司名稱</p>
+                  <p class="text-sm font-bold text-stone-800">{{ reviewModal.group && reviewModal.group.companyName || '-' }}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-user text-stone-500 text-xs"></i>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs text-stone-400">聯絡人</p>
+                  <p class="text-sm font-bold text-stone-800">{{ reviewModal.group && reviewModal.group.contactName || '-' }}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-phone text-stone-500 text-xs"></i>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs text-stone-400">連絡電話</p>
+                  <p class="text-sm font-bold text-stone-800">{{ reviewModal.group && reviewModal.group.contactPhone || '-' }}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-truck text-stone-500 text-xs"></i>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs text-stone-400">配送時間</p>
+                  <p class="text-sm font-bold text-stone-800">{{ reviewModal.group && fmtTs(reviewModal.group.deliveryTime, 'full') }}</p>
+                </div>
+              </div>
+              <div v-if="reviewModal.group && reviewModal.group.address" class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-map-marker-alt text-stone-500 text-xs"></i>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs text-stone-400">地址</p>
+                  <p class="text-sm font-bold text-stone-800">{{ reviewModal.group.address }}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 px-4 py-3">
+                <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-hashtag text-stone-500 text-xs"></i>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs text-stone-400">訂單編號</p>
+                  <p class="text-sm font-mono text-stone-500 select-all">{{ reviewModal.group && reviewModal.group.id }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 備貨統計 -->
+          <div v-else-if="reviewModal.tab === 'stock'">
+            <div v-if="groupStock.length === 0" class="text-sm text-stone-400 text-center py-8">暫無商品數據</div>
+            <div v-else class="bg-white rounded-lg border border-stone-100 overflow-hidden">
+              <div class="grid grid-cols-2 divide-x divide-stone-100">
+                <div class="flex flex-col divide-y divide-stone-50">
+                  <div v-for="(stock, idx) in groupStock.filter((_, i) => i % 2 === 0)" :key="idx" class="flex items-center justify-between text-sm px-3 py-1.5">
+                    <span class="text-stone-600">{{ stock.name }}</span>
+                    <span class="font-bold text-stone-800 tabular-nums ml-3">{{ stock.quantity }}</span>
+                  </div>
+                </div>
+                <div class="flex flex-col divide-y divide-stone-50">
+                  <div v-for="(stock, idx) in groupStock.filter((_, i) => i % 2 === 1)" :key="idx" class="flex items-center justify-between text-sm px-3 py-1.5">
+                    <span class="text-stone-600">{{ stock.name }}</span>
+                    <span class="font-bold text-stone-800 tabular-nums ml-3">{{ stock.quantity }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-stone-100/60 flex gap-3 justify-end">
+          <button @click="confirmGroup(reviewModal.group); closeReviewModal()" class="g-btn g-btn-success"><i class="fas fa-check mr-1"></i>接單</button>
+          <button @click="rejectGroup(reviewModal.group); closeReviewModal()" class="g-btn g-btn-danger"><i class="fas fa-times mr-1"></i>拒絕</button>
+          <button @click="closeReviewModal" class="g-btn g-btn-glass">關閉</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 自訂確認對話框 -->
     <div v-if="customConfirm.show" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[101] flex items-center justify-center p-6 animate-fade-in">
       <div class="g-modal p-8 max-w-sm w-full relative overflow-hidden animate-zoom-in">
@@ -2077,8 +2186,8 @@
           <p class="font-bold text-lg text-stone-800 mb-2">{{ customConfirm.type === 'danger' ? '確認刪除' : '確認操作' }}</p>
           <p class="text-sm text-stone-500 mb-6 leading-relaxed">{{ customConfirm.message }}</p>
           <div class="flex gap-3 w-full">
-            <button @click="confirmCancel" class="g-btn g-btn-glass flex-1 justify-center py-3">取消</button>
-            <button @click="confirmOk" :class="['flex-1 py-3 text-white font-bold transition shadow-lg', customConfirm.type === 'danger' ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' : 'bg-stone-800 hover:bg-black']" style="border-radius:var(--glass-radius-xs);">{{ customConfirm.type === 'danger' ? '確定刪除' : '確定' }}</button>
+            <button @click="confirmCancel" class="g-btn g-btn-glass flex-1 justify-center">取消</button>
+            <button @click="confirmOk" :class="['g-btn flex-1 justify-center text-white', customConfirm.type === 'danger' ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30' : 'bg-stone-800 hover:bg-black']">{{ customConfirm.type === 'danger' ? '確定刪除' : '確定' }}</button>
           </div>
         </div>
       </div>
@@ -2299,6 +2408,8 @@
         // 團購訂單展開狀態
         const expandedOrdersGroupId = ref(null);
         const expandedStockGroupId = ref(null);
+        // 待審核 modal
+        const reviewModal = ref({ show: false, group: null, tab: 'contact' });
         const groupOrders = ref([]);
         const groupStock = ref([]);
         const groupTotalAmount = ref(0);
@@ -2700,13 +2811,13 @@
         const reviewSelectedIds = ref([]);
         // 待審核欄位設定
         const showReviewColumnSettings = ref(false);
-        const reviewColumns = ref(JSON.parse(localStorage.getItem('reviewColumns') || JSON.stringify({contactName:true,contactPhone:true,address:false,createdAt:true,totalAmount:true})));
+        const reviewColumns = ref(JSON.parse(localStorage.getItem('reviewColumns') || JSON.stringify({deliveryTime:true,companyName:true,contactName:true,contactPhone:true,address:false,totalAmount:true})));
         watch(reviewColumns, val => localStorage.setItem('reviewColumns', JSON.stringify(val)), { deep: true });
-        const _defaultReviewColOrder = ['deliveryTime','companyName','contactName','contactPhone','address','createdAt','totalAmount'];
-        const reviewColumnOrder = ref(JSON.parse(localStorage.getItem('reviewColumnOrder') || JSON.stringify(_defaultReviewColOrder)));
+        const _defaultReviewColOrder = ['deliveryTime','companyName','contactName','contactPhone','address','totalAmount'];
+        const reviewColumnOrder = ref(JSON.parse(localStorage.getItem('reviewColumnOrder') || JSON.stringify(_defaultReviewColOrder)).filter(k => _defaultReviewColOrder.includes(k)));
         watch(reviewColumnOrder, val => localStorage.setItem('reviewColumnOrder', JSON.stringify(val)), { deep: true });
         const reviewColDragFrom = ref(null);
-        const reviewColMetaMap = { deliveryTime:{label:'配送時間',toggleable:false}, companyName:{label:'公司名稱',toggleable:false}, contactName:{label:'聯絡人',toggleable:true}, contactPhone:{label:'連絡電話',toggleable:true}, address:{label:'地址',toggleable:true}, createdAt:{label:'建立時間',toggleable:true}, totalAmount:{label:'總金額',toggleable:true} };
+        const reviewColMetaMap = { deliveryTime:{label:'配送時間',toggleable:true}, companyName:{label:'公司名稱',toggleable:true}, contactName:{label:'聯絡人',toggleable:true}, contactPhone:{label:'連絡電話',toggleable:true}, address:{label:'地址',toggleable:true}, totalAmount:{label:'總金額',toggleable:true} };
         function reviewColumnDrop(idx) { if (reviewColDragFrom.value === null || reviewColDragFrom.value === idx) { reviewColDragFrom.value = null; return; } const arr = [...reviewColumnOrder.value]; const [item] = arr.splice(reviewColDragFrom.value, 1); arr.splice(idx, 0, item); reviewColumnOrder.value = arr; reviewColDragFrom.value = null; }
         const orderedVisibleReviewColumns = computed(() => reviewColumnOrder.value.filter(k => reviewColumns.value[k] !== false).map(k => ({ key: k, ...reviewColMetaMap[k] })));
         function reviewSortByField(field) {
@@ -3782,6 +3893,15 @@
             expandedOrdersGroupId.value = null; // 關閉訂單明細
             await fetchGroupOrders(groupId);
           }
+        };
+
+        // 待審核 modal
+        const openReviewModal = async (g, tab) => {
+          reviewModal.value = { show: true, group: g, tab };
+          await fetchGroupOrders(g.id);
+        };
+        const closeReviewModal = () => {
+          reviewModal.value = { show: false, group: null, tab: 'contact' };
         };
 
         // 獲取團購訂單
@@ -5055,6 +5175,9 @@
           detailsPageSize,
           expandedOrdersGroupId,
           expandedStockGroupId,
+          reviewModal,
+          openReviewModal,
+          closeReviewModal,
           groupOrders,
           groupStock,
           groupTotalAmount,
