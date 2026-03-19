@@ -818,7 +818,7 @@
           <div v-else>
             <!-- 批次匯出按鈕 -->
             <div class="mb-3 flex flex-wrap gap-2 items-center justify-center">
-              <button @click="batchExportStock" :disabled="selectedOrderIds.length === 0 || nasPrintingId === 'batch'" class="g-btn g-btn-primary g-btn-sm flex-1 sm:flex-none">
+              <button @click="batchExportStock" :disabled="selectedOrderIds.length === 0 || nasPrintingId === 'batch'" class="g-btn g-btn-primary flex-1 sm:flex-none">
                 <i :class="nasPrintingId === 'batch' ? 'fas fa-circle-notch fa-spin' : 'fas fa-print'"></i><span class="hidden sm:inline">{{ nasPrintingId === 'batch' ? '傳送中…' : '列印' }}</span>備貨單
               </button>
               <button @click="batchExportLabels" :disabled="selectedOrderIds.length === 0 || nasPrintingId === 'batch'" class="g-btn g-btn-success flex-1 sm:flex-none">
@@ -1031,7 +1031,7 @@
 
           <!-- 詳細資訊 Modal -->
           <div v-if="detailModalOrder" class="fixed inset-0 bg-black/30 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in" @click.self="closeDetailModal">
-            <div class="g-modal w-full max-w-xl max-h-[88vh] flex flex-col animate-zoom-in">
+            <div class="g-modal w-full max-w-xl flex flex-col overflow-hidden animate-zoom-in" style="height:80vh;min-height:80vh;max-height:80vh;">
 
               <!-- Modal Header -->
               <div class="flex items-start justify-between px-6 pt-5 pb-4">
@@ -1058,7 +1058,7 @@
               </div>
 
               <!-- Modal Body -->
-              <div class="flex-1 overflow-y-auto px-6 py-5">
+              <div class="flex-1 min-h-0 overflow-y-auto px-6 py-5">
 
                 <!-- 基本資訊 tab -->
                 <div v-if="detailModalTab === 'info'">
@@ -1200,7 +1200,7 @@
                         </div>
                         <div class="min-w-0 flex-1">
                           <p class="text-xs text-stone-400">公司名稱</p>
-                          <input v-model="editFormData.companyName" type="text" class="g-input mt-1 w-full">
+                          <input v-model="editFormData.companyName" type="text" class="w-full mt-0.5 bg-transparent border-0 border-b border-stone-200 rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0 focus:border-brand-400" style="height:24px;">
                         </div>
                       </div>
                       <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
@@ -1209,7 +1209,7 @@
                         </div>
                         <div class="min-w-0 flex-1">
                           <p class="text-xs text-stone-400">聯絡人</p>
-                          <input v-model="editFormData.contactName" type="text" class="g-input mt-1 w-full">
+                          <input v-model="editFormData.contactName" type="text" class="w-full mt-0.5 bg-transparent border-0 border-b border-stone-200 rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0 focus:border-brand-400" style="height:24px;">
                         </div>
                       </div>
                       <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
@@ -1218,7 +1218,7 @@
                         </div>
                         <div class="min-w-0 flex-1">
                           <p class="text-xs text-stone-400">電話</p>
-                          <input v-model="editFormData.contactPhone" type="text" class="g-input mt-1 w-full">
+                          <input v-model="editFormData.contactPhone" type="text" class="w-full mt-0.5 bg-transparent border-0 border-b border-stone-200 rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0 focus:border-brand-400" style="height:24px;">
                         </div>
                       </div>
                       <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
@@ -1227,7 +1227,7 @@
                         </div>
                         <div class="min-w-0 flex-1">
                           <p class="text-xs text-stone-400">配送時間</p>
-                          <input v-model="editFormData.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="g-input mt-1 w-full">
+                          <input v-model="editFormData.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="w-full mt-0.5 bg-transparent border-0 border-b border-stone-200 rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0 focus:border-brand-400" style="height:28px;">
                         </div>
                       </div>
                       <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
@@ -1236,7 +1236,7 @@
                         </div>
                         <div class="min-w-0 flex-1">
                           <p class="text-xs text-stone-400">地址</p>
-                          <input v-model="editFormData.address" type="text" class="g-input mt-1 w-full" placeholder="請輸入配送地址">
+                          <input v-model="editFormData.address" type="text" class="w-full mt-0.5 bg-transparent border-0 border-b border-stone-200 rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0 focus:border-brand-400" style="height:24px;" placeholder="請輸入配送地址">
                         </div>
                       </div>
                       <div class="flex items-start gap-3 px-4 py-3 border-b border-stone-100">
@@ -1250,16 +1250,16 @@
                               <i class="fas fa-lock text-xs"></i>{{ detailModalOrder.resource }}（不可修改）
                             </span>
                           </div>
-                          <div v-else class="mt-2 flex flex-wrap gap-2">
-                            <label :class="['flex items-center gap-2 px-3 py-1.5 rounded-md border cursor-pointer transition select-none text-sm', editFormData.resource === 'Line' ? 'bg-brand-50 border-brand-300 text-brand-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
+                          <div v-else class="mt-1.5 flex flex-nowrap gap-2 overflow-x-auto pb-1">
+                            <label :class="['flex-none inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border cursor-pointer transition select-none text-xs whitespace-nowrap', editFormData.resource === 'Line' ? 'bg-brand-50 border-brand-300 text-brand-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
                               <input type="radio" v-model="editFormData.resource" value="Line" class="accent-brand-600 w-3.5 h-3.5">
                               <span>Line</span>
                             </label>
-                            <label :class="['flex items-center gap-2 px-3 py-1.5 rounded-md border cursor-pointer transition select-none text-sm', editFormData.resource === '電話' ? 'bg-brand-50 border-brand-300 text-brand-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
+                            <label :class="['flex-none inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border cursor-pointer transition select-none text-xs whitespace-nowrap', editFormData.resource === '電話' ? 'bg-brand-50 border-brand-300 text-brand-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
                               <input type="radio" v-model="editFormData.resource" value="電話" class="accent-brand-600 w-3.5 h-3.5">
                               <span>電話</span>
                             </label>
-                            <label :class="['flex items-center gap-2 px-3 py-1.5 rounded-md border cursor-pointer transition select-none text-sm', editFormData.resource === '傳真' ? 'bg-brand-50 border-brand-300 text-brand-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
+                            <label :class="['flex-none inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border cursor-pointer transition select-none text-xs whitespace-nowrap', editFormData.resource === '傳真' ? 'bg-brand-50 border-brand-300 text-brand-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
                               <input type="radio" v-model="editFormData.resource" value="傳真" class="accent-brand-600 w-3.5 h-3.5">
                               <span>傳真</span>
                             </label>
@@ -1308,34 +1308,47 @@
                       <button @click="addNewCustomerOrderInline" class="g-btn g-btn-primary g-btn-sm"><i class="fas fa-plus"></i>新增訂購人</button>
                     </div>
                     <div v-if="groupOrders.length === 0 && !editingNewCustomerOrder" class="text-center py-10 text-stone-400 text-sm">暫無訂單數據</div>
-                    <div class="space-y-2">
+                    <div class="space-y-3">
                       <div v-for="(customerOrder, idx) in groupOrders.slice().sort((a, b) => (b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0) - (a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0))" :key="customerOrder.id" class="overflow-hidden" style="border:1px solid var(--glass-border-subtle);border-radius:var(--glass-radius-xs);">
                         <!-- 唯讀 -->
                         <template v-if="editingCustomerOrderId !== customerOrder.id">
                           <!-- 訂購人標題列 -->
-                          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-b gap-2" style="background:var(--glass-bg-light);border-color:var(--glass-border-subtle);">
-                            <div class="flex items-center justify-between sm:justify-start gap-2 min-w-0">
-                              <div class="flex items-center gap-2 min-w-0">
+                          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-b gap-2 bg-stone-50/70 border-stone-100">
+                            <div class="flex items-center justify-between sm:justify-start gap-2 min-w-0 flex-1">
+                              <div class="flex items-center gap-2 min-w-0 flex-wrap">
                                 <span class="text-xs font-bold text-stone-400 bg-stone-200/60 px-1.5 py-0.5 rounded flex-shrink-0">#{{ idx + 1 }}</span>
                                 <span class="font-bold text-stone-800 text-sm">{{ customerOrder.customerName }}</span>
                                 <span v-if="customerOrder.customerUnit" class="text-xs text-stone-400 bg-stone-200/60 px-2 py-0.5 rounded-md flex-shrink-0">{{ customerOrder.customerUnit }}</span>
                               </div>
-                              <span class="text-sm font-bold text-stone-700 flex-shrink-0 sm:hidden">${{ (customerOrder.totalAmount || 0).toLocaleString() }}</span>
+                              <span class="text-xl font-black text-red-700 flex-shrink-0 sm:hidden">${{ (customerOrder.totalAmount || 0).toLocaleString() }}</span>
                             </div>
-                            <div class="flex items-center gap-1.5">
-                              <span class="hidden sm:inline text-sm font-bold text-stone-700 mr-1">${{ (customerOrder.totalAmount || 0).toLocaleString() }}</span>
+                            <div class="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
+                              <span class="hidden sm:inline text-xl font-black text-red-700 mr-1">${{ (customerOrder.totalAmount || 0).toLocaleString() }}</span>
                               <button @click="printCustomerViaNas(customerOrder)" :disabled="nasPrintingId === customerOrder.id" class="g-btn g-btn-glass g-btn-sm flex-1 sm:flex-none justify-center" title="透過 NAS 列印出貨單"><i class="fas fa-print mr-1"></i>{{ nasPrintingId === customerOrder.id ? '傳送中…' : '出貨單' }}</button>
                               <button @click="startInlineEditCustomerOrder(customerOrder)" class="g-btn g-btn-glass g-btn-sm flex-1 sm:flex-none justify-center" title="編輯">編輯</button>
                               <button @click="deleteCustomerOrder(customerOrder.id, idx)" class="g-btn g-btn-danger g-btn-sm flex-1 sm:flex-none justify-center" title="刪除">刪除</button>
                             </div>
                           </div>
                           <!-- 品項列表 -->
-                          <div class="px-4 py-2">
-                            <div v-for="(item, iidx) in customerOrder.items" :key="iidx" class="flex justify-between items-center py-1.5 border-b border-stone-50 last:border-b-0 hover:bg-stone-50 transition">
-                              <span class="text-sm text-stone-600">{{ item.itemName }}</span>
-                              <span class="text-sm font-semibold text-stone-700 tabular-nums">× {{ item.qty }}</span>
+                          <div class="px-4 py-3 bg-white">
+                            <div v-if="customerOrder.items && customerOrder.items.length" class="bg-white rounded-lg border border-stone-100 overflow-hidden">
+                              <div class="grid grid-cols-2 divide-x divide-stone-100">
+                                <div class="flex flex-col divide-y divide-stone-50">
+                                  <div v-for="(item, iidx) in customerOrder.items.filter((_, i) => i % 2 === 0)" :key="'left-' + iidx" class="flex items-center justify-between text-sm px-3 py-1.5">
+                                    <span class="text-stone-600">{{ item.itemName }}</span>
+                                    <span class="font-bold text-stone-800 tabular-nums ml-3">×{{ item.qty }}</span>
+                                  </div>
+                                </div>
+                                <div class="flex flex-col divide-y divide-stone-50">
+                                  <div v-for="(item, iidx) in customerOrder.items.filter((_, i) => i % 2 === 1)" :key="'right-' + iidx" class="flex items-center justify-between text-sm px-3 py-1.5">
+                                    <span class="text-stone-600">{{ item.itemName }}</span>
+                                    <span class="font-bold text-stone-800 tabular-nums ml-3">×{{ item.qty }}</span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                            <div v-if="customerOrder.note" class="mt-2 mb-1 text-xs text-stone-400 flex items-start gap-1.5"><i class="fas fa-comment-dots mt-0.5"></i>{{ customerOrder.note }}</div>
+                            <div v-else class="text-sm text-stone-400 italic">無商品項目</div>
+                            <div v-if="customerOrder.note" class="mt-2 mb-1 text-xs text-stone-400 flex items-start gap-1.5"><i class="fas fa-comment-dots mt-0.5"></i><span>{{ customerOrder.note }}</span></div>
                           </div>
                         </template>
                         <!-- 編輯中 -->
@@ -1425,10 +1438,20 @@
                     <div class="flex justify-end mb-4">
                       <button @click="printStockViaNas(detailModalOrder)" :disabled="nasPrintingId === detailModalOrder.id" class="g-btn g-btn-glass g-btn-sm"><i class="fas fa-print mr-1"></i>{{ nasPrintingId === detailModalOrder.id ? '傳送中…' : '列印備貨統計' }}</button>
                     </div>
-                    <div class="overflow-hidden" style="border:1px solid var(--glass-border-subtle);border-radius:var(--glass-radius-xs);">
-                      <div v-for="stock in groupStock" :key="stock.name" class="flex items-center justify-between px-4 py-3 border-b border-stone-100/50 last:border-b-0 hover:bg-white/40 transition">
-                        <span class="text-sm text-stone-700">{{ stock.name }}</span>
-                        <span class="text-sm font-bold text-stone-900 tabular-nums">{{ stock.quantity }}</span>
+                    <div class="bg-white rounded-lg border border-stone-100 overflow-hidden">
+                      <div class="grid grid-cols-2 divide-x divide-stone-100">
+                        <div class="flex flex-col divide-y divide-stone-50">
+                          <div v-for="(stock, idx) in groupStock.filter((_, i) => i % 2 === 0)" :key="'left-' + idx" class="flex items-center justify-between text-sm px-3 py-1.5">
+                            <span class="text-stone-600">{{ stock.name }}</span>
+                            <span class="font-bold text-stone-800 tabular-nums ml-3">{{ stock.quantity }}</span>
+                          </div>
+                        </div>
+                        <div class="flex flex-col divide-y divide-stone-50">
+                          <div v-for="(stock, idx) in groupStock.filter((_, i) => i % 2 === 1)" :key="'right-' + idx" class="flex items-center justify-between text-sm px-3 py-1.5">
+                            <span class="text-stone-600">{{ stock.name }}</span>
+                            <span class="font-bold text-stone-800 tabular-nums ml-3">{{ stock.quantity }}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
