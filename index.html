@@ -535,9 +535,14 @@
                     <p class="text-xs text-stone-400">{{ account.accountId }}</p>
                   </div>
                 </div>
-                <span :class="['g-badge', account.role === 'admin' ? 'g-badge-approved' : 'g-badge-expired']">
-                  {{ account.role === 'admin' ? '管理者' : '一般使用者' }}
-                </span>
+                <div class="flex flex-col items-end gap-1.5">
+                  <span :class="['g-badge', account.isAuthorized !== false ? 'g-badge-approved' : 'g-badge-pending']">
+                    {{ account.isAuthorized !== false ? '已授權' : '待授權' }}
+                  </span>
+                  <span :class="['g-badge', account.role === 'admin' ? 'g-badge-approved' : 'g-badge-expired']">
+                    {{ account.role === 'admin' ? '管理者' : '一般使用者' }}
+                  </span>
+                </div>
               </div>
               
               <div class="space-y-2 mb-4 text-sm">
@@ -1966,6 +1971,14 @@
               <option value="admin">管理者</option>
             </select>
           </div>
+
+          <div>
+            <label class="g-label mb-2 block">登入授權 <span class="text-red-500">*</span></label>
+            <select v-model="accountForm.isAuthorized" class="g-select w-full" style="height:44px;">
+              <option :value="true">已授權，可登入</option>
+              <option :value="false">待授權，不可登入</option>
+            </select>
+          </div>
         </div>
         
         <div class="flex gap-3 mt-8">
@@ -2534,6 +2547,44 @@
         // 用戶資料
         const user = ref(null);
         const loginForm = ref({ id: '', pass: '' });
+        const UNAUTHORIZED_MESSAGE = '此帳號尚未完成管理者授權，請聯絡管理者於後台「帳號管理」開通後再登入。';
+        const normalizeAccountRecord = (account) => ({
+          ...account,
+          role: account?.role || 'user',
+          isAuthorized: account?.isAuthorized !== false,
+        });
+        const clearLoginSession = () => {
+          user.value = null;
+          currentView.value = 'login';
+          sessionStorage.removeItem('user');
+          sessionStorage.removeItem('currentView');
+          sessionStorage.removeItem('adminTab');
+        };
+        const rejectUnauthorizedAccess = async (message = UNAUTHORIZED_MESSAGE) => {
+          clearLoginSession();
+          try { await signOut(auth); } catch (_) {}
+          showAlert(message, 'error');
+        };
+        const finishLogin = async (rawAccount, successMessage) => {
+          const accData = normalizeAccountRecord(rawAccount);
+          user.value = { id: accData.accountId, name: accData.name || accData.accountId, role: accData.role, ...accData };
+          currentView.value = 'admin';
+          sessionStorage.setItem('user', JSON.stringify(user.value));
+          sessionStorage.setItem('currentView', 'admin');
+          if (successMessage) showAlert(successMessage, 'success');
+
+          if (user.value.role === 'admin') {
+            await fetchAdminAccounts();
+            await checkAndExpireOrders();
+            await fetchReviewList();
+            startReviewListener();
+            adminTab.value = adminData.value.reviewList.length > 0 ? 'review' : 'details';
+          } else {
+            adminTab.value = 'details';
+            await fetchOrderDetails();
+          }
+          sessionStorage.setItem('adminTab', adminTab.value);
+        };
         
         // Admin 資料
         const adminData = ref({
@@ -2909,7 +2960,8 @@
           name: '',
           phone: '',
           email: '',
-          role: 'user'
+          role: 'user',
+          isAuthorized: true
         });
         
         // 產品管理
@@ -3372,7 +3424,7 @@
           try {
             const q = query(collection(db, "Accounts"));
             const querySnapshot = await getDocs(q);
-            adminData.value.accountsList = querySnapshot.docs.map(doc => ({
+            adminData.value.accountsList = querySnapshot.docs.map(doc => normalizeAccountRecord({
               id: doc.id,
               ...doc.data()
             }));
@@ -3393,7 +3445,8 @@
             name: '',
             phone: '',
             email: '',
-            role: 'user'
+            role: 'user',
+            isAuthorized: true
           };
           showAccountModal.value = true;
         };
@@ -3407,7 +3460,8 @@
             name: account.name || '',
             phone: account.phone || '',
             email: account.email || '',
-            role: account.role || 'user'
+            role: account.role || 'user',
+            isAuthorized: account.isAuthorized !== false
           };
           showAccountModal.value = true;
         };
@@ -3422,7 +3476,8 @@
             name: '',
             phone: '',
             email: '',
-            role: 'user'
+            role: 'user',
+            isAuthorized: true
           };
         };
         
@@ -3446,6 +3501,7 @@
               phone: accountForm.value.phone,
               email: accountForm.value.email,
               role: accountForm.value.role || 'user',
+              isAuthorized: accountForm.value.isAuthorized !== false,
               updatedAt: new Date().toISOString()
             };
             
@@ -3577,41 +3633,34 @@
 
             let accData;
             if (snap.empty) {
-              // 尚未註冊，自動建立帳號
+              // 尚未註冊，自動建立帳號，但預設待管理者授權
               const newAcc = {
                 accountId:  email.split('@')[0],
                 email,
                 name:       gUser.displayName || email.split('@')[0],
-                phone:      '',
+                phone:      gUser.phoneNumber || '',
                 password:   '',
                 role:       'user',
+                isAuthorized: false,
+                googleUid:  gUser.uid || '',
+                photoURL:   gUser.photoURL || '',
+                authProvider: 'google',
                 createdAt:  new Date().toISOString(),
                 updatedAt:  new Date().toISOString(),
               };
               const docRef = await addDoc(collection(db, 'Accounts'), newAcc);
-              accData = { id: docRef.id, ...newAcc };
-              showAlert('已自動建立帳號，歡迎！', 'success');
+              accData = normalizeAccountRecord({ id: docRef.id, ...newAcc });
+              await rejectUnauthorizedAccess('已建立 Google 帳號資料，但尚未取得管理者授權，請通知管理者至「帳號管理」開通權限。');
+              return;
             } else {
-              accData = { id: snap.docs[0].id, ...snap.docs[0].data() };
+              accData = normalizeAccountRecord({ id: snap.docs[0].id, ...snap.docs[0].data() });
             }
 
-            user.value = { id: accData.accountId, name: accData.name, role: accData.role || 'user', ...accData };
-            currentView.value = 'admin';
-            sessionStorage.setItem('user', JSON.stringify(user.value));
-            sessionStorage.setItem('currentView', 'admin');
-            showAlert(`歡迎回來，${user.value.name}！`, 'success');
-
-            if (user.value.role === 'admin') {
-              await fetchAdminAccounts();
-              await checkAndExpireOrders();
-              await fetchReviewList();
-              startReviewListener();
-              adminTab.value = adminData.value.reviewList.length > 0 ? 'review' : 'details';
-            } else {
-              adminTab.value = 'details';
-              fetchOrderDetails();
+            if (accData.isAuthorized === false) {
+              await rejectUnauthorizedAccess();
+              return;
             }
-            sessionStorage.setItem('adminTab', adminTab.value);
+            await finishLogin(accData, `歡迎回來，${accData.name || accData.accountId}！`);
           } catch (e) {
             if (e.code !== 'auth/popup-closed-by-user') {
               showAlert('Google 登入失敗：' + e.message, 'error');
@@ -3682,29 +3731,13 @@
               if (snap.empty) {
                 showAlert('帳號或密碼錯誤', 'error');
               } else {
-                const accData = snap.docs[0].data();
+                const accData = normalizeAccountRecord({ id: snap.docs[0].id, ...snap.docs[0].data() });
                 if (accData.password === loginForm.value.pass) {
-                  user.value = { id: accData.accountId, name: accData.name || accData.accountId, role: accData.role || 'user', ...accData };
-                  currentView.value = 'admin';
-                  sessionStorage.setItem('user', JSON.stringify(user.value));
-                  sessionStorage.setItem('currentView', 'admin');
-                  showAlert('登入成功！', 'success');
-                  if (user.value.role === 'admin') {
-                    await fetchAdminAccounts();
-                    await checkAndExpireOrders();
-                    await fetchReviewList();
-                    startReviewListener();
-                    if (adminData.value.reviewList.length > 0) {
-                      adminTab.value = 'review';
-                    } else {
-                      adminTab.value = 'details';
-                    }
-                    sessionStorage.setItem('adminTab', adminTab.value);
-                  } else {
-                    adminTab.value = 'details';
-                    sessionStorage.setItem('adminTab', adminTab.value);
-                    fetchOrderDetails();
+                  if (accData.isAuthorized === false) {
+                    await rejectUnauthorizedAccess();
+                    return;
                   }
+                  await finishLogin(accData, '登入成功！');
                 } else {
                   showAlert('帳號或密碼錯誤', 'error');
                 }
@@ -3719,13 +3752,13 @@
         };
 
         // 登出
-        const logout = () => {
+        const logout = async () => {
           if (reviewUnsubscribe.value) {
             reviewUnsubscribe.value();
             reviewUnsubscribe.value = null;
           }
-          user.value = null;
-          currentView.value = 'login';
+          clearLoginSession();
+          try { await signOut(auth); } catch (_) {}
           sessionStorage.clear();
           loginForm.value = { id: '', pass: '' };
           showAlert('已登出', 'info');
@@ -5185,7 +5218,7 @@
         });
 
         // 初始化
-        onMounted(() => {
+        onMounted(async () => {
           const savedUser = sessionStorage.getItem('user');
           const savedView = sessionStorage.getItem('currentView');
           const savedTab = sessionStorage.getItem('adminTab');
@@ -5205,6 +5238,26 @@
             currentView.value = savedView;
             
             if (currentView.value === 'admin') {
+              if (user.value?.id && user.value.id !== 'ADMIN') {
+                try {
+                  const accountSnap = await getDocs(query(collection(db, 'Accounts'), where('accountId', '==', user.value.id)));
+                  if (accountSnap.empty) {
+                    clearLoginSession();
+                    return;
+                  }
+                  const latestAccount = normalizeAccountRecord({ id: accountSnap.docs[0].id, ...accountSnap.docs[0].data() });
+                  if (latestAccount.isAuthorized === false) {
+                    await rejectUnauthorizedAccess();
+                    return;
+                  }
+                  user.value = { id: latestAccount.accountId, name: latestAccount.name || latestAccount.accountId, role: latestAccount.role, ...latestAccount };
+                  sessionStorage.setItem('user', JSON.stringify(user.value));
+                } catch (e) {
+                  console.error('還原登入狀態失敗:', e);
+                  clearLoginSession();
+                  return;
+                }
+              }
               // 恢復上次的標籤頁
               if (savedTab) {
                 adminTab.value = savedTab;
