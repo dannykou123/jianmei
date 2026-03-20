@@ -400,6 +400,14 @@
             </svg>
             {{ loading ? '登入中...' : '使用 Google 帳號登入' }}
           </button>
+          <!-- 本機開發後門：只在 file:// 或 localhost 環境顯示 -->
+          <div v-if="isDevEnv" class="mt-3 pt-3 border-t border-dashed border-amber-300">
+            <button type="button" @click="handleDevLogin"
+              class="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-dashed border-amber-400 rounded-xl bg-amber-50 hover:bg-amber-100 transition font-medium text-amber-700 text-sm">
+              <i class="fas fa-wrench text-amber-500"></i>
+              🛠 開發模式登入（本機測試用）
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -799,12 +807,8 @@
             </button>
           </div>
 
-          <div v-if="loading" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
-          <div v-else-if="adminData.detailsList.length === 0" class="text-center py-20 g-card">
-            <i class="fas fa-inbox text-5xl mb-4 text-stone-200"></i>
-            <p class="font-bold text-stone-400">沒有符合條件的訂單</p>
-          </div>
-          <div v-else>
+          <div v-if="loading && !detailsHasEverLoaded" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
+          <template v-else>
             <!-- 批次匯出按鈕 -->
             <div class="mb-3 flex flex-wrap gap-2 items-center justify-center">
               <button @click="batchExportStock" :disabled="selectedOrderIds.length === 0 || nasPrintingId === 'batch'" class="g-btn g-btn-primary flex-1 sm:flex-none">
@@ -911,14 +915,16 @@
                   </span>
                 </div>
                 <div class="flex items-center gap-1">
-                  <button @click="goToFirstDetailsPage" :disabled="detailsPage === 1" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">«</button>
-                  <button @click="goToPrevDetailsPage" :disabled="detailsPage === 1" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">‹</button>
-                  <button @click="goToNextDetailsPage" :disabled="detailsPage === totalDetailsPages" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">›</button>
-                  <button @click="goToLastDetailsPage" :disabled="detailsPage === totalDetailsPages" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">»</button>
+                  <i v-if="loading" class="fas fa-circle-notch fa-spin text-stone-300 mr-1" style="font-size:13px;"></i>
+                  <button @click="goToFirstDetailsPage" :disabled="detailsPage === 1 || loading" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">«</button>
+                  <button @click="goToPrevDetailsPage" :disabled="detailsPage === 1 || loading" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">‹</button>
+                  <button @click="goToNextDetailsPage" :disabled="detailsPage === totalDetailsPages || loading" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">›</button>
+                  <button @click="goToLastDetailsPage" :disabled="detailsPage === totalDetailsPages || loading" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">»</button>
                 </div>
               </div>
               <!-- 表格 -->
-              <div class="overflow-x-auto border-t border-stone-100/60">
+              <template v-if="adminData.detailsList.length > 0">
+              <div class="overflow-x-auto border-t border-stone-100/60" :style="loading ? 'opacity:0.5;transition:opacity 0.15s' : 'opacity:1;transition:opacity 0.15s'">
               <table class="g-table">
                 <thead>
                   <tr>
@@ -992,8 +998,13 @@
                 </tbody>
               </table>
               </div>
+              </template>
+              <div v-else class="text-center py-14 border-t border-stone-100/60">
+                <i class="fas fa-inbox text-4xl mb-3 text-stone-200"></i>
+                <p class="font-bold text-stone-400 text-sm">沒有符合條件的訂單</p>
+              </div>
             </div>
-          </div>
+          </template>
 
           <!-- 訂單狀態修改 Modal -->
           <div v-if="statusEditOrder" class="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" style="z-index:2147483646;" @click.self="statusEditOrder = null">
@@ -3081,6 +3092,7 @@
         const detailsPage = ref(1);
         const detailsPageSize = ref(parseInt(localStorage.getItem('detailsPageSize') || '10'));
         const detailsTotalCount = ref(0);
+        const detailsHasEverLoaded = ref(false); // 第一次載入完成後設為 true，防止切換篩選時出現全螢幕 spinner
         const detailsStart = ref('');
         const detailsEnd = ref('');
         const detailsShouldAutoSelectApproved = ref(false);
@@ -3393,19 +3405,21 @@
           return sortedDetailsList.value.slice(start, start + detailsPageSize.value);
         });
 
-        const fetchOrderDetailsLocal = async () => {
+        const fetchOrderDetailsLocal = async (ver) => {
           const localQuery = query(collection(db, 'GroupOrders'), ...getDetailsBaseConstraints(), orderBy('deliveryTime', 'desc'));
           const querySnapshot = await getDocs(localQuery);
+          if (ver !== detailsFetchVersion) return; // 版本過舊，丟棄結果
           const groups = mapGroupDocs(querySnapshot.docs);
           const missingGroupIds = applyDetailsList(groups);
           if (missingGroupIds.length) backfillMissingGroupTotals(missingGroupIds);
           detailsTotalCount.value = groups.length;
         };
 
-        const fetchOrderDetailsRemote = async (navigation = 'reset') => {
+        const fetchOrderDetailsRemote = async (navigation = 'reset', ver) => {
           if (navigation === 'reset' || navigation === 'first' || navigation === 'last' || !detailsTotalCount.value) {
             await refreshDetailsCount();
           }
+          if (ver !== detailsFetchVersion) return; // 版本過舊，丟棄結果
           if (navigation === 'last' && detailsTotalCount.value === 0) {
             applyDetailsList([]);
             detailsPage.value = 1;
@@ -3413,6 +3427,7 @@
             return;
           }
           const querySnapshot = await getDocs(buildDetailsRemoteQuery(navigation));
+          if (ver !== detailsFetchVersion) return; // 版本過舊，丟棄結果
           const docs = querySnapshot.docs;
           const groups = mapGroupDocs(docs);
           const missingGroupIds = applyDetailsList(groups);
@@ -3433,6 +3448,7 @@
         };
 
         let detailsFetchTimer = null;
+        let detailsFetchVersion = 0; // 每次新 fetch 遞增，用來拋棄過時的並行 fetch 結果
         const scheduleDetailsFetch = (delay = 120) => {
           if (detailsFetchTimer) clearTimeout(detailsFetchTimer);
           detailsFetchTimer = setTimeout(() => {
@@ -3442,6 +3458,7 @@
         };
 
         const fetchOrderDetails = async (navigation = 'reset') => {
+          const myVersion = ++detailsFetchVersion;
           loading.value = true;
           try {
             if (isDetailsLocalMode.value) {
@@ -3452,16 +3469,20 @@
                 else if (navigation === 'last') detailsPage.value = totalDetailsPages.value;
               } else {
                 detailsPage.value = 1;
-                await fetchOrderDetailsLocal();
+                await fetchOrderDetailsLocal(myVersion);
               }
             } else {
-              await fetchOrderDetailsRemote(navigation);
+              await fetchOrderDetailsRemote(navigation, myVersion);
             }
           } catch (error) {
+            if (myVersion !== detailsFetchVersion) return; // 過時的 fetch，忽略錯誤
             console.error('獲取訂單詳情錯誤:', error);
             showAlert('獲取失敗：' + error.message, 'error');
           } finally {
-            loading.value = false;
+            if (myVersion === detailsFetchVersion) {
+              loading.value = false;
+              detailsHasEverLoaded.value = true;
+            }
           }
         };
 
@@ -3796,6 +3817,32 @@
 
         // 登入處理
         // Google 登入
+        // 偵測本機開發環境（file:// 或 localhost）
+        const isDevEnv = computed(() => {
+          const proto = window.location.protocol;
+          const host  = window.location.hostname;
+          return proto === 'file:' || host === 'localhost' || host === '127.0.0.1';
+        });
+
+        // 本機開發後門登入（跳過 Firebase Auth，僅供本機測試）
+        const handleDevLogin = async () => {
+          loading.value = true;
+          try {
+            const devAccount = {
+              accountId:    'dev-admin',
+              name:         '開發者',
+              email:        'dev@localhost',
+              phone:        '',
+              role:         'admin',
+              isAuthorized: true,
+              authProvider: 'dev',
+            };
+            await finishLogin(devAccount, '⚠ 開發模式：已以管理員身份登入（僅本機）');
+          } finally {
+            loading.value = false;
+          }
+        };
+
         const handleGoogleLogin = async () => {
           loading.value = true;
           try {
@@ -4651,6 +4698,7 @@
             fetchLabelOrders();
           } else if (newTab === 'details') {
             clearDetailsFilter();
+            detailsHasEverLoaded.value = false; // 重置，讓進入訂單管理時顯示初始 spinner
             scheduleDetailsFetch(0);
           }
         });
@@ -5358,6 +5406,7 @@
           printAllFilteredStock,
           sortByField,
           detailsTotalCountDisplay,
+          detailsHasEverLoaded,
           goToFirstDetailsPage,
           goToPrevDetailsPage,
           goToNextDetailsPage,
@@ -5466,6 +5515,8 @@
           saveEditCreateCustomer,
           saveCreateGroupOrder,
           showAlert,
+          isDevEnv,
+          handleDevLogin,
           handleGoogleLogin,
           logout,
           fetchAdminAccounts,
