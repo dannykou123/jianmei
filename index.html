@@ -2685,6 +2685,61 @@
           });
         };
 
+        const getOrderTotalAmount = (orderData, priceMap = null) => {
+          if (typeof orderData?.totalAmount === 'number' && Number.isFinite(orderData.totalAmount)) {
+            return orderData.totalAmount;
+          }
+          return (orderData?.items || []).reduce((sum, item) => {
+            const qty = parseInt(item.qty) || 0;
+            if (typeof item.subtotal === 'number' && Number.isFinite(item.subtotal)) {
+              return sum + item.subtotal;
+            }
+            const directPrice = typeof item.price === 'number' && Number.isFinite(item.price) ? item.price : null;
+            const mappedPrice = priceMap ? (priceMap[item.itemName] || 0) : 0;
+            return sum + (directPrice ?? mappedPrice) * qty;
+          }, 0);
+        };
+
+        const setGroupTotalAmount = (groupId, totalAmount) => {
+          groupTotalAmountMap.value = { ...groupTotalAmountMap.value, [groupId]: totalAmount || 0 };
+        };
+
+        const syncGroupTotalAmount = async (groupId, totalAmount) => {
+          setGroupTotalAmount(groupId, totalAmount);
+          if (detailModalOrder.value?.id === groupId) {
+            detailModalOrder.value = { ...detailModalOrder.value, totalAmount };
+          }
+          await updateDoc(doc(db, 'GroupOrders', groupId), { totalAmount });
+        };
+
+        const seedGroupTotalsFromGroups = (groups) => {
+          const nextTotals = { ...groupTotalAmountMap.value };
+          const missingGroupIds = [];
+          groups.forEach(group => {
+            if (typeof group.totalAmount === 'number' && Number.isFinite(group.totalAmount)) {
+              nextTotals[group.id] = group.totalAmount;
+            } else {
+              missingGroupIds.push(group.id);
+            }
+          });
+          groupTotalAmountMap.value = nextTotals;
+          return missingGroupIds;
+        };
+
+        const backfillMissingGroupTotals = async (groupIds) => {
+          for (let i = 0; i < groupIds.length; i += 5) {
+            const chunk = groupIds.slice(i, i + 5);
+            await Promise.all(chunk.map(async (groupId) => {
+              try {
+                const totalAmount = await calculateOrderTotal(groupId);
+                await updateDoc(doc(db, 'GroupOrders', groupId), { totalAmount });
+              } catch (error) {
+                console.error('補算訂單總金額失敗:', groupId, error);
+              }
+            }));
+          }
+        };
+
         const saveCreateGroupOrder = async () => {
           createOrderSubmitted.value = true;
           const f = createOrderForm.value;
@@ -2862,7 +2917,7 @@
             showAlert('已更新', 'success');
             // 重新計算總金額
             const total = groupOrders.value.reduce((s, o) => s + (o.totalAmount || 0), 0);
-            groupTotalAmountMap.value = { ...groupTotalAmountMap.value, [detailModalOrder.value.id]: total };
+            await syncGroupTotalAmount(detailModalOrder.value.id, total);
           } catch (e) { showAlert('儲存失敗：' + e.message, 'error'); }
           finally { loading.value = false; }
         };
@@ -2874,7 +2929,7 @@
             await deleteDoc(doc(db, 'Orders', orderId));
             groupOrders.value.splice(idx, 1);
             const total = groupOrders.value.reduce((s, o) => s + (o.totalAmount || 0), 0);
-            groupTotalAmountMap.value = { ...groupTotalAmountMap.value, [detailModalOrder.value.id]: total };
+            await syncGroupTotalAmount(detailModalOrder.value.id, total);
             editingCustomerOrderId.value = null;
             showAlert('已刪除', 'success');
           } catch (e) { showAlert('刪除失敗：' + e.message, 'error'); }
@@ -2911,8 +2966,7 @@
             });
             groupOrders.value.push({ id: newDocRef.id, customerName: data.customerName, customerUnit: data.customerUnit, note: data.note, items: enrichedItems, totalAmount: newTotal });
             const total = groupOrders.value.reduce((s, o) => s + (o.totalAmount || 0), 0);
-            groupTotalAmountMap.value = { ...groupTotalAmountMap.value, [detailModalOrder.value.id]: total };
-            await updateDoc(doc(db, 'GroupOrders', detailModalOrder.value.id), { totalAmount: total });
+            await syncGroupTotalAmount(detailModalOrder.value.id, total);
             editingNewCustomerOrder.value = false;
             showAlert('已新增', 'success');
           } catch (e) { showAlert('新增失敗：' + e.message, 'error'); }
@@ -3816,11 +3870,9 @@
               id: doc.id,
               ...doc.data()
             }));
-            
-            // 自动计算每个订单的总金额
-            for (const order of adminData.value.reviewList) {
-              await calculateOrderTotal(order.id);
-            }
+
+            const missingGroupIds = seedGroupTotalsFromGroups(adminData.value.reviewList);
+            if (missingGroupIds.length) backfillMissingGroupTotals(missingGroupIds);
           } catch (error) {
             console.error('獲取待審核列表錯誤:', error);
             showAlert('獲取失敗', 'error');
@@ -3980,10 +4032,11 @@
             const querySnapshot = await getDocs(q);
             const orders = querySnapshot.docs.map(doc => {
               const orderData = doc.data();
-              let orderTotal = 0;
+              let orderTotal = getOrderTotalAmount(orderData, priceMap);
               
               // 計算每個訂單的金額
-              if (orderData.items && Array.isArray(orderData.items)) {
+              if ((!orderData.totalAmount || !Number.isFinite(orderData.totalAmount)) && orderData.items && Array.isArray(orderData.items)) {
+                orderTotal = 0;
                 orderData.items.forEach(item => {
                   const price = priceMap[item.itemName] || 0;
                   const qty = parseInt(item.qty) || 0;
@@ -4028,17 +4081,6 @@
         // 計算單個訂單的總金額
         const calculateOrderTotal = async (groupId) => {
           try {
-            // 確保產品列表已載入
-            if (adminData.value.itemsList.length === 0) {
-              await fetchAdminItems();
-            }
-            
-            // 建立價格映射表
-            const priceMap = {};
-            adminData.value.itemsList.forEach(item => {
-              priceMap[item.name] = item.price || 0;
-            });
-            
             const q = query(
               collection(db, "Orders"),
               where("groupOrderId", "==", groupId)
@@ -4047,20 +4089,15 @@
             
             let totalAmount = 0;
             querySnapshot.docs.forEach(doc => {
-              const orderData = doc.data();
-              if (orderData.items && Array.isArray(orderData.items)) {
-                orderData.items.forEach(item => {
-                  const price = priceMap[item.itemName] || 0;
-                  const qty = parseInt(item.qty) || 0;
-                  totalAmount += price * qty;
-                });
-              }
+              totalAmount += getOrderTotalAmount(doc.data());
             });
             
             // 儲存總金額
-            groupTotalAmountMap.value = { ...groupTotalAmountMap.value, [groupId]: totalAmount };
+            setGroupTotalAmount(groupId, totalAmount);
+            return totalAmount;
           } catch (error) {
             console.error('計算訂單總金額錯誤:', error);
+            return 0;
           }
         };
 
@@ -4316,11 +4353,9 @@
               if (deliveryDiff !== 0) return deliveryDiff;
               return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
             });
-            
-            // 自动计算每个订单的总金额
-            for (const order of adminData.value.detailsList) {
-              await calculateOrderTotal(order.id);
-            }
+
+            const missingGroupIds = seedGroupTotalsFromGroups(adminData.value.detailsList);
+            if (missingGroupIds.length) backfillMissingGroupTotals(missingGroupIds);
           } catch (error) {
             console.error('獲取訂單詳情錯誤:', error);
             showAlert('獲取失敗', 'error');
