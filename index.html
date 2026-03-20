@@ -2598,6 +2598,7 @@
         // 新訂單通知
         const newOrderNotif = ref({ show: false, orders: [] });
         const reviewUnsubscribe = ref(null);
+        const reviewHasLoaded = ref(false); // 第一次 snapshot 到達前顯示 spinner
         
         // 用戶資料
         const user = ref(null);
@@ -3892,6 +3893,7 @@
             reviewUnsubscribe.value();
             reviewUnsubscribe.value = null;
           }
+          reviewHasLoaded.value = false; // 重置，等待新的 snapshot
           let initialized = false;
           const q = query(
             collection(db, "GroupOrders"),
@@ -3903,6 +3905,7 @@
             adminData.value.reviewList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
             if (!initialized) {
               initialized = true;
+              reviewHasLoaded.value = true; // 第一次資料到達，可以顯示畫面
               return;
             }
             // 偵測新增訂單
@@ -5501,6 +5504,8 @@
                 // fetchReviewList handled by startReviewListener
               } else if (adminTab.value === 'details') {
                 fetchOrderDetails(); // 自動查詢當天的 approved 訂單
+              } else if (adminTab.value === 'contacts') {
+                fetchFrequentContacts();
               } else if (adminTab.value === 'stock') {
                 fetchStockList();
               } else if (adminTab.value === 'labels') {
@@ -5520,6 +5525,7 @@
           user,
           adminData,
           newOrderNotif,
+          reviewHasLoaded,
           detailsStatus,
           detailsSort,
           detailsKeyword,
