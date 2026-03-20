@@ -200,6 +200,13 @@
     }
     .g-btn-success:hover { background: rgba(34,197,94,0.15); }
 
+    .g-btn-success-solid {
+      background: #166534;
+      border: 1px solid #14532d;
+      color: #ffffff;
+    }
+    .g-btn-success-solid:hover:not(:disabled) { background: #14532d; }
+
     .g-btn-sm { height: 30px; padding: 0 10px; font-size: 12px; }
     .g-btn-lg { height: 42px; padding: 0 20px; font-size: 14px; }
 
@@ -691,7 +698,7 @@
               <!-- Row 1: 每頁筆數 + 欄位設定 -->
               <div class="flex flex-col md:flex-row md:items-center gap-2 px-4 pt-3 pb-2">
                 <div class="md:flex-1"></div>
-                <div class="flex items-center gap-2 flex-shrink-0">
+                <div class="flex items-center gap-2 flex-shrink-0 self-end md:self-auto">
                   <select v-model.number="reviewPageSize" class="g-select" style="height:32px;font-size:12px;padding-right:28px;">
                     <option :value="10">每頁10筆</option>
                     <option :value="20">每頁20筆</option>
@@ -814,7 +821,7 @@
               <button @click="batchExportStock" :disabled="selectedOrderIds.length === 0 || nasPrintingId === 'batch'" class="g-btn g-btn-primary flex-1 sm:flex-none">
                 <i :class="nasPrintingId === 'batch' ? 'fas fa-circle-notch fa-spin' : 'fas fa-print'"></i><span class="hidden sm:inline">{{ nasPrintingId === 'batch' ? '傳送中…' : '列印' }}</span>備貨單
               </button>
-              <button @click="batchExportLabels" :disabled="selectedOrderIds.length === 0 || nasPrintingId === 'batch'" class="g-btn g-btn-success flex-1 sm:flex-none">
+              <button @click="batchExportLabels" :disabled="selectedOrderIds.length === 0 || nasPrintingId === 'batch'" class="g-btn g-btn-success-solid flex-1 sm:flex-none">
                 <i :class="nasPrintingId === 'batch' ? 'fas fa-circle-notch fa-spin' : 'fas fa-print'"></i><span class="hidden sm:inline">{{ nasPrintingId === 'batch' ? '傳送中…' : '列印' }}</span>出貨單 ({{ selectedOrderIds.length }})
               </button>
             </div>
@@ -855,7 +862,7 @@
                 </div>
                 <div class="flex items-center gap-2 md:flex-1 md:min-w-0">
                   <div class="relative flex-1 min-w-0">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-xs"></i>
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-xs z-[1] pointer-events-none"></i>
                     <input type="text" v-model="detailsKeyword" placeholder="關鍵字搜尋..." class="g-input w-full pl-8" style="height:32px;">
                   </div>
                   <select v-model.number="detailsPageSize" class="g-select flex-shrink-0" style="height:32px;font-size:12px;padding-right:28px;">
@@ -896,19 +903,19 @@
                   <span class="text-xs text-stone-400 font-bold">第 {{ detailsPage }} / {{ totalDetailsPages }} 頁　共 {{ detailsTotalCountDisplay }} 筆</span>
                   <span v-if="detailsStart && detailsEnd" class="hidden sm:flex items-center gap-2 text-xs">
                     <span class="flex items-center gap-1">
-                      <span class="text-stone-400">本頁金額</span>
+                      <span class="text-stone-400">總金額</span>
                       <span class="font-black text-red-600">${{ detailsDashboardTotal.toLocaleString() }}</span>
                       <span class="text-stone-300">({{ detailsOrderCount }})</span>
                     </span>
                     <span class="text-stone-200">│</span>
                     <span class="flex items-center gap-1">
-                      <span class="text-stone-400">本頁已接單</span>
+                      <span class="text-stone-400">已接單</span>
                       <span class="font-black text-green-600">${{ detailsApprovedTotal.toLocaleString() }}</span>
                       <span class="text-stone-300">({{ detailsApprovedCount }})</span>
                     </span>
                     <span class="text-stone-200">│</span>
                     <span class="flex items-center gap-1">
-                      <span class="text-stone-400">本頁待審核</span>
+                      <span class="text-stone-400">待審核</span>
                       <span class="font-black text-amber-600">${{ detailsPendingTotal.toLocaleString() }}</span>
                       <span class="text-stone-300">({{ detailsPendingCount }})</span>
                     </span>
@@ -972,9 +979,9 @@
                     </template>
                     <td class="hidden sm:table-cell px-4 py-3 text-center whitespace-nowrap">
                       <div class="flex gap-2 justify-center">
-                        <button @click="openDetailModal(order)" class="g-btn g-btn-primary g-btn-sm">詳細</button>
-                        <button @click="printStockViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-glass g-btn-sm" title="透過 NAS 列印備貨單">{{ nasPrintingId === order.id ? '傳送中…' : '備貨單' }}</button>
-                        <button @click="printGroupViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-glass g-btn-sm" title="透過 NAS 列印出貨單">{{ nasPrintingId === order.id ? '傳送中…' : '出貨單' }}</button>
+                        <button @click="openDetailModal(order)" class="g-btn g-btn-glass g-btn-sm"><i class="fas fa-info-circle"></i>詳細</button>
+                        <button @click="printStockViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-primary g-btn-sm" title="透過 NAS 列印備貨單"><i class="fas fa-print"></i>{{ nasPrintingId === order.id ? '傳送中…' : '備貨單' }}</button>
+                        <button @click="printGroupViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-success-solid g-btn-sm" title="透過 NAS 列印出貨單"><i class="fas fa-print"></i>{{ nasPrintingId === order.id ? '傳送中…' : '出貨單' }}</button>
                       </div>
                     </td>
                   </tr>
@@ -982,15 +989,16 @@
                   <tr class="sm:hidden border-b border-stone-100/50">
                     <td colspan="4" class="px-3 pb-2.5 pt-0">
                       <div class="flex gap-2">
+                        <button @click="openDetailModal(order)" class="g-btn g-btn-primary g-btn-sm flex-1 justify-center">
+                          <i class="fas fa-search"></i>詳細
+                        </button>                        
                         <button @click="printStockViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-glass g-btn-sm flex-1 justify-center">
                           <i class="fas fa-print"></i>{{ nasPrintingId === order.id ? '傳送中…' : '備貨單' }}
                         </button>
-                        <button @click="printGroupViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-glass g-btn-sm flex-1 justify-center">
+                        <button @click="printGroupViaNas(order)" :disabled="nasPrintingId === order.id" class="g-btn g-btn-success-solid g-btn-sm flex-1 justify-center">
                           <i class="fas fa-print"></i>{{ nasPrintingId === order.id ? '傳送中…' : '出貨單' }}
                         </button>
-                        <button @click="openDetailModal(order)" class="g-btn g-btn-primary g-btn-sm flex-1 justify-center">
-                          <i class="fas fa-search"></i>詳細
-                        </button>
+
                       </div>
                     </td>
                   </tr>
@@ -1479,51 +1487,91 @@
               <!-- Body -->
               <div class="flex-1 overflow-y-auto px-6 py-5">
                 <!-- 基本資訊 -->
-                  <div v-if="createOrderTab === 'info'" class="space-y-3">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div class="sm:col-span-2">
-                        <label class="g-label mb-1 block">常用聯絡人</label>
-                        <button type="button" @click="showContactPicker = true" class="g-input w-full text-left flex items-center justify-between gap-2 cursor-pointer">
-                          <span :class="selectedContactId ? 'text-stone-800 font-bold' : 'text-stone-400'">
-                            {{ selectedContact ? selectedContact.companyName + ' / ' + selectedContact.contactName : selectedContactId ? '請選擇' : '點擊選擇常用聯絡人...' }}
-                          </span>
-                          <i class="fas fa-address-book text-stone-400 flex-shrink-0"></i>
-                        </button>
+                  <div v-if="createOrderTab === 'info'">
+                    <div class="bg-white rounded-xl border border-stone-100 overflow-hidden">
+                      <!-- 常用聯絡人 -->
+                      <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100 cursor-pointer hover:bg-stone-50/50" @click="showContactPicker = true">
+                        <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                          <i class="fas fa-address-book text-stone-500 text-xs"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <p class="text-xs text-stone-400">常用聯絡人</p>
+                          <p class="text-sm mt-0.5" :class="selectedContactId ? 'font-bold text-stone-800' : 'text-stone-400'">
+                            {{ selectedContact ? selectedContact.companyName + ' / ' + selectedContact.contactName : '點擊選擇常用聯絡人...' }}
+                          </p>
+                        </div>
+                        <i class="fas fa-chevron-right text-stone-300 text-xs flex-shrink-0"></i>
                       </div>
-                      <div>
-                        <label class="g-label mb-1 block">公司名稱 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.companyName" type="text" class="g-input w-full" :class="fieldErr('companyName') ? 'border-red-300' : ''">
-                        <p v-if="fieldErr('companyName')" class="text-xs text-red-400 mt-1">必填</p>
+                      <!-- 公司名稱 -->
+                      <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                        <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                          <i class="fas fa-building text-stone-500 text-xs"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <p class="text-xs" :class="fieldErr('companyName') ? 'text-red-400' : 'text-stone-400'">公司名稱 <span class="text-red-400">*</span></p>
+                          <input v-model="createOrderForm.companyName" type="text" class="w-full mt-0.5 bg-transparent border-0 border-b rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0" :class="fieldErr('companyName') ? 'border-red-300' : 'border-stone-200 focus:border-brand-400'" style="height:24px;">
+                        </div>
                       </div>
-                      <div>
-                        <label class="g-label mb-1 block">聯絡人 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.contactName" type="text" class="g-input w-full" :class="fieldErr('contactName') ? 'border-red-300' : ''">
-                        <p v-if="fieldErr('contactName')" class="text-xs text-red-400 mt-1">必填</p>
+                      <!-- 聯絡人 -->
+                      <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                        <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                          <i class="fas fa-user text-stone-500 text-xs"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <p class="text-xs" :class="fieldErr('contactName') ? 'text-red-400' : 'text-stone-400'">聯絡人 <span class="text-red-400">*</span></p>
+                          <input v-model="createOrderForm.contactName" type="text" class="w-full mt-0.5 bg-transparent border-0 border-b rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0" :class="fieldErr('contactName') ? 'border-red-300' : 'border-stone-200 focus:border-brand-400'" style="height:24px;">
+                        </div>
                       </div>
-                      <div>
-                        <label class="g-label mb-1 block">聯絡電話 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.contactPhone" type="text" class="g-input w-full" :class="fieldErr('contactPhone') ? 'border-red-300' : ''">
-                        <p v-if="fieldErr('contactPhone')" class="text-xs text-red-400 mt-1">必填</p>
+                      <!-- 聯絡電話 -->
+                      <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                        <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                          <i class="fas fa-phone text-stone-500 text-xs"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <p class="text-xs" :class="fieldErr('contactPhone') ? 'text-red-400' : 'text-stone-400'">聯絡電話 <span class="text-red-400">*</span></p>
+                          <input v-model="createOrderForm.contactPhone" type="text" class="w-full mt-0.5 bg-transparent border-0 border-b rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0" :class="fieldErr('contactPhone') ? 'border-red-300' : 'border-stone-200 focus:border-brand-400'" style="height:24px;">
+                        </div>
                       </div>
-                      <div>
-                        <label class="g-label mb-1 block">配送時間 <span class="text-red-500">*</span></label>
-                        <input v-model="createOrderForm.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="g-input w-full" :class="fieldErr('deliveryTime') ? 'border-red-300' : ''">
-                        <p v-if="fieldErr('deliveryTime')" class="text-xs text-red-400 mt-1">必填</p>
+                      <!-- 配送時間 -->
+                      <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                        <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                          <i class="fas fa-truck text-stone-500 text-xs"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <p class="text-xs" :class="fieldErr('deliveryTime') ? 'text-red-400' : 'text-stone-400'">配送時間 <span class="text-red-400">*</span></p>
+                          <input v-model="createOrderForm.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="w-full mt-0.5 bg-transparent border-0 border-b rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0" :class="fieldErr('deliveryTime') ? 'border-red-300' : 'border-stone-200 focus:border-brand-400'" style="height:28px;">
+                        </div>
                       </div>
-                       <div>
-                         <label class="g-label mb-1 block">來源<span class="text-red-500 ml-0.5">*</span></label>
-                         <div class="flex gap-4 py-2" :class="fieldErr('resource') ? 'rounded-lg border border-red-300 px-2' : ''">
-                           <label class="inline-flex items-center gap-2"><input type="radio" v-model="createOrderForm.resource" value="Line" class="accent-brand-600"><span>Line</span></label>
-                           <label class="inline-flex items-center gap-2"><input type="radio" v-model="createOrderForm.resource" value="電話" class="accent-brand-600"><span>電話</span></label>
-                           <label class="inline-flex items-center gap-2"><input type="radio" v-model="createOrderForm.resource" value="傳真" class="accent-brand-600"><span>傳真</span></label>
-                         </div>
-                         <p v-if="fieldErr('resource')" class="text-xs text-red-400 mt-1">必填</p>
-                       </div>
-                    </div>
-                    <div>
-                      <label class="g-label mb-1 block">配送地址<span class="text-red-500 ml-0.5">*</span></label>
-                      <input v-model="createOrderForm.address" type="text" class="g-input w-full" :class="fieldErr('address') ? 'border-red-300' : ''">
-                      <p v-if="fieldErr('address')" class="text-xs text-red-400 mt-1">必填</p>
+                      <!-- 配送地址 -->
+                      <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                        <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                          <i class="fas fa-map-marker-alt text-stone-500 text-xs"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <p class="text-xs" :class="fieldErr('address') ? 'text-red-400' : 'text-stone-400'">配送地址 <span class="text-red-400">*</span></p>
+                          <input v-model="createOrderForm.address" type="text" class="w-full mt-0.5 bg-transparent border-0 border-b rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0" :class="fieldErr('address') ? 'border-red-300' : 'border-stone-200 focus:border-brand-400'" style="height:24px;" placeholder="請輸入配送地址">
+                        </div>
+                      </div>
+                      <!-- 來源 -->
+                      <div class="flex items-start gap-3 px-4 py-3 border-b border-stone-100">
+                        <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <i class="fas fa-paper-plane text-stone-500 text-xs"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <p class="text-xs" :class="fieldErr('resource') ? 'text-red-400' : 'text-stone-400'">來源 <span class="text-red-400">*</span></p>
+                          <div class="mt-1.5 flex flex-nowrap gap-2 overflow-x-auto pb-1">
+                            <label :class="['flex-none inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border cursor-pointer transition select-none text-xs whitespace-nowrap', createOrderForm.resource === 'Line' ? 'bg-brand-50 border-brand-300 text-brand-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
+                              <input type="radio" v-model="createOrderForm.resource" value="Line" class="accent-brand-600 w-3.5 h-3.5"><span>Line</span>
+                            </label>
+                            <label :class="['flex-none inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border cursor-pointer transition select-none text-xs whitespace-nowrap', createOrderForm.resource === '電話' ? 'bg-brand-50 border-brand-300 text-brand-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
+                              <input type="radio" v-model="createOrderForm.resource" value="電話" class="accent-brand-600 w-3.5 h-3.5"><span>電話</span>
+                            </label>
+                            <label :class="['flex-none inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border cursor-pointer transition select-none text-xs whitespace-nowrap', createOrderForm.resource === '傳真' ? 'bg-brand-50 border-brand-300 text-brand-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
+                              <input type="radio" v-model="createOrderForm.resource" value="傳真" class="accent-brand-600 w-3.5 h-3.5"><span>傳真</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 <!-- 訂購明細 -->
@@ -1609,22 +1657,39 @@
                       </template>
                       <!-- 唯讀 -->
                       <template v-else>
-                        <div class="flex items-center justify-between px-4 py-3 border-b" style="background:var(--glass-bg-light);border-color:var(--glass-border-subtle);">
-                          <div class="flex items-center gap-2">
+                        <!-- 訂購人標題列 -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-b gap-2 bg-stone-50/70 border-stone-100">
+                          <div class="flex items-center gap-2 min-w-0 flex-wrap">
+                            <span class="text-xs font-bold text-stone-400 bg-stone-200/60 px-1.5 py-0.5 rounded flex-shrink-0">#{{ cidx + 1 }}</span>
                             <span class="font-bold text-stone-800 text-sm">{{ customer.customerName }}</span>
-                            <span v-if="customer.customerUnit" class="text-xs text-stone-400 bg-stone-200/60 px-2 py-0.5 rounded-md">{{ customer.customerUnit }}</span>
+                            <span v-if="customer.customerUnit" class="text-xs text-stone-400 bg-stone-200/60 px-2 py-0.5 rounded-md flex-shrink-0">{{ customer.customerUnit }}</span>
                           </div>
-                          <div class="flex gap-1.5">
+                          <div class="flex items-center gap-1.5 flex-shrink-0">
+                            <span class="text-lg font-black text-red-700 mr-1">${{ calcCreateCustomerTotal(customer).toLocaleString() }}</span>
                             <button @click="startEditCreateCustomer(cidx)" class="g-btn g-btn-glass g-btn-sm">編輯</button>
                             <button @click="createOrderCustomers.splice(cidx,1)" class="g-btn g-btn-danger g-btn-sm">刪除</button>
                           </div>
                         </div>
-                        <div class="px-4 py-2">
-                          <div v-for="(item, iidx) in customer.items.filter(i => i.qty > 0)" :key="iidx" class="flex justify-between items-center py-1.5 border-b border-stone-50 last:border-b-0">
-                            <span class="text-sm text-stone-600">{{ item.itemName }}</span>
-                            <span class="text-sm font-semibold text-stone-700">× {{ item.qty }}</span>
+                        <!-- 品項列表 -->
+                        <div class="px-4 py-3 bg-white">
+                          <div v-if="customer.items.filter(i => i.qty > 0).length" class="bg-white rounded-lg border border-stone-100 overflow-hidden">
+                            <div class="grid grid-cols-2 divide-x divide-stone-100">
+                              <div class="flex flex-col divide-y divide-stone-50">
+                                <div v-for="(item, iidx) in customer.items.filter(i => i.qty > 0).filter((_, i) => i % 2 === 0)" :key="'L'+iidx" class="flex items-center justify-between text-sm px-3 py-1.5">
+                                  <span class="text-stone-600">{{ item.itemName }}</span>
+                                  <span class="font-bold text-stone-800 tabular-nums ml-3">×{{ item.qty }}</span>
+                                </div>
+                              </div>
+                              <div class="flex flex-col divide-y divide-stone-50">
+                                <div v-for="(item, iidx) in customer.items.filter(i => i.qty > 0).filter((_, i) => i % 2 === 1)" :key="'R'+iidx" class="flex items-center justify-between text-sm px-3 py-1.5">
+                                  <span class="text-stone-600">{{ item.itemName }}</span>
+                                  <span class="font-bold text-stone-800 tabular-nums ml-3">×{{ item.qty }}</span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                          <div v-if="customer.note" class="mt-2 mb-1 text-xs text-stone-400"><i class="fas fa-comment-dots mr-1"></i>{{ customer.note }}</div>
+                          <div v-else class="text-sm text-stone-400 italic">無商品項目</div>
+                          <div v-if="customer.note" class="mt-2 mb-1 text-xs text-stone-400 flex items-start gap-1.5"><i class="fas fa-comment-dots mt-0.5"></i><span>{{ customer.note }}</span></div>
                         </div>
                       </template>
                     </div>
@@ -2518,10 +2583,10 @@
                   else selectedOrderIds.value = pagedDetailsList.value.map(o => o.id);
                 };
         // 狀態管理
-        const currentView = ref('login');
+        const currentView = ref(sessionStorage.getItem('currentView') || 'login');
         const loading = ref(false);
         const showAdminMenu = ref(false);
-        const adminTab = ref('accounts');
+        const adminTab = ref(sessionStorage.getItem('adminTab') || 'accounts');
         const customAlert = ref({ show: false, message: '', type: 'info' });
         const customConfirm = ref({ show: false, message: '', type: 'confirm', resolve: null });
         const showConfirm = (message, type = 'confirm') => new Promise(resolve => {
@@ -2647,6 +2712,9 @@
           newCreateCustomerData.value = { customerName: '', customerUnit: '', note: '', items: adminData.value.itemsList.map(i => ({ itemName: i.name, qty: 0 })) };
           showCreateOrderModal.value = true;
         };
+
+        const calcCreateCustomerTotal = (customer) =>
+          enrichItemsWithPrice((customer.items || []).filter(i => i.qty > 0)).reduce((s, i) => s + (i.subtotal || 0), 0);
 
         const startEditCreateCustomer = (cidx) => {
           const c = createOrderCustomers.value[cidx];
@@ -2775,12 +2843,21 @@
 
         const mapGroupDocs = (docs) => docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
 
-        const applyDetailsList = (groups) => {
+        const applyDetailsList = (groups, isReset = true) => {
           adminData.value.detailsList = groups;
-          selectedOrderIds.value = [];
           if (detailsShouldAutoSelectApproved.value) {
-            selectedOrderIds.value = groups.filter(o => o.status === 'approved').map(o => o.id);
-            detailsShouldAutoSelectApproved.value = false;
+            const newApproved = groups.filter(o => o.status === 'approved').map(o => o.id);
+            if (isReset) {
+              selectedOrderIds.value = newApproved;
+            } else {
+              // 翻頁：累加本頁已接單，不清掉其他頁已勾選的
+              const merged = new Set(selectedOrderIds.value);
+              newApproved.forEach(id => merged.add(id));
+              selectedOrderIds.value = [...merged];
+            }
+            // 不清掉 flag，讓後續翻頁都繼續自動勾選
+          } else {
+            selectedOrderIds.value = [];
           }
           return seedGroupTotalsFromGroups(groups);
         };
@@ -3098,6 +3175,7 @@
         const detailsShouldAutoSelectApproved = ref(false);
         const detailsFirstDoc = ref(null);
         const detailsLastDoc = ref(null);
+        const detailsRangeSummary = ref(null); // { total, approvedTotal, pendingTotal, count, approvedCount, pendingCount } — 時間範圍全部合計
         const statusEditOrder = ref(null);
         const showColumnSettings = ref(false);
         const tableColumns = ref(JSON.parse(localStorage.getItem('tableColumns') || JSON.stringify({orderNo:true,contactName:true,contactPhone:true,address:false,resource:false,totalAmount:true})));
@@ -3373,29 +3451,55 @@
 
         const detailsTotalCountDisplay = computed(() => isDetailsLocalMode.value ? sortedDetailsList.value.length : detailsTotalCount.value);
 
+        // 統計資料來源：有時間範圍時用全範圍資料；否則用當頁
+        const detailsStatsList = computed(() => {
+          if (detailsStart.value && detailsEnd.value) {
+            if (isDetailsLocalMode.value) return sortedDetailsList.value; // local mode 已有全部資料
+          }
+          return pagedDetailsList.value; // 無範圍 or remote 未完成 → 顯示本頁
+        });
+        // 是否正在以範圍計算（決定 label 文字）
+        const detailsStatLabel = computed(() => {
+          if (!detailsStart.value || !detailsEnd.value) return '本頁';
+          if (isDetailsLocalMode.value) return '範圍';
+          if (detailsRangeSummary.value !== null) return '範圍';
+          return '本頁'; // remote mode 範圍資料尚在載入
+        });
         // Dashboard 金額計算
-        const detailsApprovedTotal = computed(() =>
-          pagedDetailsList.value.filter(o => o.status === 'approved')
-            .reduce((sum, o) => sum + (groupTotalAmountMap.value[o.id] || 0), 0)
-        );
-        const detailsPendingTotal = computed(() =>
-          pagedDetailsList.value.filter(o => o.status === 'pending')
-            .reduce((sum, o) => sum + (groupTotalAmountMap.value[o.id] || 0), 0)
-        );
-        const detailsDashboardTotal = computed(() =>
-          pagedDetailsList.value.filter(o => o.status !== 'rejected' && o.status !== 'expired')
-            .reduce((sum, o) => sum + (groupTotalAmountMap.value[o.id] || 0), 0)
-        );
+        const detailsApprovedTotal = computed(() => {
+          if (detailsStart.value && detailsEnd.value && !isDetailsLocalMode.value && detailsRangeSummary.value !== null)
+            return detailsRangeSummary.value.approvedTotal;
+          return detailsStatsList.value.filter(o => o.status === 'approved')
+            .reduce((sum, o) => sum + (groupTotalAmountMap.value[o.id] || 0), 0);
+        });
+        const detailsPendingTotal = computed(() => {
+          if (detailsStart.value && detailsEnd.value && !isDetailsLocalMode.value && detailsRangeSummary.value !== null)
+            return detailsRangeSummary.value.pendingTotal;
+          return detailsStatsList.value.filter(o => o.status === 'pending')
+            .reduce((sum, o) => sum + (groupTotalAmountMap.value[o.id] || 0), 0);
+        });
+        const detailsDashboardTotal = computed(() => {
+          if (detailsStart.value && detailsEnd.value && !isDetailsLocalMode.value && detailsRangeSummary.value !== null)
+            return detailsRangeSummary.value.total;
+          return detailsStatsList.value.filter(o => o.status !== 'rejected' && o.status !== 'expired')
+            .reduce((sum, o) => sum + (groupTotalAmountMap.value[o.id] || 0), 0);
+        });
         // 訂單數統計
-        const detailsOrderCount = computed(() =>
-           pagedDetailsList.value.filter(o => o.status !== 'rejected' && o.status !== 'expired').length
-        );
-        const detailsApprovedCount = computed(() =>
-           pagedDetailsList.value.filter(o => o.status === 'approved').length
-        );
-        const detailsPendingCount = computed(() =>
-           pagedDetailsList.value.filter(o => o.status === 'pending').length
-        );
+        const detailsOrderCount = computed(() => {
+          if (detailsStart.value && detailsEnd.value && !isDetailsLocalMode.value && detailsRangeSummary.value !== null)
+            return detailsRangeSummary.value.count;
+          return detailsStatsList.value.filter(o => o.status !== 'rejected' && o.status !== 'expired').length;
+        });
+        const detailsApprovedCount = computed(() => {
+          if (detailsStart.value && detailsEnd.value && !isDetailsLocalMode.value && detailsRangeSummary.value !== null)
+            return detailsRangeSummary.value.approvedCount;
+          return detailsStatsList.value.filter(o => o.status === 'approved').length;
+        });
+        const detailsPendingCount = computed(() => {
+          if (detailsStart.value && detailsEnd.value && !isDetailsLocalMode.value && detailsRangeSummary.value !== null)
+            return detailsRangeSummary.value.pendingCount;
+          return detailsStatsList.value.filter(o => o.status === 'pending').length;
+        });
 
         // 分頁後的訂單列表
         const totalDetailsPages = computed(() => Math.max(1, Math.ceil(detailsTotalCountDisplay.value / detailsPageSize.value)));
@@ -3410,7 +3514,7 @@
           const querySnapshot = await getDocs(localQuery);
           if (ver !== detailsFetchVersion) return; // 版本過舊，丟棄結果
           const groups = mapGroupDocs(querySnapshot.docs);
-          const missingGroupIds = applyDetailsList(groups);
+          const missingGroupIds = applyDetailsList(groups, true); // local mode 一次拿全部，視為 reset
           if (missingGroupIds.length) backfillMissingGroupTotals(missingGroupIds);
           detailsTotalCount.value = groups.length;
         };
@@ -3430,7 +3534,8 @@
           if (ver !== detailsFetchVersion) return; // 版本過舊，丟棄結果
           const docs = querySnapshot.docs;
           const groups = mapGroupDocs(docs);
-          const missingGroupIds = applyDetailsList(groups);
+          const isPageNav = (navigation === 'next' || navigation === 'prev');
+          const missingGroupIds = applyDetailsList(groups, !isPageNav);
           updateDetailsCursorState(docs);
           if (missingGroupIds.length) backfillMissingGroupTotals(missingGroupIds);
 
@@ -3457,6 +3562,29 @@
           }, delay);
         };
 
+        // 取得時間範圍全部訂單的合計（remote mode 專用，輕量查詢只讀 status + totalAmount）
+        const fetchDetailsRangeSummary = async () => {
+          if (!detailsStart.value || !detailsEnd.value || isDetailsLocalMode.value) {
+            detailsRangeSummary.value = null;
+            return;
+          }
+          try {
+            const snap = await getDocs(query(collection(db, 'GroupOrders'), ...getDetailsBaseConstraints()));
+            let total = 0, approvedTotal = 0, pendingTotal = 0, count = 0, approvedCount = 0, pendingCount = 0;
+            snap.docs.forEach(d => {
+              const data = d.data();
+              const amt = data.totalAmount || 0;
+              const status = data.status;
+              if (status !== 'rejected' && status !== 'expired') { total += amt; count++; }
+              if (status === 'approved') { approvedTotal += amt; approvedCount++; }
+              if (status === 'pending')  { pendingTotal  += amt; pendingCount++;  }
+            });
+            detailsRangeSummary.value = { total, approvedTotal, pendingTotal, count, approvedCount, pendingCount };
+          } catch (e) {
+            console.error('fetchDetailsRangeSummary error:', e);
+          }
+        };
+
         const fetchOrderDetails = async (navigation = 'reset') => {
           const myVersion = ++detailsFetchVersion;
           loading.value = true;
@@ -3472,6 +3600,10 @@
                 await fetchOrderDetailsLocal(myVersion);
               }
             } else {
+              if (navigation === 'reset') {
+                detailsRangeSummary.value = null; // 清除舊範圍合計
+                if (detailsStart.value && detailsEnd.value) fetchDetailsRangeSummary(); // 非同步，不阻塞分頁載入
+              }
               await fetchOrderDetailsRemote(navigation, myVersion);
             }
           } catch (error) {
@@ -5511,6 +5643,7 @@
           confirmAddCreateCustomer,
           editingCreateCustomerIdx,
           editingCreateCustomerData,
+          calcCreateCustomerTotal,
           startEditCreateCustomer,
           saveEditCreateCustomer,
           saveCreateGroupOrder,
@@ -5588,6 +5721,8 @@
           printGroupViaNas,
           printCustomerViaNas,
           printStockViaNas,
+          detailsRangeSummary,
+          detailsStatLabel,
           detailsApprovedTotal,
           detailsPendingTotal,
           detailsDashboardTotal,
