@@ -515,7 +515,7 @@
             </button>
           </div>
           
-          <div v-if="loading" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
+          <div v-if="loading || !accountsHasLoaded" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
           
           <div v-else-if="adminData.accountsList.length === 0" class="text-center py-20 g-card">
             <i class="fas fa-users text-5xl mb-4 text-stone-200"></i>
@@ -576,7 +576,7 @@
             </button>
           </div>
 
-          <div v-if="loading" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
+          <div v-if="loading || !contactsHasLoaded" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
 
           <div v-else-if="frequentContacts.length === 0" class="text-center py-20 g-card">
             <i class="fas fa-address-book text-5xl mb-4 text-stone-200"></i>
@@ -635,7 +635,7 @@
             </button>
           </div>
           
-          <div v-if="loading" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
+          <div v-if="loading || !itemsHasLoaded" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
           
           <div v-else-if="adminData.itemsList.length === 0" class="text-center py-20 g-card">
             <i class="fas fa-box text-5xl mb-4 text-stone-200"></i>
@@ -2598,7 +2598,10 @@
         // 新訂單通知
         const newOrderNotif = ref({ show: false, orders: [] });
         const reviewUnsubscribe = ref(null);
-        const reviewHasLoaded = ref(false); // 第一次 snapshot 到達前顯示 spinner
+        const reviewHasLoaded = ref(false);
+        const accountsHasLoaded = ref(false);
+        const contactsHasLoaded = ref(false);
+        const itemsHasLoaded = ref(false);
         
         // 用戶資料
         const user = ref(null);
@@ -3689,6 +3692,7 @@
 
         // 常用聯絡人 CRUD
         const fetchFrequentContacts = async () => {
+          contactsHasLoaded.value = false;
           try {
             const snapshot = await getDocs(query(collection(db, 'FrequentContacts'), orderBy('companyName', 'asc')));
             frequentContacts.value = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -3697,6 +3701,8 @@
               const snapshot2 = await getDocs(collection(db, 'FrequentContacts'));
               frequentContacts.value = snapshot2.docs.map(d => ({ id: d.id, ...d.data() }));
             } catch (e2) { console.error('獲取常用聯絡人錯誤:', e2); }
+          } finally {
+            contactsHasLoaded.value = true;
           }
         };
         const openAddContactModal = () => {
@@ -3776,6 +3782,7 @@
             showAlert('獲取失敗', 'error');
           } finally {
             loading.value = false;
+            accountsHasLoaded.value = true;
           }
         };
         
@@ -4059,6 +4066,7 @@
             showAlert('獲取失敗', 'error');
           } finally {
             loading.value = false;
+            itemsHasLoaded.value = true;
           }
         };
         
@@ -5526,6 +5534,9 @@
           adminData,
           newOrderNotif,
           reviewHasLoaded,
+          accountsHasLoaded,
+          contactsHasLoaded,
+          itemsHasLoaded,
           detailsStatus,
           detailsSort,
           detailsKeyword,
