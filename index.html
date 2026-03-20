@@ -678,7 +678,7 @@
             <h2 class="text-xl font-black text-stone-800 whitespace-nowrap">待審核訂單</h2>
           </div>
 
-          <div v-if="loading" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
+          <div v-if="loading || !reviewHasLoaded" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
           <div v-else-if="adminData.reviewList.length === 0" class="text-center py-20 g-card">
             <i class="fas fa-check-circle text-5xl mb-4 text-stone-200"></i>
             <p class="font-bold text-stone-400">目前沒有待審核的團購</p>
