@@ -382,30 +382,14 @@
     
     <!-- 管理員登入頁面 -->
     <div v-if="currentView === 'login'" class="flex flex-col items-center justify-center min-h-screen px-6">
-      <form @submit.prevent="handleLogin" class="g-card-solid p-10 w-full max-w-sm relative overflow-hidden" style="border-radius:var(--glass-radius);">
+      <div class="g-card-solid p-10 w-full max-w-sm relative overflow-hidden" style="border-radius:var(--glass-radius);">
         <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-brand-500 via-brand-400 to-orange-400" style="opacity:0.9"></div>
         <div class="flex justify-center mb-6">
           <span class="w-14 h-14 bg-gradient-to-br from-brand-600 to-brand-500 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg" style="box-shadow:0 8px 24px rgba(200,75,49,0.3);"><i class="fas fa-chart-pie"></i></span>
         </div>
-        <h2 class="text-2xl font-black mb-8 text-center text-stone-800 tracking-tight">管理後台登入</h2>
+        <h2 class="text-2xl font-black mb-3 text-center text-stone-800 tracking-tight">管理後台登入</h2>
+        <p class="text-sm text-stone-500 text-center leading-6 mb-8">已統一使用 Google 帳號登入。首次登入會自動建立帳號，需由管理者授權後才能進入後台。</p>
         <div class="space-y-5">
-          <div>
-            <label class="g-label ml-1 mb-1.5 block">Account ID</label>
-            <input v-model="loginForm.id" type="text" autocomplete="username" placeholder="請輸入帳號" class="g-input g-input-lg w-full">
-          </div>
-          <div>
-            <label class="g-label ml-1 mb-1.5 block">Password</label>
-            <input v-model="loginForm.pass" type="password" autocomplete="current-password" placeholder="請輸入密碼" class="g-input g-input-lg w-full" required>
-          </div>
-          <button type="submit" :disabled="loading" class="g-btn g-btn-brand g-btn-lg w-full mt-2">
-            {{ loading ? '驗證中...' : '確認登入' }}
-          </button>
-          <!-- Google 登入 -->
-          <div class="relative flex items-center gap-3 my-1">
-            <div class="flex-1 h-px bg-stone-200"></div>
-            <span class="text-xs text-stone-400">or</span>
-            <div class="flex-1 h-px bg-stone-200"></div>
-          </div>
           <button type="button" @click="handleGoogleLogin" :disabled="loading"
             class="w-full flex items-center justify-center gap-3 py-3 px-4 border border-stone-200 rounded-xl bg-white hover:bg-stone-50 transition font-medium text-stone-700 text-sm shadow-sm">
             <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48">
@@ -417,7 +401,7 @@
             {{ loading ? '登入中...' : '使用 Google 帳號登入' }}
           </button>
         </div>
-      </form>
+      </div>
     </div>
 
     <!-- 管理員後台 -->
@@ -1940,13 +1924,8 @@
         <div class="space-y-4">
           <div>
             <label class="g-label mb-2 block">帳號 <span class="text-red-500">*</span></label>
-            <input v-model="accountForm.accountId" :disabled="!!editingAccount.id" type="text" placeholder="例如：admin、User001" class="g-input g-input-lg w-full disabled:opacity-50 disabled:cursor-not-allowed">
-          </div>
-          
-          <div>
-            <label class="g-label mb-2 block">密碼 <span class="text-red-500">*</span></label>
-            <input v-model="accountForm.password" type="text" placeholder="請輸入密碼" class="g-input g-input-lg w-full">
-            <p class="text-xs text-stone-400 mt-1 ml-1">{{ editingAccount.id ? '留空表示不修改密碼' : '必填欄位' }}</p>
+            <input v-model="accountForm.accountId" :disabled="!!editingAccount.id" type="text" placeholder="例如：alice、sales-team" class="g-input g-input-lg w-full disabled:opacity-50 disabled:cursor-not-allowed">
+            <p class="text-xs text-stone-400 mt-1 ml-1">僅作為系統帳號識別，登入驗證以 Google Email 為主。</p>
           </div>
           
           <div>
@@ -2546,7 +2525,6 @@
         
         // 用戶資料
         const user = ref(null);
-        const loginForm = ref({ id: '', pass: '' });
         const UNAUTHORIZED_MESSAGE = '此帳號尚未完成管理者授權，請聯絡管理者於後台「帳號管理」開通後再登入。';
         const normalizeAccountRecord = (account) => ({
           ...account,
@@ -2956,7 +2934,6 @@
         const editingAccount = ref({});
         const accountForm = ref({
           accountId: '',
-          password: '',
           name: '',
           phone: '',
           email: '',
@@ -3441,7 +3418,6 @@
           editingAccount.value = {};
           accountForm.value = {
             accountId: '',
-            password: '',
             name: '',
             phone: '',
             email: '',
@@ -3456,7 +3432,6 @@
           editingAccount.value = { ...account };
           accountForm.value = {
             accountId: account.accountId || '',
-            password: '',
             name: account.name || '',
             phone: account.phone || '',
             email: account.email || '',
@@ -3472,7 +3447,6 @@
           editingAccount.value = {};
           accountForm.value = {
             accountId: '',
-            password: '',
             name: '',
             phone: '',
             email: '',
@@ -3487,9 +3461,9 @@
             showAlert('請輸入帳號', 'error');
             return;
           }
-          
-          if (!editingAccount.value.id && !accountForm.value.password) {
-            showAlert('請輸入密碼', 'error');
+
+          if (!accountForm.value.email) {
+            showAlert('請輸入 Google 帳號 Email', 'error');
             return;
           }
           
@@ -3504,11 +3478,6 @@
               isAuthorized: accountForm.value.isAuthorized !== false,
               updatedAt: new Date().toISOString()
             };
-            
-            // 如果有輸入密碼，則更新密碼
-            if (accountForm.value.password) {
-              accountData.password = accountForm.value.password;
-            }
             
             if (editingAccount.value.id) {
               // 更新現有帳號
@@ -3534,11 +3503,6 @@
         
         // 刪除帳號
         const deleteAccount = async (account) => {
-          if (account.accountId === 'ADMIN') {
-            showAlert('無法刪除管理員帳號', 'error');
-            return;
-          }
-          
           if (!await showConfirm(`確定要刪除帳號「${account.name || account.accountId}」嗎？此操作無法復原。`, 'danger')) {
             return;
           }
@@ -3639,7 +3603,6 @@
                 email,
                 name:       gUser.displayName || email.split('@')[0],
                 phone:      gUser.phoneNumber || '',
-                password:   '',
                 role:       'user',
                 isAuthorized: false,
                 googleUid:  gUser.uid || '',
@@ -3670,87 +3633,6 @@
           }
         };
 
-        const handleLogin = async () => {
-          if (!loginForm.value.id || !loginForm.value.pass) {
-            showAlert('請輸入帳號和密碼', 'error');
-            return;
-          }
-          
-          loading.value = true;
-          try {
-            // 檢查是否為 ADMIN
-            if (loginForm.value.id.toUpperCase() === 'ADMIN') {
-              // 先檢查硬編碼的管理員密碼（備用方案）
-              if (loginForm.value.pass === '8888') {
-                user.value = { id: 'ADMIN', name: '系統管理員', role: 'admin' };
-                currentView.value = 'admin';
-                sessionStorage.setItem('user', JSON.stringify(user.value));
-                sessionStorage.setItem('currentView', 'admin');
-                showAlert('登入成功！', 'success');
-                await fetchAdminAccounts();
-                await checkAndExpireOrders();
-                await fetchReviewList();
-                startReviewListener();
-                adminTab.value = adminData.value.reviewList.length > 0 ? 'review' : 'details';
-                sessionStorage.setItem('adminTab', adminTab.value);
-              } else {
-                // 如果不是硬編碼密碼，再查詢 Firebase
-                try {
-                  const docRef = doc(db, 'users', 'ADMIN');
-                  const docSnap = await getDoc(docRef);
-                  
-                  if (docSnap.exists()) {
-                    const userData = docSnap.data();
-                    if (userData.password === loginForm.value.pass) {
-                      user.value = { id: 'ADMIN', role: 'admin', ...userData };
-                      currentView.value = 'admin';
-                      sessionStorage.setItem('user', JSON.stringify(user.value));
-                      sessionStorage.setItem('currentView', 'admin');
-                      showAlert('登入成功！', 'success');
-                      await fetchAdminAccounts();
-                      await checkAndExpireOrders();
-                      await fetchReviewList();
-                      startReviewListener();
-                      adminTab.value = adminData.value.reviewList.length > 0 ? 'review' : 'details';
-                      sessionStorage.setItem('adminTab', adminTab.value);
-                    } else {
-                      showAlert('密碼錯誤', 'error');
-                    }
-                  } else {
-                    showAlert('密碼錯誤', 'error');
-                  }
-                } catch (fbError) {
-                  console.error('Firebase查詢錯誤:', fbError);
-                  showAlert('密碼錯誤', 'error');
-                }
-              }
-            } else {
-              // 查詢 Accounts collection
-              const q = query(collection(db, 'Accounts'), where('accountId', '==', loginForm.value.id));
-              const snap = await getDocs(q);
-              if (snap.empty) {
-                showAlert('帳號或密碼錯誤', 'error');
-              } else {
-                const accData = normalizeAccountRecord({ id: snap.docs[0].id, ...snap.docs[0].data() });
-                if (accData.password === loginForm.value.pass) {
-                  if (accData.isAuthorized === false) {
-                    await rejectUnauthorizedAccess();
-                    return;
-                  }
-                  await finishLogin(accData, '登入成功！');
-                } else {
-                  showAlert('帳號或密碼錯誤', 'error');
-                }
-              }
-            }
-          } catch (error) {
-            console.error('登入錯誤:', error);
-            showAlert('登入失敗：' + error.message, 'error');
-          } finally {
-            loading.value = false;
-          }
-        };
-
         // 登出
         const logout = async () => {
           if (reviewUnsubscribe.value) {
@@ -3760,7 +3642,6 @@
           clearLoginSession();
           try { await signOut(auth); } catch (_) {}
           sessionStorage.clear();
-          loginForm.value = { id: '', pass: '' };
           showAlert('已登出', 'info');
         };
 
@@ -5238,14 +5119,14 @@
             currentView.value = savedView;
             
             if (currentView.value === 'admin') {
-              if (user.value?.id && user.value.id !== 'ADMIN') {
+              if (user.value?.id) {
                 try {
-                  const accountSnap = await getDocs(query(collection(db, 'Accounts'), where('accountId', '==', user.value.id)));
-                  if (accountSnap.empty) {
+                  const accountDoc = await getDoc(doc(db, 'Accounts', user.value.id));
+                  if (!accountDoc.exists()) {
                     clearLoginSession();
                     return;
                   }
-                  const latestAccount = normalizeAccountRecord({ id: accountSnap.docs[0].id, ...accountSnap.docs[0].data() });
+                  const latestAccount = normalizeAccountRecord({ id: accountDoc.id, ...accountDoc.data() });
                   if (latestAccount.isAuthorized === false) {
                     await rejectUnauthorizedAccess();
                     return;
@@ -5293,7 +5174,6 @@
           showAdminMenu,
           adminTab,
           user,
-          loginForm,
           adminData,
           newOrderNotif,
           detailsStatus,
@@ -5418,7 +5298,6 @@
           saveCreateGroupOrder,
           showAlert,
           handleGoogleLogin,
-          handleLogin,
           logout,
           fetchAdminAccounts,
           openAddAccountModal,
