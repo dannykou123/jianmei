@@ -1383,6 +1383,7 @@
           </template>
 
           <!-- 訂單狀態修改 Modal -->
+          <teleport to="body">
           <div v-if="statusEditOrder" class="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" style="z-index:2147483646;" @click.self="statusEditOrder = null">
             <div class="g-modal w-full max-w-xs p-6 animate-zoom-in" style="z-index:2147483647; position:relative;">
               <h3 class="text-base font-black mb-1">變更訂單狀態</h3>
@@ -1404,10 +1405,12 @@
               <button @click="statusEditOrder = null" class="g-btn g-btn-glass mt-4 w-full justify-center">取消</button>
             </div>
           </div>
+          </teleport>
 
           <!-- 詳細資訊 Modal -->
-          <div v-if="detailModalOrder" class="fixed inset-0 bg-black/30 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in" @click.self="closeDetailModal">
-            <div class="g-modal w-full max-w-xl flex flex-col overflow-hidden animate-zoom-in" style="height:80vh;min-height:80vh;max-height:80vh;">
+          <teleport to="body">
+          <div v-if="detailModalOrder" class="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" style="z-index:2147483644;" @click.self="closeDetailModal">
+            <div class="g-modal w-full max-w-xl flex flex-col overflow-hidden animate-zoom-in" style="z-index:2147483645; position:relative; height:80vh;min-height:80vh;max-height:80vh;">
 
               <!-- Modal Header -->
               <div class="flex items-start justify-between px-6 pt-5 pb-4">
@@ -1836,6 +1839,7 @@
               </div>
             </div>
           </div>
+          </teleport>
 
           <!-- 新增訂單 Modal -->
           <div v-if="showCreateOrderModal" class="fixed inset-0 bg-black/30 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in" @click.self="showCreateOrderModal = false">
