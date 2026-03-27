@@ -831,17 +831,13 @@
                    <button @click="adminTab='contacts'; fetchFrequentContacts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='contacts' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
                      <i class="fas fa-address-book w-4"></i>常用聯絡人
                    </button>
-<<<<<<< .mine
-                   <div class="my-1 border-t border-stone-100"></div>
-                   <a href="https://192.168.50.102:8000/health" target="_blank" rel="noopener" @click="showSettingsMenu=false" class="w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3 text-stone-600 hover:bg-stone-50/80">
-                     <i class="fas fa-shield-alt w-4"></i>列印認證
-                   </a>
-=======
                    <div class="border-t my-1" style="border-color:var(--glass-border-subtle);"></div>
                    <button @click="adminTab='analytics'; fetchAnalytics(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='analytics' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
                      <i class="fas fa-chart-bar w-4"></i>統計分析
                    </button>
->>>>>>> .theirs
+                   <a href="https://192.168.50.102:8000/health" target="_blank" rel="noopener" @click="showSettingsMenu=false" class="w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3 text-stone-600 hover:bg-stone-50/80">
+                     <i class="fas fa-shield-alt w-4"></i>列印認證
+                   </a>
                  </div>
                </div>
                <button @click="logout" class="g-btn g-btn-glass g-btn-sm">
