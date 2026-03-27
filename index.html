@@ -752,7 +752,12 @@
         <div class="max-w-7xl mx-auto">
           <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div class="sm:hidden admin-mobile-topbar">
-              <span class="admin-mobile-brand"><i class="fas fa-chart-pie"></i></span>
+              <div class="flex items-center gap-2">
+                <span class="admin-mobile-brand"><i class="fas fa-chart-pie"></i></span>
+                <button @click="toggleDarkMode" :class="['g-btn g-btn-glass g-btn-sm theme-toggle-btn transition-all admin-mobile-icon-btn', isDark ? 'is-dark' : '']" :title="isDark ? '切換淺色模式' : '切換深色模式'">
+                  <i :class="isDark ? 'fas fa-moon' : 'fas fa-sun'"></i>
+                </button>
+              </div>
               <div class="admin-mobile-toolbar">
                 <button @click="adminTab='review'; fetchReviewList()" :class="['g-btn g-btn-sm transition-all admin-mobile-review-btn', adminTab=='review'?'g-btn-brand':'g-btn-glass']">
                   <i class="fas fa-clock"></i><span>待審核</span><span v-if="adminData.reviewList.length > 0" class="review-count-badge text-[10px] px-1 rounded-full font-black" style="line-height:15px;">{{ adminData.reviewList.length }}</span>
@@ -762,10 +767,10 @@
                 </button>
                 <div class="relative flex-shrink-0">
                   <div v-if="showSettingsMenu" class="fixed inset-0 z-40" @click="showSettingsMenu = false"></div>
-                  <button @click="showSettingsMenu = !showSettingsMenu" :class="['g-btn g-btn-sm transition-all admin-mobile-icon-btn', (adminTab=='accounts'||adminTab=='items'||adminTab=='contacts') ? 'g-btn-primary' : 'g-btn-glass']" title="設定">
+                  <button @click="showSettingsMenu = !showSettingsMenu" :class="['g-btn g-btn-sm transition-all admin-mobile-icon-btn', (adminTab=='accounts'||adminTab=='items'||adminTab=='contacts'||adminTab=='analytics') ? 'g-btn-primary' : 'g-btn-glass']" title="設定">
                     <i class="fas fa-cog"></i>
                   </button>
-                  <div v-if="showSettingsMenu" class="absolute left-0 top-full mt-2 w-44 g-card-solid py-2 z-50 animate-slide-down" style="border-radius:var(--glass-radius-sm);">
+                  <div v-if="showSettingsMenu" class="absolute right-0 top-full mt-2 w-44 g-card-solid py-2 z-50 animate-slide-down" style="border-radius:var(--glass-radius-sm);">
                     <button v-if="user && user.role === 'admin'" @click="adminTab='accounts'; fetchAdminAccounts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='accounts' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
                       <i class="fas fa-users w-4"></i>帳號管理
                     </button>
@@ -775,15 +780,16 @@
                     <button @click="adminTab='contacts'; fetchFrequentContacts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='contacts' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
                       <i class="fas fa-address-book w-4"></i>常用聯絡人
                     </button>
+                    <div class="border-t my-1" style="border-color:var(--glass-border-subtle);"></div>
+                    <button @click="adminTab='analytics'; fetchAnalytics(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='analytics' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
+                      <i class="fas fa-chart-bar w-4"></i>統計分析
+                    </button>
                     <div class="my-1 border-t border-stone-100"></div>
                     <a href="https://192.168.50.102:8000/" target="_blank" rel="noopener" @click="showSettingsMenu=false" class="w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3 text-stone-600 hover:bg-stone-50/80">
                       <i class="fas fa-shield-alt w-4"></i>列印認證
                     </a>
                   </div>
                 </div>
-                <button @click="toggleDarkMode" :class="['g-btn g-btn-glass g-btn-sm theme-toggle-btn transition-all admin-mobile-icon-btn', isDark ? 'is-dark' : '']" :title="isDark ? '切換淺色模式' : '切換深色模式'">
-                  <i :class="isDark ? 'fas fa-moon' : 'fas fa-sun'"></i>
-                </button>
                 <button @click="logout" class="g-btn g-btn-glass g-btn-sm admin-mobile-icon-btn" title="登出">
                   <i class="fas fa-sign-out-alt"></i>
                 </button>
@@ -795,6 +801,9 @@
                  <span class="w-8 h-8 bg-gradient-to-br from-brand-600 to-brand-500 text-white rounded-xl flex items-center justify-center text-base" style="box-shadow:0 4px 12px rgba(200,75,49,0.3);"><i class="fas fa-chart-pie"></i></span>
                  <span>健美滷味管理後台</span>
                </h1>
+               <button @click="toggleDarkMode" :class="['g-btn g-btn-glass g-btn-sm theme-toggle-btn transition-all', isDark ? 'is-dark' : '']" :title="isDark ? '切換淺色模式' : '切換深色模式'">
+                 <i :class="isDark ? 'fas fa-moon' : 'fas fa-sun'"></i>
+               </button>
             </div>
             
             <!-- 導航按鈕（手機與桌面共用） -->
@@ -809,7 +818,7 @@
                <!-- 設定齒輪下拉選單 -->
                <div class="relative">
                  <div v-if="showSettingsMenu" class="fixed inset-0 z-40" @click="showSettingsMenu = false"></div>
-                 <button @click="showSettingsMenu = !showSettingsMenu" :class="['g-btn g-btn-sm transition-all', (adminTab=='accounts'||adminTab=='items'||adminTab=='contacts') ? 'g-btn-primary' : 'g-btn-glass']">
+                 <button @click="showSettingsMenu = !showSettingsMenu" :class="['g-btn g-btn-sm transition-all', (adminTab=='accounts'||adminTab=='items'||adminTab=='contacts'||adminTab=='analytics') ? 'g-btn-primary' : 'g-btn-glass']">
                    <i class="fas fa-cog"></i>
                  </button>
                  <div v-if="showSettingsMenu" class="absolute right-0 top-full mt-2 w-52 g-card-solid py-2 z-50 animate-slide-down" style="border-radius:var(--glass-radius-sm);">
@@ -822,15 +831,19 @@
                    <button @click="adminTab='contacts'; fetchFrequentContacts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='contacts' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
                      <i class="fas fa-address-book w-4"></i>常用聯絡人
                    </button>
+<<<<<<< .mine
                    <div class="my-1 border-t border-stone-100"></div>
                    <a href="https://192.168.50.102:8000/health" target="_blank" rel="noopener" @click="showSettingsMenu=false" class="w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3 text-stone-600 hover:bg-stone-50/80">
                      <i class="fas fa-shield-alt w-4"></i>列印認證
                    </a>
+=======
+                   <div class="border-t my-1" style="border-color:var(--glass-border-subtle);"></div>
+                   <button @click="adminTab='analytics'; fetchAnalytics(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='analytics' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
+                     <i class="fas fa-chart-bar w-4"></i>統計分析
+                   </button>
+>>>>>>> .theirs
                  </div>
                </div>
-               <button @click="toggleDarkMode" :class="['g-btn g-btn-glass g-btn-sm theme-toggle-btn transition-all', isDark ? 'is-dark' : '']" :title="isDark ? '切換淺色模式' : '切換深色模式'">
-                 <i :class="isDark ? 'fas fa-moon' : 'fas fa-sun'"></i>
-               </button>
                <button @click="logout" class="g-btn g-btn-glass g-btn-sm">
                  <i class="fas fa-sign-out-alt"></i>
                </button>
@@ -866,6 +879,9 @@
                 </button>
                 <button @click="adminTab='contacts'; fetchFrequentContacts(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm', adminTab=='contacts'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-white/60']">
                   <i class="fas fa-address-book w-5"></i><span>常用聯絡人</span>
+                </button>
+                <button @click="adminTab='analytics'; fetchAnalytics(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm', adminTab=='analytics'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-white/60']">
+                  <i class="fas fa-chart-bar w-5"></i><span>統計分析</span>
                 </button>
                 <button @click="toggleDarkMode; showAdminMenu=false" class="w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm text-stone-600 hover:bg-white/60">
                   <i :class="[isDark ? 'fas fa-moon' : 'fas fa-sun', 'w-5']"></i><span>{{ isDark ? '切換淺色模式' : '切換深色模式' }}</span>
@@ -1457,7 +1473,7 @@
                       </button>
                     </div>
                     <div class="bg-white rounded-xl border border-stone-100 overflow-hidden">
-                      <div class="flex items-center gap-6 px-5 py-4 border-b border-stone-100 bg-stone-50/50">
+                      <div class="flex items-center gap-6 px-5 py-4 border-b border-stone-100 bg-stone-50/50 overflow-x-auto">
                         <div class="flex items-center gap-2">
                           <i class="fa-solid fa-sack-dollar text-stone-400 text-base"></i>
                           <div class="flex flex-col">
@@ -1473,8 +1489,8 @@
                             <span class="text-lg font-black text-stone-800">{{ groupOrders.length }} 筆</span>
                           </div>
                         </div>
-                        <div class="w-px h-8 bg-stone-200"></div>
-                        <div class="flex items-center gap-2 min-w-0">
+                        <div class="hidden sm:block w-px h-8 bg-stone-200"></div>
+                        <div class="hidden sm:flex items-center gap-2 min-w-0">
                           <i class="fas fa-hashtag text-stone-400 text-base"></i>
                           <div class="flex flex-col min-w-0">
                             <span class="text-xs text-stone-400 font-medium">訂單編號</span>
@@ -1567,8 +1583,8 @@
                               <span class="text-lg font-black text-stone-800">{{ groupOrders.length }} 筆</span>
                             </div>
                           </div>
-                          <div class="w-px h-8 bg-stone-200 flex-none"></div>
-                          <div class="flex items-center gap-2 flex-none min-w-0">
+                          <div class="hidden sm:block w-px h-8 bg-stone-200 flex-none"></div>
+                          <div class="hidden sm:flex items-center gap-2 flex-none min-w-0">
                             <i class="fas fa-hashtag text-stone-400 text-base"></i>
                             <div class="flex flex-col min-w-0 whitespace-nowrap leading-tight">
                               <span class="text-[11px] text-stone-400 font-medium whitespace-nowrap">訂單編號</span>
@@ -2201,6 +2217,211 @@
                 <span class="text-sm font-black text-brand-600 flex-shrink-0">${{ order.totalAmount.toLocaleString() }}</span>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- 統計分析 -->
+        <div v-if="adminTab === 'analytics'" class="space-y-5">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-xl font-black text-stone-800">統計分析</h2>
+            <button @click="fetchAnalytics" :disabled="analyticsLoading" class="g-btn g-btn-glass g-btn-sm">
+              <i :class="analyticsLoading ? 'fas fa-circle-notch fa-spin' : 'fas fa-sync-alt'"></i>
+              <span class="hidden sm:inline">重新整理</span>
+            </button>
+          </div>
+
+          <!-- 載入中 -->
+          <div v-if="analyticsLoading" class="text-center py-20">
+            <i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i>
+          </div>
+
+          <template v-else-if="analyticsHasLoaded && analyticsData">
+            <!-- KPI 卡片 -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div class="g-card-solid p-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:rgba(200,75,49,0.12);color:var(--brand-600);">
+                    <i class="fas fa-dollar-sign"></i>
+                  </div>
+                  <span class="text-xs font-bold text-stone-500">年度總營收</span>
+                </div>
+                <p class="text-xl font-black text-stone-800">${{ analyticsData.totalRevenue.toLocaleString() }}</p>
+              </div>
+              <div class="g-card-solid p-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:rgba(59,130,246,0.12);color:#3b82f6;">
+                    <i class="fas fa-file-alt"></i>
+                  </div>
+                  <span class="text-xs font-bold text-stone-500">已確認訂單</span>
+                </div>
+                <p class="text-xl font-black text-stone-800">{{ analyticsData.totalOrders }} 筆</p>
+              </div>
+              <div class="g-card-solid p-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:rgba(16,185,129,0.12);color:#10b981;">
+                    <i class="fas fa-chart-line"></i>
+                  </div>
+                  <span class="text-xs font-bold text-stone-500">平均訂單金額</span>
+                </div>
+                <p class="text-xl font-black text-stone-800">${{ analyticsData.avgOrderValue.toLocaleString() }}</p>
+              </div>
+              <div class="g-card-solid p-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:rgba(245,158,11,0.12);color:#f59e0b;">
+                    <i class="fas fa-inbox"></i>
+                  </div>
+                  <span class="text-xs font-bold text-stone-500">待確認訂單</span>
+                </div>
+                <p class="text-xl font-black text-stone-800">{{ analyticsData.statusBreakdown.pending }} 筆</p>
+              </div>
+            </div>
+
+            <!-- 月度營收圖表 + 訂單狀態 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <!-- 月度營收長條圖 -->
+              <div class="g-card-solid p-5 lg:col-span-2">
+                <h3 class="font-black text-stone-800 mb-4 flex items-center gap-2">
+                  <i class="fas fa-chart-bar text-brand-600"></i>每月營收（近12個月）
+                </h3>
+                <!-- 金額標籤列 -->
+                <div class="flex gap-1 mb-1">
+                  <div v-for="m in analyticsData.monthlyRevenue" :key="m.month+'v'" class="flex-1 text-center overflow-hidden" style="font-size:9px;font-weight:700;color:var(--brand-600);min-height:13px;line-height:13px;">
+                    <span v-if="m.amount > 0">{{ m.amount >= 10000 ? (m.amount/10000).toFixed(1)+'萬' : '$'+m.amount.toLocaleString() }}</span>
+                  </div>
+                </div>
+                <!-- 長條圖：直接用 flex items-end 對齊底部 -->
+                <div class="flex items-end gap-1" style="height:80px;">
+                  <div v-for="m in analyticsData.monthlyRevenue" :key="m.month" class="flex-1 rounded-t transition-all"
+                    :style="{
+                      height: analyticsData.monthlyRevenue.reduce((mx,x)=>Math.max(mx,x.amount),1) > 0
+                        ? Math.max(3, Math.round(m.amount / analyticsData.monthlyRevenue.reduce((mx,x)=>Math.max(mx,x.amount),1) * 76)) + 'px'
+                        : '3px',
+                      background: m.amount > 0 ? 'var(--brand-600)' : 'var(--glass-border-subtle)'
+                    }">
+                  </div>
+                </div>
+                <!-- 月份標籤列 -->
+                <div class="flex gap-1 mt-1.5">
+                  <div v-for="m in analyticsData.monthlyRevenue" :key="m.month+'l'" class="flex-1 text-center text-stone-400 overflow-hidden" style="font-size:9px;">
+                    {{ m.month.slice(5) }}月
+                  </div>
+                </div>
+              </div>
+
+              <!-- 訂單狀態分布 -->
+              <div class="g-card-solid p-5">
+                <h3 class="font-black text-stone-800 mb-4 flex items-center gap-2">
+                  <i class="fas fa-pie-chart text-stone-500"></i>訂單狀態
+                </h3>
+                <div class="space-y-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#10b981;"></div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex justify-between text-sm mb-1">
+                        <span class="font-bold text-stone-700">已確認</span>
+                        <span class="font-black text-stone-800">{{ analyticsData.statusBreakdown.approved }}</span>
+                      </div>
+                      <div class="h-2 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
+                        <div class="h-full rounded-full transition-all" style="background:#10b981;" :style="{width: analyticsData.totalGroupCount > 0 ? (analyticsData.statusBreakdown.approved / analyticsData.totalGroupCount * 100).toFixed(1) + '%' : '0%'}"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#f59e0b;"></div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex justify-between text-sm mb-1">
+                        <span class="font-bold text-stone-700">待確認</span>
+                        <span class="font-black text-stone-800">{{ analyticsData.statusBreakdown.pending }}</span>
+                      </div>
+                      <div class="h-2 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
+                        <div class="h-full rounded-full transition-all" style="background:#f59e0b;" :style="{width: analyticsData.totalGroupCount > 0 ? (analyticsData.statusBreakdown.pending / analyticsData.totalGroupCount * 100).toFixed(1) + '%' : '0%'}"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#ef4444;"></div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex justify-between text-sm mb-1">
+                        <span class="font-bold text-stone-700">已拒絕</span>
+                        <span class="font-black text-stone-800">{{ analyticsData.statusBreakdown.rejected }}</span>
+                      </div>
+                      <div class="h-2 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
+                        <div class="h-full rounded-full transition-all" style="background:#ef4444;" :style="{width: analyticsData.totalGroupCount > 0 ? (analyticsData.statusBreakdown.rejected / analyticsData.totalGroupCount * 100).toFixed(1) + '%' : '0%'}"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#94a3b8;"></div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex justify-between text-sm mb-1">
+                        <span class="font-bold text-stone-700">已過期</span>
+                        <span class="font-black text-stone-800">{{ analyticsData.statusBreakdown.expired }}</span>
+                      </div>
+                      <div class="h-2 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
+                        <div class="h-full rounded-full transition-all" style="background:#94a3b8;" :style="{width: analyticsData.totalGroupCount > 0 ? (analyticsData.statusBreakdown.expired / analyticsData.totalGroupCount * 100).toFixed(1) + '%' : '0%'}"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-xs text-stone-400 mt-2 pt-2 border-t" style="border-color:var(--glass-border-subtle)">共 {{ analyticsData.totalGroupCount }} 筆訂單（近12個月）</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 熱銷產品 + 客戶排行 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <!-- 熱銷產品 -->
+              <div class="g-card-solid p-5">
+                <h3 class="font-black text-stone-800 mb-4 flex items-center gap-2">
+                  <i class="fas fa-fire text-orange-500"></i>熱銷產品（按數量）
+                </h3>
+                <div v-if="analyticsData.topProducts.length === 0" class="text-center py-8 text-stone-400 text-sm">尚無資料</div>
+                <div v-else class="space-y-2.5">
+                  <div v-for="(p, i) in analyticsData.topProducts" :key="p.name" class="flex items-center gap-3">
+                    <span class="text-xs font-black w-5 text-right flex-shrink-0" :style="{color: i<3 ? 'var(--brand-600)' : '#94a3b8'}">{{ i + 1 }}</span>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex justify-between items-baseline mb-1">
+                        <span class="text-sm font-bold text-stone-700 truncate">{{ p.name }}</span>
+                        <span class="text-xs text-stone-500 flex-shrink-0 ml-2">×{{ p.qty }}</span>
+                      </div>
+                      <div class="h-1.5 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
+                        <div class="h-full rounded-full transition-all" :style="{width: analyticsData.topProducts[0].qty > 0 ? (p.qty / analyticsData.topProducts[0].qty * 100).toFixed(1) + '%' : '0%', background: i < 3 ? 'var(--brand-600)' : '#cbd5e1'}"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 客戶排行 -->
+              <div class="g-card-solid p-5">
+                <h3 class="font-black text-stone-800 mb-4 flex items-center gap-2">
+                  <i class="fas fa-building text-blue-500"></i>客戶排行（按營收）
+                </h3>
+                <div v-if="analyticsData.topCompanies.length === 0" class="text-center py-8 text-stone-400 text-sm">尚無資料</div>
+                <div v-else class="space-y-2.5">
+                  <div v-for="(c, i) in analyticsData.topCompanies" :key="c.name" class="flex items-center gap-3">
+                    <span class="text-xs font-black w-5 text-right flex-shrink-0" :style="{color: i<3 ? '#3b82f6' : '#94a3b8'}">{{ i + 1 }}</span>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex justify-between items-baseline mb-1">
+                        <span class="text-sm font-bold text-stone-700 truncate">{{ c.name }}</span>
+                        <span class="text-xs font-black text-stone-600 flex-shrink-0 ml-2">${{ c.revenue.toLocaleString() }}</span>
+                      </div>
+                      <div class="h-1.5 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
+                        <div class="h-full rounded-full transition-all" :style="{width: analyticsData.topCompanies[0].revenue > 0 ? (c.revenue / analyticsData.topCompanies[0].revenue * 100).toFixed(1) + '%' : '0%', background: i < 3 ? '#3b82f6' : '#cbd5e1'}"></div>
+                      </div>
+                      <span class="text-xs text-stone-400">{{ c.orderCount }} 筆訂單</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <div v-else-if="!analyticsLoading && !analyticsHasLoaded" class="text-center py-20 g-card">
+            <i class="fas fa-chart-pie text-6xl mb-4 text-stone-300"></i>
+            <p class="font-bold text-stone-400 mb-4">點擊下方按鈕載入統計資料</p>
+            <button @click="fetchAnalytics" class="g-btn g-btn-primary">
+              <i class="fas fa-chart-bar"></i>載入統計
+            </button>
           </div>
         </div>
 
@@ -3024,7 +3245,16 @@
             await checkAndExpireOrders();
             await fetchReviewList();
             startReviewListener();
-            adminTab.value = adminData.value.reviewList.length > 0 ? 'review' : 'details';
+            if (adminData.value.reviewList.length > 0) {
+              adminTab.value = 'review';
+            } else {
+              adminTab.value = 'details';
+              // 等 watch(adminTab) 和 watch([filters...]) 觸發、排程的 timer 建立後再統一處理
+              await nextTick();
+              // 取消任何被 watcher 排程的 fetch timer，改由直接呼叫確保必定執行
+              if (detailsFetchTimer) { clearTimeout(detailsFetchTimer); detailsFetchTimer = null; }
+              await fetchOrderDetails();
+            }
           } else {
             adminTab.value = 'details';
             await fetchOrderDetails();
@@ -3612,6 +3842,11 @@
         const labelSelectedIds = ref([]); // 已勾選的個人訂單 ID
         const labelPriceMap = ref({});
         const stockPrintChunks = ref([]);
+
+        // 統計分析
+        const analyticsData = ref(null);
+        const analyticsLoading = ref(false);
+        const analyticsHasLoaded = ref(false);
 
         // computed: 出貨單總筆數
         const labelTotalOrderCount = computed(() =>
@@ -5212,6 +5447,93 @@
           } finally { loading.value = false; }
         };
 
+        // 統計分析
+        const fetchAnalytics = async () => {
+          analyticsLoading.value = true;
+          try {
+            const now = new Date();
+            const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), 1);
+            yearAgo.setHours(0, 0, 0, 0);
+            const gq = query(
+              collection(db, "GroupOrders"),
+              where("deliveryTime", ">=", Timestamp.fromDate(yearAgo))
+            );
+            const groupSnap = await getDocs(gq);
+            const groups = groupSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const approvedGroups = groups.filter(g => g.status === 'approved');
+
+            // 狀態分布
+            const statusBreakdown = { approved: 0, pending: 0, rejected: 0, expired: 0 };
+            groups.forEach(g => {
+              if (statusBreakdown.hasOwnProperty(g.status)) statusBreakdown[g.status]++;
+            });
+
+            // 總營收
+            let totalRevenue = 0;
+            approvedGroups.forEach(g => { totalRevenue += (g.totalAmount || 0); });
+
+            // 每月營收（近6個月）
+            const monthMap = {};
+            for (let i = 11; i >= 0; i--) {
+              const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+              const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+              monthMap[key] = 0;
+            }
+            approvedGroups.forEach(g => {
+              if (!g.deliveryTime) return;
+              const d = g.deliveryTime.toDate ? g.deliveryTime.toDate() : new Date(g.deliveryTime.seconds * 1000);
+              const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+              if (Object.prototype.hasOwnProperty.call(monthMap, key)) monthMap[key] += (g.totalAmount || 0);
+            });
+            const monthlyRevenue = Object.entries(monthMap).map(([month, amount]) => ({ month, amount }));
+
+            // 客戶排行
+            const companyMap = {};
+            approvedGroups.forEach(g => {
+              const name = g.companyName || '未知';
+              if (!companyMap[name]) companyMap[name] = { name, orderCount: 0, revenue: 0 };
+              companyMap[name].orderCount++;
+              companyMap[name].revenue += (g.totalAmount || 0);
+            });
+            const topCompanies = Object.values(companyMap).sort((a, b) => b.revenue - a.revenue).slice(0, 8);
+
+            // 熱銷產品（讀取 Orders）
+            const productMap = {};
+            const approvedIds = approvedGroups.map(g => g.id);
+            for (let i = 0; i < approvedIds.length; i += 10) {
+              const batch = approvedIds.slice(i, i + 10);
+              const oq = query(collection(db, "Orders"), where("groupOrderId", "in", batch));
+              const oSnap = await getDocs(oq);
+              oSnap.docs.forEach(d => {
+                const order = d.data();
+                (order.items || []).forEach(item => {
+                  if (!item.itemName) return;
+                  if (!productMap[item.itemName]) productMap[item.itemName] = { name: item.itemName, qty: 0, revenue: 0 };
+                  productMap[item.itemName].qty += parseInt(item.qty) || 0;
+                  productMap[item.itemName].revenue += parseFloat(item.subtotal) || 0;
+                });
+              });
+            }
+            const topProducts = Object.values(productMap).sort((a, b) => b.qty - a.qty).slice(0, 10);
+
+            analyticsData.value = {
+              totalRevenue,
+              totalOrders: approvedGroups.length,
+              totalGroupCount: groups.length,
+              avgOrderValue: approvedGroups.length ? Math.round(totalRevenue / approvedGroups.length) : 0,
+              monthlyRevenue,
+              topCompanies,
+              topProducts,
+              statusBreakdown,
+            };
+            analyticsHasLoaded.value = true;
+          } catch (e) {
+            console.error('fetchAnalytics error:', e);
+          } finally {
+            analyticsLoading.value = false;
+          }
+        };
+
         // 監聽 adminTab 切換
         watch(adminTab, (newTab) => {
           // 保存當前標籤狀態
@@ -5227,6 +5549,8 @@
             fetchStockList();
           } else if (newTab === 'labels') {
             fetchLabelOrders();
+          } else if (newTab === 'analytics') {
+            fetchAnalytics();
           } else if (newTab === 'details') {
             clearDetailsFilter();
             detailsHasEverLoaded.value = false; // 重置，讓進入訂單管理時顯示初始 spinner
@@ -5909,6 +6233,8 @@
                 fetchStockList();
               } else if (adminTab.value === 'labels') {
                 fetchLabelOrders();
+              } else if (adminTab.value === 'analytics') {
+                fetchAnalytics();
               }
               // 啟動即時監聽 & 檢查過期
               checkAndExpireOrders().then(() => startReviewListener());
@@ -6147,6 +6473,10 @@
           toggleAllOrderSelection,
           batchExportStock,
           batchExportLabels,
+          analyticsData,
+          analyticsLoading,
+          analyticsHasLoaded,
+          fetchAnalytics,
           window
         };
       }
