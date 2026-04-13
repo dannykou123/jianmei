@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="健美滷味團購管理系統 - 管理員後台">
   <title>健美滷味 - 管理後台</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -13,7 +13,18 @@
       darkMode: 'class',
       theme: {
         extend: {
-          colors: { brand: { 50: '#FFF5F3', 100: '#FFE5DF', 200: '#FFD4CC', 300: '#FFB8A8', 400: '#FF9B82', 500: '#C84B31', 600: '#B54329', 700: '#9A3921', 800: '#7F2F1A', 900: '#642512' } }
+          colors: {
+            brand: { 50: '#FAF5F3', 100: '#F2E6E2', 200: '#E5CFC8', 300: '#D4B0A5', 400: '#C29185', 500: '#B0736A', 600: '#9A6158', 700: '#805048', 800: '#653F38', 900: '#4A2E28' },
+            morandi: { green: '#5E9E72', amber: '#C4A97D', rose: '#C46B6B', blue: '#6889A8', purple: '#9B8BAD', gray: '#A89E98' }
+          },
+          fontSize: {
+            'xs': ['13px', { lineHeight: '1.4' }],
+            'sm': ['15px', { lineHeight: '1.5' }],
+            'base': ['17px', { lineHeight: '1.6' }],
+            'lg': ['20px', { lineHeight: '1.5' }],
+            'xl': ['22px', { lineHeight: '1.4' }],
+            '2xl': ['26px', { lineHeight: '1.3' }],
+          }
         }
       }
     }
@@ -26,6 +37,7 @@
 
     /* ═══════════════ Glass/SaaS Design System ═══════════════ */
     :root {
+      /* ── Glass foundation ── */
       --glass-bg: rgba(255,255,255,0.72);
       --glass-bg-heavy: rgba(255,255,255,0.88);
       --glass-bg-light: rgba(255,255,255,0.55);
@@ -39,25 +51,53 @@
       --glass-shadow-glow: 0 0 0 1px rgba(255,255,255,0.5) inset, 0 8px 32px rgba(0,0,0,0.08);
       --glass-radius: 16px;
       --glass-radius-sm: 12px;
-      --glass-radius-xs: 8px;
+      --glass-radius-xs: 10px;
       --glass-radius-full: 9999px;
-      --brand-glow: rgba(200,75,49,0.12);
       --spring: cubic-bezier(0.23,1,0.32,1);
       --smooth: cubic-bezier(0.4,0,0.2,1);
       --mobile-panel-bg: rgba(255,255,255,0.92);
+      /* ── Morandi semantic colors ── */
+      --brand: #B0736A;
+      --brand-soft: rgba(176,115,106,0.12);
+      --brand-glow: rgba(176,115,106,0.15);
+      --color-success: #5E9E72;
+      --color-warning: #C4A97D;
+      --color-danger: #C46B6B;
+      --color-info: #6889A8;
+      /* ── Text ── */
+      --text-primary: #3D3833;
+      --text-secondary: #6B6560;
+      --text-muted: #9E9690;
+      /* ── Backgrounds ── */
+      --bg-page: #F5F0EB;
+      --bg-card: rgba(255,255,255,0.72);
+      /* ── Font sizes (elderly-friendly) ── */
+      --fs-title: 22px;
+      --fs-body: 17px;
+      --fs-label: 15px;
+      --fs-small: 13px;
+      /* ── Z-index layers ── */
+      --z-dropdown: 30;
+      --z-sticky: 40;
+      --z-modal-backdrop: 50;
+      --z-modal: 60;
+      --z-modal-top: 70;
+      --z-toast: 80;
+      --z-max: 90;
     }
 
     /* Animated mesh gradient background */
     body {
-      background: #f5f3f0;
+      background: var(--bg-page);
       background-image:
-        radial-gradient(ellipse 80% 60% at 10% 20%, rgba(200,75,49,0.07) 0%, transparent 55%),
-        radial-gradient(ellipse 60% 80% at 85% 75%, rgba(59,130,246,0.05) 0%, transparent 55%),
-        radial-gradient(ellipse 70% 50% at 50% 10%, rgba(200,75,49,0.04) 0%, transparent 50%);
+        radial-gradient(ellipse 80% 60% at 10% 20%, rgba(176,115,106,0.06) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 80% at 85% 75%, rgba(123,149,176,0.04) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 50% at 50% 10%, rgba(176,115,106,0.03) 0%, transparent 50%);
       background-attachment: fixed;
       min-height: 100vh;
-      color: #1c1917;
+      color: var(--text-primary);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: var(--fs-body);
     }
 
     /* Glass Card */
@@ -82,9 +122,9 @@
 
     /* Glass Nav */
     .g-nav {
-      background: rgba(255,255,255,0.78);
-      backdrop-filter: blur(20px) saturate(1.4);
-      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(20px) saturate(1.3);
+      -webkit-backdrop-filter: blur(20px) saturate(1.3);
       border-bottom: 1px solid var(--glass-border-subtle);
       box-shadow: 0 1px 12px rgba(0,0,0,0.04);
     }
@@ -93,32 +133,32 @@
       align-items: center;
       gap: 6px;
       max-width: 100%;
-      padding: 6px 10px;
+      padding: 8px 14px;
       border-radius: 999px;
       background: rgba(255,255,255,0.72);
       border: 1px solid rgba(231,229,228,0.9);
-      color: #57534e;
-      font-size: 12px;
+      color: var(--text-secondary);
+      font-size: 14px;
       font-weight: 800;
       line-height: 1;
     }
     .admin-mobile-tab.is-brand {
-      background: linear-gradient(135deg, #C84B31, #E85D3A);
+      background: linear-gradient(135deg, #B0736A, #C29185);
       border-color: transparent;
       color: #ffffff;
-      box-shadow: 0 4px 16px rgba(200,75,49,0.22);
+      box-shadow: 0 4px 16px rgba(176,115,106,0.25);
     }
     .admin-mobile-topbar {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       flex-wrap: nowrap;
       min-width: 0;
     }
     .admin-mobile-toolbar {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
       flex: 1;
       min-width: 0;
       flex-wrap: nowrap;
@@ -127,55 +167,55 @@
     }
     .admin-mobile-toolbar .g-btn {
       flex-shrink: 0;
-      height: 34px;
-      padding: 0 10px;
-      font-size: 11px;
-      gap: 4px;
+      height: 42px;
+      padding: 0 14px;
+      font-size: 14px;
+      gap: 5px;
     }
     .admin-mobile-toolbar .admin-mobile-icon-btn {
-      width: 34px;
+      width: 42px;
       padding: 0;
     }
     .admin-mobile-toolbar .admin-mobile-review-btn {
-      padding: 0 8px;
+      padding: 0 12px;
     }
     .admin-mobile-toolbar .admin-mobile-details-btn {
-      padding: 0 9px;
+      padding: 0 12px;
     }
     .admin-mobile-brand {
-      width: 34px;
-      height: 34px;
+      width: 40px;
+      height: 40px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       border-radius: 12px;
-      background: linear-gradient(135deg, #C84B31, #E85D3A);
+      background: linear-gradient(135deg, #B0736A, #C29185);
       color: #ffffff;
-      box-shadow: 0 4px 12px rgba(200,75,49,0.28);
+      box-shadow: 0 4px 12px rgba(176,115,106,0.25);
       flex-shrink: 0;
     }
 
     /* Glass Input */
     .g-input {
-      height: 38px;
-      padding: 0 12px;
+      height: 46px;
+      padding: 0 14px;
       background: rgba(255,255,255,0.65);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       border: 1px solid var(--glass-border-strong);
       border-radius: var(--glass-radius-xs);
-      font-size: 14px;
+      font-size: var(--fs-body);
       font-weight: 500;
-      color: #1c1917;
+      color: var(--text-primary);
       outline: none;
       transition: all 0.25s var(--smooth);
     }
     .g-input:focus {
       background: rgba(255,255,255,0.92);
-      border-color: rgba(200,75,49,0.45);
-      box-shadow: 0 0 0 3px rgba(200,75,49,0.08), 0 2px 8px rgba(0,0,0,0.06);
+      border-color: rgba(176,115,106,0.50);
+      box-shadow: 0 0 0 3px rgba(176,115,106,0.10), 0 2px 8px rgba(0,0,0,0.06);
     }
-    .g-input::placeholder { color: #a8a29e; font-weight: 400; }
+    .g-input::placeholder { color: var(--text-muted); font-weight: 400; }
     input[type="date"]::-webkit-calendar-picker-indicator,
     input[type="datetime-local"]::-webkit-calendar-picker-indicator {
       cursor: pointer;
@@ -183,7 +223,7 @@
     }
 
     .theme-toggle-btn i {
-      color: #f59e0b;
+      color: #F5C518;
       transition: color 0.2s;
     }
     .theme-toggle-btn.is-dark i {
@@ -192,42 +232,42 @@
 
     .review-count-badge {
       background: rgba(255,255,255,0.95);
-      color: #c84b31;
-      border: 1px solid rgba(200,75,49,0.18);
+      color: var(--brand);
+      border: 1px solid rgba(176,115,106,0.20);
       box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
     }
-    textarea.g-input { height: auto; padding: 10px 12px; resize: none; }
-    .g-input-lg { height: 44px; padding: 0 16px; font-size: 15px; }
+    textarea.g-input { height: auto; padding: 12px 14px; resize: none; }
+    .g-input-lg { height: 52px; padding: 0 18px; font-size: 18px; }
 
     /* Glass Select */
     .g-select {
-      height: 38px;
-      padding: 0 32px 0 12px;
+      height: 46px;
+      padding: 0 36px 0 14px;
       appearance: none;
-      background: rgba(255,255,255,0.65) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='%2378716c'%3E%3Cpath d='M0 0l5 6 5-6z'/%3E%3C/svg%3E") no-repeat right 10px center;
+      background: rgba(255,255,255,0.65) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='%236B6560'%3E%3Cpath d='M0 0l5 6 5-6z'/%3E%3C/svg%3E") no-repeat right 12px center;
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       border: 1px solid var(--glass-border-strong);
       border-radius: var(--glass-radius-xs);
-      font-size: 14px;
+      font-size: var(--fs-body);
       font-weight: 600;
-      color: #1c1917;
+      color: var(--text-primary);
       outline: none;
       cursor: pointer;
       transition: all 0.25s var(--smooth);
     }
     .g-select:focus {
-      border-color: rgba(200,75,49,0.45);
-      box-shadow: 0 0 0 3px rgba(200,75,49,0.08);
+      border-color: rgba(176,115,106,0.50);
+      box-shadow: 0 0 0 3px rgba(176,115,106,0.10);
     }
 
     /* Glass Label */
     .g-label {
-      font-size: 11px;
+      font-size: var(--fs-label);
       font-weight: 700;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
-      color: #a8a29e;
+      color: var(--text-muted);
     }
 
     /* Glass Button System */
@@ -235,12 +275,12 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      height: 36px;
-      padding: 0 16px;
+      gap: 7px;
+      height: 44px;
+      padding: 0 18px;
       border: none;
       border-radius: var(--glass-radius-xs);
-      font-size: 13px;
+      font-size: var(--fs-label);
       font-weight: 700;
       letter-spacing: 0.01em;
       cursor: pointer;
@@ -254,108 +294,108 @@
     .g-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
 
     .g-btn-primary {
-      background: #1c1917;
+      background: #4A3F3A;
       color: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      box-shadow: 0 2px 8px rgba(74,63,58,0.18);
     }
-    .g-btn-primary:hover { background: #000; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+    .g-btn-primary:hover { background: #3D3833; box-shadow: 0 4px 16px rgba(74,63,58,0.25); }
 
     .g-btn-info {
-      background: #3d6fc4;
+      background: var(--color-info);
       color: #fff;
-      box-shadow: 0 2px 8px rgba(61,111,196,0.22);
+      box-shadow: 0 2px 8px rgba(123,149,176,0.25);
     }
-    .g-btn-info:hover { background: #345faa; box-shadow: 0 4px 16px rgba(61,111,196,0.30); }
+    .g-btn-info:hover { background: #5A7B9A; box-shadow: 0 4px 16px rgba(104,137,168,0.32); }
     .g-btn-info:disabled {
       opacity: 0.92;
-      background: #3d6fc4;
+      background: var(--color-info);
       color: #ffffff;
-      box-shadow: 0 2px 8px rgba(61,111,196,0.18);
+      box-shadow: 0 2px 8px rgba(123,149,176,0.20);
     }
 
     .g-btn-brand {
-      background: linear-gradient(135deg, #C84B31, #E85D3A);
+      background: linear-gradient(135deg, #B0736A, #C29185);
       color: #fff;
-      box-shadow: 0 4px 16px rgba(200,75,49,0.3);
+      box-shadow: 0 4px 16px rgba(176,115,106,0.30);
     }
-    .g-btn-brand:hover { box-shadow: 0 6px 24px rgba(200,75,49,0.4); transform: translateY(-1px); }
+    .g-btn-brand:hover { box-shadow: 0 6px 24px rgba(176,115,106,0.40); transform: translateY(-1px); }
 
     .g-btn-glass {
       background: rgba(255,255,255,0.6);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       border: 1px solid var(--glass-border-strong);
-      color: #57534e;
+      color: var(--text-secondary);
     }
-    .g-btn-glass:hover { background: rgba(255,255,255,0.85); color: #1c1917; }
+    .g-btn-glass:hover { background: rgba(255,255,255,0.85); color: var(--text-primary); }
 
     .g-btn-danger {
-      background: #cf5252;
-      border: 1px solid #b64545;
+      background: var(--color-danger);
+      border: 1px solid #A85555;
       color: #ffffff;
     }
-    .g-btn-danger:hover { background: #b64545; }
+    .g-btn-danger:hover { background: #A85555; }
     .g-btn-danger:disabled {
       opacity: 0.92;
-      background: #cf5252;
-      border-color: #b64545;
+      background: var(--color-danger);
+      border-color: #A85555;
       color: #ffffff;
-      box-shadow: 0 2px 8px rgba(207,82,82,0.18);
+      box-shadow: 0 2px 8px rgba(196,107,107,0.20);
     }
 
     .g-btn-success {
-      background: #3f9b62;
-      border: 1px solid #358552;
+      background: var(--color-success);
+      border: 1px solid #4E8A60;
       color: #ffffff;
     }
-    .g-btn-success:hover { background: #358552; }
+    .g-btn-success:hover { background: #4E8A60; }
     .g-btn-success:disabled {
       opacity: 0.92;
-      background: #3f9b62;
-      border-color: #358552;
+      background: var(--color-success);
+      border-color: #4E8A60;
       color: #ffffff;
-      box-shadow: 0 2px 8px rgba(63,155,98,0.18);
+      box-shadow: 0 2px 8px rgba(94,158,114,0.20);
     }
 
     .g-btn-success-solid {
-      background: #3f9b62;
-      border: 1px solid #358552;
+      background: var(--color-success);
+      border: 1px solid #4E8A60;
       color: #ffffff;
     }
-    .g-btn-success-solid:hover:not(:disabled) { background: #358552; }
+    .g-btn-success-solid:hover:not(:disabled) { background: #4E8A60; }
     .g-btn-success-solid:disabled {
       opacity: 0.92;
-      background: #3f9b62;
-      border-color: #358552;
+      background: var(--color-success);
+      border-color: #4E8A60;
       color: #ffffff;
-      box-shadow: 0 2px 8px rgba(63,155,98,0.18);
+      box-shadow: 0 2px 8px rgba(94,158,114,0.20);
     }
 
     .status-chip-approved-active {
-      background: #ecfdf3;
-      border-color: #22c55e;
-      color: #166534;
-      box-shadow: inset 0 0 0 1px rgba(34,197,94,0.08);
+      background: rgba(94,158,114,0.12);
+      border-color: var(--color-success);
+      color: #4A7D58;
+      box-shadow: inset 0 0 0 1px rgba(94,158,114,0.08);
     }
 
     .status-chip-rejected-active {
-      background: #fef2f2;
-      border-color: #ef4444;
-      color: #b91c1c;
-      box-shadow: inset 0 0 0 1px rgba(239,68,68,0.06);
+      background: rgba(196,107,107,0.12);
+      border-color: var(--color-danger);
+      color: #A85555;
+      box-shadow: inset 0 0 0 1px rgba(196,107,107,0.06);
     }
 
-    .g-btn-sm { height: 30px; padding: 0 10px; font-size: 12px; }
-    .g-btn-lg { height: 42px; padding: 0 20px; font-size: 14px; }
+    .g-btn-sm { height: 38px; padding: 0 14px; font-size: 14px; }
+    .g-btn-lg { height: 50px; padding: 0 22px; font-size: 16px; }
 
     /* Glass Badge */
     .g-badge {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
+      gap: 6px;
+      padding: 4px 12px;
       border-radius: var(--glass-radius-full);
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 700;
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
@@ -363,57 +403,57 @@
     }
     .g-badge::before {
       content: '';
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       flex-shrink: 0;
     }
     .g-badge-approved {
-      background: rgba(34,197,94,0.12);
-      color: #15803d;
-      border: 1px solid rgba(34,197,94,0.25);
+      background: rgba(94,158,114,0.12);
+      color: #4A7D58;
+      border: 1px solid rgba(94,158,114,0.30);
     }
-    .g-badge-approved::before { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+    .g-badge-approved::before { background: var(--color-success); box-shadow: 0 0 6px rgba(94,158,114,0.5); }
     .g-badge-pending {
-      background: rgba(245,158,11,0.12);
-      color: #92400e;
-      border: 1px solid rgba(245,158,11,0.25);
+      background: rgba(196,169,125,0.12);
+      color: #8B7340;
+      border: 1px solid rgba(196,169,125,0.30);
     }
-    .g-badge-pending::before { background: #f59e0b; animation: pulse-dot 2s ease-in-out infinite; }
+    .g-badge-pending::before { background: var(--color-warning); animation: pulse-dot 2s ease-in-out infinite; }
     .g-badge-rejected {
-      background: rgba(239,68,68,0.10);
-      color: #991b1b;
-      border: 1px solid rgba(239,68,68,0.2);
+      background: rgba(196,107,107,0.10);
+      color: #A85555;
+      border: 1px solid rgba(196,107,107,0.25);
     }
-    .g-badge-rejected::before { background: #ef4444; }
+    .g-badge-rejected::before { background: var(--color-danger); }
     .g-badge-expired {
-      background: rgba(168,162,158,0.12);
-      color: #78716c;
-      border: 1px solid rgba(168,162,158,0.25);
+      background: rgba(168,158,152,0.12);
+      color: #8A7E78;
+      border: 1px solid rgba(168,158,152,0.25);
     }
-    .g-badge-expired::before { background: #a8a29e; }
+    .g-badge-expired::before { background: var(--text-muted); }
 
     /* Glass Table */
-    .g-table { width: 100%; font-size: 14px; border-collapse: collapse; }
+    .g-table { width: 100%; font-size: var(--fs-body); border-collapse: collapse; }
     .g-table thead tr {
-      background: rgba(245,244,242,0.6);
+      background: rgba(245,240,235,0.6);
       backdrop-filter: blur(4px);
       border-bottom: 1px solid var(--glass-border-strong);
     }
     .g-table thead th {
-      padding: 10px 14px;
-      font-size: 11px;
+      padding: 12px 14px;
+      font-size: var(--fs-small);
       font-weight: 700;
       letter-spacing: 0.05em;
       text-transform: uppercase;
-      color: #a8a29e;
+      color: var(--text-muted);
     }
     .g-table tbody tr {
       border-bottom: 1px solid rgba(120,113,108,0.08);
       transition: all 0.2s var(--smooth);
     }
-    .g-table tbody tr:hover { background: rgba(200,75,49,0.03); }
-    .g-table tbody td { padding: 10px 14px; }
+    .g-table tbody tr:hover { background: rgba(176,115,106,0.04); }
+    .g-table tbody td { padding: 12px 14px; }
 
     /* Glass Modal */
     .g-modal {
@@ -454,6 +494,166 @@
 
     .hide-scroll::-webkit-scrollbar { display: none; }
     .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* ═══════════════ Bottom Tab Bar (Mobile) ═══════════════ */
+    .bottom-tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: stretch;
+      justify-content: space-around;
+      height: 64px;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(20px) saturate(1.3);
+      -webkit-backdrop-filter: blur(20px) saturate(1.3);
+      border-top: 1px solid var(--glass-border-subtle);
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
+      z-index: var(--z-sticky);
+    }
+    .bottom-tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 6px 4px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s var(--smooth);
+      position: relative;
+      border: none;
+      background: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bottom-tab-item i {
+      font-size: 20px;
+      transition: all 0.2s var(--smooth);
+    }
+    .bottom-tab-item.is-active {
+      color: var(--brand);
+    }
+    .bottom-tab-item.is-active i {
+      transform: scale(1.1);
+    }
+    .bottom-tab-badge {
+      position: absolute;
+      top: 4px;
+      right: calc(50% - 20px);
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 9px;
+      background: var(--color-danger);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    html.dark .bottom-tab-bar {
+      background: rgba(20,20,26,0.92);
+      border-top-color: rgba(56,56,68,0.55);
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.15);
+    }
+    html.dark .bottom-tab-item {
+      color: var(--text-muted);
+    }
+    html.dark .bottom-tab-item.is-active {
+      color: var(--brand);
+    }
+
+    /* More page grid */
+    .more-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      padding: 8px 0;
+    }
+    .more-grid-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px 12px;
+      border-radius: var(--glass-radius);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      cursor: pointer;
+      transition: all 0.2s var(--smooth);
+      text-align: center;
+    }
+    .more-grid-item:hover {
+      box-shadow: var(--glass-shadow);
+      transform: translateY(-1px);
+    }
+    .more-grid-item i {
+      font-size: 26px;
+      color: var(--brand);
+    }
+    .more-grid-item span {
+      font-size: var(--fs-label);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* ═══════════════ Responsive (Mobile-first) ═══════════════ */
+    @media (max-width: 639px) {
+      /* Full-screen modals on mobile (compact modals stay small) */
+      .g-modal:not(.g-modal-compact) {
+        border-radius: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        min-height: 100vh !important;
+        margin: 0 !important;
+      }
+      /* Compact modals: always small and centered */
+      .g-modal-compact {
+        max-width: min(360px, calc(100vw - 32px)) !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: 90dvh !important;
+        overflow-y: auto !important;
+        margin: auto !important;
+        border-radius: var(--glass-radius) !important;
+      }
+      /* Modal backdrop padding removal (only for non-compact) */
+      .fixed.inset-0.p-4:not(:has(.g-modal-compact)) {
+        padding: 0 !important;
+      }
+      /* More grid columns */
+      .more-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      /* Table responsive: horizontal scroll */
+      .g-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -16px;
+        padding: 0 16px;
+      }
+    }
+
+    @media (min-width: 640px) and (max-width: 1023px) {
+      /* iPad Mini adjustments */
+      .more-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+    }
+
     @media print {
       .no-print { display: none !important; }
       body { background: white !important; margin: 0 !important; padding: 0 !important; }
@@ -532,16 +732,27 @@
       --glass-shadow: 0 8px 32px rgba(0,0,0,0.38), 0 2px 8px rgba(0,0,0,0.24);
       --glass-shadow-lg: 0 16px 48px rgba(0,0,0,0.52), 0 4px 16px rgba(0,0,0,0.34);
       --glass-shadow-glow: 0 0 0 1px rgba(68,68,80,0.46) inset, 0 8px 32px rgba(0,0,0,0.40);
-      --brand-glow: rgba(200,75,49,0.20);
+      --brand: #C29185;
+      --brand-soft: rgba(194,145,133,0.15);
+      --brand-glow: rgba(194,145,133,0.20);
+      --color-success: #6EAE82;
+      --color-warning: #D4BC90;
+      --color-danger: #D88080;
+      --color-info: #7B9EBE;
+      --text-primary: #E2E0DC;
+      --text-secondary: #B0ACA6;
+      --text-muted: #7A7670;
+      --bg-page: #1c1c20;
+      --bg-card: rgba(34,34,40,0.88);
       --mobile-panel-bg: rgba(24,24,30,0.97);
     }
     html.dark body {
-      background: #1c1c20;
+      background: var(--bg-page);
       background-image:
-        radial-gradient(ellipse 80% 60% at 10% 20%, rgba(200,75,49,0.05) 0%, transparent 55%),
-        radial-gradient(ellipse 60% 80% at 85% 75%, rgba(59,130,246,0.035) 0%, transparent 55%),
-        radial-gradient(ellipse 70% 50% at 50% 10%, rgba(200,75,49,0.03) 0%, transparent 50%);
-      color: #e2e2e7;
+        radial-gradient(ellipse 80% 60% at 10% 20%, rgba(176,115,106,0.05) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 80% at 85% 75%, rgba(123,149,176,0.035) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 50% at 50% 10%, rgba(176,115,106,0.03) 0%, transparent 50%);
+      color: var(--text-primary);
     }
     /* Nav */
     html.dark .g-nav {
@@ -554,10 +765,10 @@
       color: #d6d6de;
     }
     html.dark .admin-mobile-tab.is-brand {
-      background: linear-gradient(135deg, #C84B31, #E85D3A);
+      background: linear-gradient(135deg, #B0736A, #C29185);
       border-color: transparent;
       color: #ffffff;
-      box-shadow: 0 4px 16px rgba(200,75,49,0.28);
+      box-shadow: 0 4px 16px rgba(176,115,106,0.28);
     }
     /* Cards */
     html.dark .g-card { background: var(--glass-bg); border-color: var(--glass-border); box-shadow: var(--glass-shadow-glow); }
@@ -569,60 +780,60 @@
     html.dark .theme-toggle-btn i { color: #e2e8f0; }
     html.dark .g-btn-primary { background: #3c3c46; color: #e2e2e7; box-shadow: 0 2px 8px rgba(0,0,0,0.30); }
     html.dark .g-btn-primary:hover { background: #50505c; }
-    html.dark .g-btn-info { background: #355fa4; color: #fff; box-shadow: 0 2px 8px rgba(53,95,164,0.28); }
-    html.dark .g-btn-info:hover { background: #2f538f; box-shadow: 0 4px 16px rgba(53,95,164,0.34); }
-    html.dark .g-btn-info:disabled { opacity: 0.92; background: #355fa4; color: #ffffff; box-shadow: 0 2px 8px rgba(53,95,164,0.22); }
-    html.dark .g-btn-danger { background: #b84747; border-color: #9f3f3f; color: #ffffff; box-shadow: 0 2px 8px rgba(184,71,71,0.24); }
-    html.dark .g-btn-danger:hover { background: #9f3f3f; }
-    html.dark .g-btn-danger:disabled { opacity: 0.92; background: #b84747; border-color: #9f3f3f; color: #ffffff; box-shadow: 0 2px 8px rgba(184,71,71,0.20); }
-    html.dark .g-btn-success { background: #357f51; border-color: #2d6c44; color: #ffffff; box-shadow: 0 2px 8px rgba(53,127,81,0.24); }
-    html.dark .g-btn-success:hover { background: #2d6c44; }
-    html.dark .g-btn-success:disabled { opacity: 0.92; background: #357f51; border-color: #2d6c44; color: #ffffff; box-shadow: 0 2px 8px rgba(53,127,81,0.20); }
-    html.dark .status-chip-approved-active { background: rgba(18,66,38,0.76); border-color: rgba(74,222,128,0.40); color: #86efac; box-shadow: inset 0 0 0 1px rgba(74,222,128,0.08); }
-    html.dark .status-chip-rejected-active { background: rgba(84,28,28,0.76); border-color: rgba(248,113,113,0.40); color: #fca5a5; box-shadow: inset 0 0 0 1px rgba(248,113,113,0.08); }
-    html.dark .g-btn-success-solid { background: #357f51; border-color: #2d6c44; color: #ffffff; }
-    html.dark .g-btn-success-solid:hover:not(:disabled) { background: #2d6c44; }
-    html.dark .g-btn-success-solid:disabled { opacity: 0.92; background: #357f51; border-color: #2d6c44; color: #ffffff; box-shadow: 0 2px 8px rgba(53,127,81,0.24); }
+    html.dark .g-btn-info { background: #6080A5; color: #fff; box-shadow: 0 2px 8px rgba(96,128,165,0.28); }
+    html.dark .g-btn-info:hover { background: #527294; box-shadow: 0 4px 16px rgba(96,128,165,0.34); }
+    html.dark .g-btn-info:disabled { opacity: 0.92; background: #6080A5; color: #ffffff; box-shadow: 0 2px 8px rgba(96,128,165,0.22); }
+    html.dark .g-btn-danger { background: #C06868; border-color: #A85858; color: #ffffff; box-shadow: 0 2px 8px rgba(192,104,104,0.24); }
+    html.dark .g-btn-danger:hover { background: #A85858; }
+    html.dark .g-btn-danger:disabled { opacity: 0.92; background: #C06868; border-color: #A85858; color: #ffffff; box-shadow: 0 2px 8px rgba(192,104,104,0.20); }
+    html.dark .g-btn-success { background: #58A06C; border-color: #488A5A; color: #ffffff; box-shadow: 0 2px 8px rgba(88,160,108,0.24); }
+    html.dark .g-btn-success:hover { background: #488A5A; }
+    html.dark .g-btn-success:disabled { opacity: 0.92; background: #58A06C; border-color: #488A5A; color: #ffffff; box-shadow: 0 2px 8px rgba(88,160,108,0.20); }
+    html.dark .status-chip-approved-active { background: rgba(88,160,108,0.20); border-color: rgba(110,174,130,0.40); color: #6EAE82; box-shadow: inset 0 0 0 1px rgba(110,174,130,0.08); }
+    html.dark .status-chip-rejected-active { background: rgba(192,104,104,0.20); border-color: rgba(216,128,128,0.40); color: #D88080; box-shadow: inset 0 0 0 1px rgba(216,128,128,0.08); }
+    html.dark .g-btn-success-solid { background: #58A06C; border-color: #488A5A; color: #ffffff; }
+    html.dark .g-btn-success-solid:hover:not(:disabled) { background: #488A5A; }
+    html.dark .g-btn-success-solid:disabled { opacity: 0.92; background: #58A06C; border-color: #488A5A; color: #ffffff; box-shadow: 0 2px 8px rgba(88,160,108,0.24); }
     html.dark .review-count-badge {
       background: rgba(52,52,62,0.96);
-      color: #f87171;
-      border-color: rgba(248,113,113,0.20);
+      color: #D88080;
+      border-color: rgba(216,128,128,0.20);
       box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
     }
     /* Inputs */
-    html.dark .g-input { background: rgba(36,36,44,0.76); border-color: var(--glass-border-strong); color: #e2e2e7; }
-    html.dark .g-input:focus { background: rgba(42,42,52,0.95); border-color: rgba(200,75,49,0.52); box-shadow: 0 0 0 3px rgba(200,75,49,0.10), 0 2px 8px rgba(0,0,0,0.16); }
+    html.dark .g-input { background: rgba(36,36,44,0.76); border-color: var(--glass-border-strong); color: var(--text-primary); }
+    html.dark .g-input:focus { background: rgba(42,42,52,0.95); border-color: rgba(194,145,133,0.52); box-shadow: 0 0 0 3px rgba(194,145,133,0.10), 0 2px 8px rgba(0,0,0,0.16); }
     html.dark input[type="date"]::-webkit-calendar-picker-indicator,
     html.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
       filter: invert(1) brightness(1.15) contrast(1.05);
       opacity: 0.92;
     }
-    html.dark .g-input::placeholder { color: #5a5a68; }
-    html.dark textarea.g-input { color: #e2e2e7; background: rgba(36,36,44,0.76); }
+    html.dark .g-input::placeholder { color: var(--text-muted); }
+    html.dark textarea.g-input { color: var(--text-primary); background: rgba(36,36,44,0.76); }
     /* Select */
     html.dark .g-select {
       background-color: rgba(36,36,44,0.76);
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='%2396969e'%3E%3Cpath d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
       border-color: var(--glass-border-strong);
-      color: #e2e2e7;
+      color: var(--text-primary);
     }
-    html.dark .g-select:focus { border-color: rgba(200,75,49,0.52); box-shadow: 0 0 0 3px rgba(200,75,49,0.10); }
-    html.dark .g-label { color: #a8a8bc; }
+    html.dark .g-select:focus { border-color: rgba(194,145,133,0.52); box-shadow: 0 0 0 3px rgba(194,145,133,0.10); }
+    html.dark .g-label { color: var(--text-muted); }
     /* Table */
     html.dark .g-table thead tr { background: rgba(24,24,30,0.72); border-bottom-color: var(--glass-border-strong); }
-    html.dark .g-table thead th { color: #9898aa; }
+    html.dark .g-table thead th { color: var(--text-muted); }
     html.dark .g-table tbody tr { border-bottom-color: rgba(54,54,66,0.28); }
-    html.dark .g-table tbody tr:hover { background: rgba(200,75,49,0.055); }
-    html.dark .g-table tbody td { color: #dcdce6; }
+    html.dark .g-table tbody tr:hover { background: rgba(176,115,106,0.06); }
+    html.dark .g-table tbody td { color: var(--text-primary); }
     /* Modal */
     html.dark .g-modal { box-shadow: var(--glass-shadow-lg), 0 0 0 1px rgba(66,66,78,0.46) inset; }
     html.dark .g-modal-header { border-bottom-color: var(--glass-border-subtle); }
     html.dark .g-modal-footer { border-top-color: var(--glass-border-subtle); }
     /* Badges */
-    html.dark .g-badge-approved { background: rgba(34,197,94,0.10); color: #6ee7a8; border-color: rgba(34,197,94,0.20); }
-    html.dark .g-badge-approved::before { box-shadow: 0 0 6px rgba(110,231,168,0.4); }
-    html.dark .g-badge-pending { background: rgba(245,158,11,0.10); color: #fcd34d; border-color: rgba(245,158,11,0.20); }
-    html.dark .g-badge-rejected { background: rgba(239,68,68,0.09); color: #fca5a5; border-color: rgba(239,68,68,0.17); }
+    html.dark .g-badge-approved { background: rgba(110,174,130,0.12); color: #6EAE82; border-color: rgba(110,174,130,0.25); }
+    html.dark .g-badge-approved::before { box-shadow: 0 0 6px rgba(110,174,130,0.4); }
+    html.dark .g-badge-pending { background: rgba(212,188,144,0.12); color: #D4BC90; border-color: rgba(212,188,144,0.25); }
+    html.dark .g-badge-rejected { background: rgba(216,128,128,0.10); color: #D88080; border-color: rgba(216,128,128,0.20); }
     html.dark .g-badge-expired { background: rgba(80,80,92,0.13); color: #72727e; border-color: rgba(80,80,92,0.22); }
     /* Scrollbar */
     html.dark ::-webkit-scrollbar-thumb { background: rgba(70,70,82,0.48); }
@@ -646,7 +857,7 @@
     html.dark .text-green-700 { color: #34d399 !important; }
     html.dark .text-amber-600 { color: #fbbf24 !important; }
     html.dark .text-amber-700 { color: #fcd34d !important; }
-    html.dark .text-brand-700 { color: #e8856c !important; }
+    html.dark .text-brand-700 { color: #D4B0A5 !important; }
     /* Background colors */
     html.dark .bg-white { background-color: #2a2a34 !important; }
     html.dark .bg-stone-50 { background-color: #222230 !important; }
@@ -661,10 +872,10 @@
     html.dark .bg-stone-50\/70 { background-color: rgba(26,26,36,0.96) !important; }
     html.dark .bg-stone-100\/60 { background-color: rgba(46,46,58,0.64) !important; }
     html.dark .bg-stone-200\/60 { background-color: rgba(48,48,58,0.55) !important; }
-    html.dark .bg-brand-50 { background-color: rgba(200,75,49,0.14) !important; }
+    html.dark .bg-brand-50 { background-color: rgba(176,115,106,0.14) !important; }
     html.dark .bg-green-100 { background-color: rgba(34,197,94,0.12) !important; }
     html.dark .bg-red-100 { background-color: rgba(239,68,68,0.12) !important; }
-    html.dark .bg-brand-100 { background-color: rgba(200,75,49,0.14) !important; }
+    html.dark .bg-brand-100 { background-color: rgba(176,115,106,0.14) !important; }
     html.dark .bg-amber-50 { background-color: rgba(58,48,18,0.50) !important; }
     html.dark .bg-green-50\/80 { background-color: rgba(20,65,32,0.85) !important; }
     html.dark .bg-amber-50\/80 { background-color: rgba(68,52,10,0.85) !important; }
@@ -717,7 +928,7 @@
       <div class="g-card-solid p-10 w-full max-w-sm relative overflow-hidden" style="border-radius:var(--glass-radius);">
         <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-brand-500 via-brand-400 to-orange-400" style="opacity:0.9"></div>
         <div class="flex justify-center mb-6">
-          <span class="w-14 h-14 bg-gradient-to-br from-brand-600 to-brand-500 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg" style="box-shadow:0 8px 24px rgba(200,75,49,0.3);"><i class="fas fa-chart-pie"></i></span>
+          <span class="w-14 h-14 bg-gradient-to-br from-brand-600 to-brand-500 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg" style="box-shadow:0 8px 24px rgba(176,115,106,0.3);"><i class="fas fa-chart-pie"></i></span>
         </div>
         <h2 class="text-2xl font-black mb-3 text-center text-stone-800 tracking-tight">健美滷味訂單管理</h2>
         <p class="text-sm text-stone-500 text-center leading-6 mb-8">首次登入會自動建立帳號<br>需由管理者授權後才能進入後台</p>
@@ -745,60 +956,27 @@
     </div>
 
     <!-- 管理員後台 -->
-    <div v-else-if="currentView === 'admin'" class="min-h-screen pb-20 hide-for-label-print hide-for-stock-print">
+    <div v-else-if="currentView === 'admin'" class="min-h-screen hide-for-label-print hide-for-stock-print" style="padding-bottom:80px;">
       
-      <!-- 導航欄 -->
+      <!-- 導航欄 (桌面版保持頂部，手機版簡化) -->
       <div class="g-nav px-4 py-2.5 sticky top-0 z-50 no-print">
-        <div class="max-w-7xl mx-auto">
-          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div class="sm:hidden admin-mobile-topbar">
-              <div class="flex items-center gap-2">
-                <span class="admin-mobile-brand"><i class="fas fa-chart-pie"></i></span>
-                <button @click="toggleDarkMode" :class="['g-btn g-btn-glass g-btn-sm theme-toggle-btn transition-all admin-mobile-icon-btn', isDark ? 'is-dark' : '']" :title="isDark ? '切換淺色模式' : '切換深色模式'">
-                  <i :class="isDark ? 'fas fa-moon' : 'fas fa-sun'"></i>
-                </button>
-              </div>
-              <div class="admin-mobile-toolbar">
-                <button @click="adminTab='review'; fetchReviewList()" :class="['g-btn g-btn-sm transition-all admin-mobile-review-btn', adminTab=='review'?'g-btn-brand':'g-btn-glass']">
-                  <i class="fas fa-clock"></i><span>待審核</span><span v-if="adminData.reviewList.length > 0" class="review-count-badge text-[10px] px-1 rounded-full font-black" style="line-height:15px;">{{ adminData.reviewList.length }}</span>
-                </button>
-                <button @click="adminTab='details'" :class="['g-btn g-btn-sm transition-all admin-mobile-details-btn', adminTab=='details'?'g-btn-primary':'g-btn-glass']">
-                  <i class="fas fa-file-alt"></i><span>訂單管理</span>
-                </button>
-                <div class="relative flex-shrink-0">
-                  <div v-if="showSettingsMenu" class="fixed inset-0 z-40" @click="showSettingsMenu = false"></div>
-                  <button @click="showSettingsMenu = !showSettingsMenu" :class="['g-btn g-btn-sm transition-all admin-mobile-icon-btn', (adminTab=='accounts'||adminTab=='items'||adminTab=='contacts'||adminTab=='analytics') ? 'g-btn-primary' : 'g-btn-glass']" title="設定">
-                    <i class="fas fa-cog"></i>
-                  </button>
-                  <div v-if="showSettingsMenu" class="absolute right-0 top-full mt-2 w-44 g-card-solid py-2 z-50 animate-slide-down" style="border-radius:var(--glass-radius-sm);">
-                    <button v-if="user && user.role === 'admin'" @click="adminTab='accounts'; fetchAdminAccounts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='accounts' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
-                      <i class="fas fa-users w-4"></i>帳號管理
-                    </button>
-                    <button @click="adminTab='items'; fetchAdminItems(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='items' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
-                      <i class="fas fa-box w-4"></i>產品管理
-                    </button>
-                    <button @click="adminTab='contacts'; fetchFrequentContacts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='contacts' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
-                      <i class="fas fa-address-book w-4"></i>常用聯絡人
-                    </button>
-                    <div class="border-t my-1" style="border-color:var(--glass-border-subtle);"></div>
-                    <button @click="adminTab='analytics'; fetchAnalytics(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='analytics' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
-                      <i class="fas fa-chart-bar w-4"></i>統計分析
-                    </button>
-                    <div class="my-1 border-t border-stone-100"></div>
-                    <a href="https://192.168.50.102:8000/" target="_blank" rel="noopener" @click="showSettingsMenu=false" class="w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3 text-stone-600 hover:bg-stone-50/80">
-                      <i class="fas fa-shield-alt w-4"></i>列印認證
-                    </a>
-                  </div>
-                </div>
-                <button @click="logout" class="g-btn g-btn-glass g-btn-sm admin-mobile-icon-btn" title="登出">
-                  <i class="fas fa-sign-out-alt"></i>
-                </button>
-              </div>
+        <div class="max-w-screen-2xl mx-auto">
+          <div class="flex items-center justify-between">
+            <!-- 手機版簡化頂部：品牌 + 深淺模式 -->
+            <div class="sm:hidden flex items-center gap-2">
+              <span class="admin-mobile-brand"><i class="fas fa-chart-pie"></i></span>
+              <span class="font-black text-lg" style="color:var(--text-primary);">健美滷味</span>
+            </div>
+            <div class="sm:hidden flex items-center gap-2">
+              <button @click="toggleDarkMode" :class="['g-btn g-btn-glass g-btn-sm theme-toggle-btn transition-all', isDark ? 'is-dark' : '']" style="width:42px;height:42px;padding:0;">
+                <i :class="isDark ? 'fas fa-moon' : 'fas fa-sun'" style="font-size:16px;"></i>
+              </button>
             </div>
 
+            <!-- 桌面版左側 -->
             <div class="hidden sm:flex items-center gap-2 min-w-0">
                <h1 class="font-black text-base text-stone-900 flex items-center gap-2 min-w-0">
-                 <span class="w-8 h-8 bg-gradient-to-br from-brand-600 to-brand-500 text-white rounded-xl flex items-center justify-center text-base" style="box-shadow:0 4px 12px rgba(200,75,49,0.3);"><i class="fas fa-chart-pie"></i></span>
+                 <span class="w-8 h-8 bg-gradient-to-br from-brand-600 to-brand-500 text-white rounded-xl flex items-center justify-center text-base" style="box-shadow:0 4px 12px rgba(176,115,106,0.3);"><i class="fas fa-chart-pie"></i></span>
                  <span>健美滷味管理後台</span>
                </h1>
                <button @click="toggleDarkMode" :class="['g-btn g-btn-glass g-btn-sm theme-toggle-btn transition-all', isDark ? 'is-dark' : '']" :title="isDark ? '切換淺色模式' : '切換深色模式'">
@@ -806,27 +984,27 @@
                </button>
             </div>
             
-            <!-- 導航按鈕（手機與桌面共用） -->
+            <!-- 桌面版導航按鈕 -->
             <div class="hidden sm:flex items-center gap-1.5">
                <button @click="adminTab='review'; fetchReviewList()" :class="['g-btn g-btn-sm transition-all flex items-center gap-1', adminTab=='review'?'g-btn-brand':'g-btn-glass']">
-                 <i class="hidden sm:inline fas fa-clock"></i><span>待審核</span><span v-if="adminData.reviewList.length > 0" class="review-count-badge text-[10px] px-1.5 rounded-full font-black" style="line-height:16px;">{{ adminData.reviewList.length }}</span>
+                 <i class="fas fa-clock"></i><span>待審核</span><span v-if="adminData.reviewList.length > 0" class="review-count-badge text-[10px] px-1.5 rounded-full font-black" style="line-height:16px;">{{ adminData.reviewList.length }}</span>
                </button>
                <button @click="adminTab='details'" :class="['g-btn g-btn-sm transition-all', adminTab=='details'?'g-btn-primary':'g-btn-glass']">
-                 <i class="hidden sm:inline fas fa-file-alt"></i>訂單管理
+                 <i class="fas fa-file-alt"></i>訂單管理
+               </button>
+               <button @click="adminTab='items'; fetchAdminItems()" :class="['g-btn g-btn-sm transition-all', adminTab=='items'?'g-btn-primary':'g-btn-glass']">
+                 <i class="fas fa-box"></i>產品管理
                </button>
                <div class="w-px h-5 bg-stone-200/60 mx-0.5"></div>
                <!-- 設定齒輪下拉選單 -->
                <div class="relative">
                  <div v-if="showSettingsMenu" class="fixed inset-0 z-40" @click="showSettingsMenu = false"></div>
-                 <button @click="showSettingsMenu = !showSettingsMenu" :class="['g-btn g-btn-sm transition-all', (adminTab=='accounts'||adminTab=='items'||adminTab=='contacts'||adminTab=='analytics') ? 'g-btn-primary' : 'g-btn-glass']">
+                 <button @click="showSettingsMenu = !showSettingsMenu" :class="['g-btn g-btn-sm transition-all', (adminTab=='accounts'||adminTab=='contacts'||adminTab=='analytics') ? 'g-btn-primary' : 'g-btn-glass']">
                    <i class="fas fa-cog"></i>
                  </button>
                  <div v-if="showSettingsMenu" class="absolute right-0 top-full mt-2 w-52 g-card-solid py-2 z-50 animate-slide-down" style="border-radius:var(--glass-radius-sm);">
                    <button v-if="user && user.role === 'admin'" @click="adminTab='accounts'; fetchAdminAccounts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='accounts' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
                      <i class="fas fa-users w-4"></i>帳號管理
-                   </button>
-                   <button @click="adminTab='items'; fetchAdminItems(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='items' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
-                     <i class="fas fa-box w-4"></i>產品管理
                    </button>
                    <button @click="adminTab='contacts'; fetchFrequentContacts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='contacts' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
                      <i class="fas fa-address-book w-4"></i>常用聯絡人
@@ -848,51 +1026,29 @@
         </div>
       </div>
       
-      <!-- 手機版側邊選單 -->
-      <transition name="mobile-menu">
-        <div v-if="showAdminMenu" @click="showAdminMenu = false" class="md:hidden fixed inset-0 bg-black/30 backdrop-blur-md z-40 no-print animate-fade-in">
-          <div @click.stop class="w-72 h-full p-5 overflow-y-auto animate-slide-up" style="background:var(--mobile-panel-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:8px 0 40px rgba(0,0,0,0.08);">
-            <div class="flex items-center justify-between mb-6">
-              <h2 class="font-black text-lg text-stone-800">功能選單</h2>
-              <button @click="showAdminMenu = false" class="g-btn g-btn-glass g-btn-sm" style="width:32px;height:32px;padding:0;">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <div class="space-y-1">
-              <button @click="adminTab='review'; fetchReviewList(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm', adminTab=='review'?'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md':'text-stone-600 hover:bg-white/60']">
-                <i class="fas fa-clock w-5"></i><span>待審核 <span v-if="adminData.reviewList.length>0" class="text-xs">({{adminData.reviewList.length}})</span></span>
-              </button>
-              <button @click="adminTab='details'; showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm', adminTab=='details'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-white/60']">
-                <i class="fas fa-file-alt w-5"></i><span>訂單管理</span>
-              </button>
-              <div class="border-t border-stone-200/50 pt-2 mt-2">
-                <p class="g-label px-4 mb-2">設定</p>
-                <button v-if="user && user.role === 'admin'" @click="adminTab='accounts'; fetchAdminAccounts(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm', adminTab=='accounts'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-white/60']">
-                  <i class="fas fa-users w-5"></i><span>帳號管理</span>
-                </button>
-                <button @click="adminTab='items'; fetchAdminItems(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm', adminTab=='items'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-white/60']">
-                  <i class="fas fa-box w-5"></i><span>產品管理</span>
-                </button>
-                <button @click="adminTab='contacts'; fetchFrequentContacts(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm', adminTab=='contacts'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-white/60']">
-                  <i class="fas fa-address-book w-5"></i><span>常用聯絡人</span>
-                </button>
-                <button @click="adminTab='analytics'; fetchAnalytics(); showAdminMenu=false" :class="['w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm', adminTab=='analytics'?'bg-stone-800 text-white shadow-md':'text-stone-600 hover:bg-white/60']">
-                  <i class="fas fa-chart-bar w-5"></i><span>統計分析</span>
-                </button>
-                <button @click="toggleDarkMode; showAdminMenu=false" class="w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm text-stone-600 hover:bg-white/60">
-                  <i :class="[isDark ? 'fas fa-moon' : 'fas fa-sun', 'w-5']"></i><span>{{ isDark ? '切換淺色模式' : '切換深色模式' }}</span>
-                </button>
-                <button @click="logout(); showAdminMenu=false" class="w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-3 text-sm text-red-600 hover:bg-red-50/80">
-                  <i class="fas fa-sign-out-alt w-5"></i><span>登出</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </transition>
+      <!-- 手機版底部 Tab Bar -->
+      <nav class="sm:hidden bottom-tab-bar no-print">
+        <button @click="adminTab='review'; fetchReviewList()" :class="['bottom-tab-item', adminTab==='review' ? 'is-active' : '']">
+          <i class="fas fa-clock"></i>
+          <span>待審核</span>
+          <span v-if="adminData.reviewList.length > 0" class="bottom-tab-badge">{{ adminData.reviewList.length }}</span>
+        </button>
+        <button @click="adminTab='details'" :class="['bottom-tab-item', adminTab==='details' ? 'is-active' : '']">
+          <i class="fas fa-file-alt"></i>
+          <span>訂單管理</span>
+        </button>
+        <button @click="adminTab='contacts'; fetchFrequentContacts()" :class="['bottom-tab-item', adminTab==='contacts' ? 'is-active' : '']">
+          <i class="fas fa-address-book"></i>
+          <span>聯絡人</span>
+        </button>
+        <button @click="adminTab='more'" :class="['bottom-tab-item', adminTab==='more'||adminTab==='accounts'||adminTab==='items'||adminTab==='analytics' ? 'is-active' : '']">
+          <i class="fas fa-ellipsis-h"></i>
+          <span>更多</span>
+        </button>
+      </nav>
 
       <!-- 主要內容區域 -->
-      <div class="max-w-7xl mx-auto p-4 md:p-6">
+      <div class="max-w-screen-2xl mx-auto p-4 md:p-6">
         
         <!-- 帳號管理 -->
         <div v-if="adminTab === 'accounts'" class="space-y-4">
@@ -914,7 +1070,7 @@
             <div v-for="account in adminData.accountsList" :key="account.id" class="g-card p-5 hover:translate-y-[-2px]">
               <div class="flex justify-between items-start mb-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-11 h-11 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center text-white font-black text-lg" style="box-shadow:0 4px 12px rgba(200,75,49,0.25);">
+                  <div class="w-11 h-11 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center text-white font-black text-lg" style="box-shadow:0 4px 12px rgba(176,115,106,0.25);">
                     {{ account.name ? account.name.charAt(0).toUpperCase() : account.accountId.charAt(0) }}
                   </div>
                   <div>
@@ -974,7 +1130,7 @@
           <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div v-for="contact in frequentContacts" :key="contact.id" class="g-card p-5 hover:translate-y-[-2px]">
               <div class="flex items-center gap-3 mb-4">
-                <div class="w-11 h-11 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center text-white font-black text-lg flex-shrink-0" style="box-shadow:0 4px 12px rgba(200,75,49,0.25);">
+                <div class="w-11 h-11 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center text-white font-black text-lg flex-shrink-0" style="box-shadow:0 4px 12px rgba(176,115,106,0.25);">
                   {{ contact.companyName ? contact.companyName.charAt(0) : '?' }}
                 </div>
                 <div class="min-w-0">
@@ -1005,65 +1161,72 @@
         </div>
 
         <!-- 產品管理 -->
-        <div v-if="adminTab === 'items'" class="space-y-4">
-          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
-            <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-              <h2 class="text-2xl font-black text-stone-800">產品管理</h2>
-              <select v-model="itemsSort" @change="fetchAdminItems" class="g-select w-full sm:w-auto">
-                <option value="createdAt-asc">建立時間 (舊→新)</option>
-                <option value="createdAt-desc">建立時間 (新→舊)</option>
-                <option value="name-asc">名稱 (A→Z)</option>
-                <option value="name-desc">名稱 (Z→A)</option>
-                <option value="price-asc">價格 (低→高)</option>
-                <option value="price-desc">價格 (高→低)</option>
-              </select>
-            </div>
-            <button @click="openAddItemModal" class="g-btn g-btn-brand flex items-center justify-center gap-2">
-              <i class="fas fa-plus"></i><span>新增產品</span>
+        <div v-if="adminTab === 'items'">
+          <!-- 頁首 -->
+          <div class="flex items-center justify-between gap-3 mb-5">
+            <h2 class="text-2xl font-black text-stone-800 flex-shrink-0">產品管理</h2>
+            <button @click="openAddItemModal" class="g-btn g-btn-brand flex items-center gap-2 flex-shrink-0">
+              <i class="fas fa-plus"></i><span class="hidden sm:inline">新增產品</span><span class="sm:hidden">新增</span>
             </button>
           </div>
 
-          <!-- 類型篩選 -->
-          <div class="flex overflow-hidden self-start" style="border-radius:var(--glass-radius-xs);border:1px solid var(--glass-border-strong);">
-            <button @click="itemTypeFilter = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', itemTypeFilter === 'all' ? 'bg-stone-800 text-white' : 'bg-white/60 text-stone-500 hover:bg-white/80']">全部</button>
-            <button @click="itemTypeFilter = 'regular'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', itemTypeFilter === 'regular' ? 'bg-green-600 text-white' : 'bg-white/60 text-green-700 hover:bg-green-50']">一般</button>
-            <button @click="itemTypeFilter = 'vacuum'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', itemTypeFilter === 'vacuum' ? 'bg-purple-600 text-white' : 'bg-white/60 text-purple-700 hover:bg-purple-50']">真空包裝</button>
+          <!-- 工具列：篩選 + 排序 + 計數 -->
+          <div class="flex flex-wrap items-center gap-2 mb-4">
+            <div class="flex overflow-hidden" style="border-radius:var(--glass-radius-xs);border:1px solid var(--glass-border-strong);">
+              <button @click="itemTypeFilter = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', itemTypeFilter === 'all' ? 'bg-stone-800 text-white' : 'bg-white/60 text-stone-500 hover:bg-white/80']">全部</button>
+              <button @click="itemTypeFilter = 'regular'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', itemTypeFilter === 'regular' ? 'bg-green-600 text-white' : 'bg-white/60 text-green-700 hover:bg-green-50']">一般</button>
+              <button @click="itemTypeFilter = 'vacuum'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', itemTypeFilter === 'vacuum' ? 'bg-purple-600 text-white' : 'bg-white/60 text-purple-700 hover:bg-purple-50']">真空包裝</button>
+            </div>
+            <select v-model="itemsSort" @change="fetchAdminItems" class="g-select" style="height:32px;font-size:12px;padding-top:0;padding-bottom:0;">
+              <option value="createdAt-asc">建立時間 (舊→新)</option>
+              <option value="createdAt-desc">建立時間 (新→舊)</option>
+              <option value="name-asc">名稱 (A→Z)</option>
+              <option value="name-desc">名稱 (Z→A)</option>
+              <option value="price-asc">價格 (低→高)</option>
+              <option value="price-desc">價格 (高→低)</option>
+            </select>
+            <span class="text-xs text-stone-400 ml-auto">
+              共 {{ adminData.itemsList.filter(i => itemTypeFilter === 'all' || (i.type||'regular') === itemTypeFilter).length }} 項
+            </span>
           </div>
 
           <div v-if="loading || !itemsHasLoaded" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
-          
+
           <div v-else-if="adminData.itemsList.length === 0" class="text-center py-20 g-card">
             <i class="fas fa-box text-5xl mb-4 text-stone-200"></i>
             <p class="font-bold text-stone-400">目前沒有產品資料</p>
           </div>
-          
-          <div v-else class="space-y-3">
-            <div v-for="item in adminData.itemsList.filter(i => itemTypeFilter === 'all' || (i.type||'regular') === itemTypeFilter)" :key="item.id" class="g-card px-5 py-4 hover:translate-y-[-1px]">
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div class="flex-1 min-w-0">
-                  <div class="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3 mb-1">
-                    <h3 class="font-black text-stone-800 text-base">{{ item.name }}</h3>
-                    <p class="text-lg font-black text-brand-600">NT$ {{ item.price }}</p>
-                    <span v-if="item.isCombo" class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
-                      <i class="fas fa-layer-group text-[10px]"></i>組合 {{ item.combos ? item.combos.length : 0 }}項
-                    </span>
-                    <span v-if="(item.type||'regular')==='vacuum'" class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold"></i>真空包裝</span>
-                    <span v-else class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold"></i>一般</span>
-                  </div>
-                  <p v-if="item.description" class="text-sm text-stone-500 line-clamp-2">{{ item.description }}</p>
-                  <div v-if="item.isCombo && item.combos && item.combos.length" class="mt-1 flex flex-wrap gap-1">
-                    <span v-for="comp in item.combos" :key="comp.itemName" class="text-xs bg-stone-100 text-stone-500 px-2 py-0.5 rounded">{{ comp.itemName }} ×{{ comp.qty }}</span>
-                  </div>
+
+          <!-- 清單卡片 -->
+          <div v-else class="g-card-solid overflow-hidden">
+            <div v-for="(item, idx) in adminData.itemsList.filter(i => itemTypeFilter === 'all' || (i.type||'regular') === itemTypeFilter)" :key="item.id"
+                 class="flex items-center gap-3 px-4 py-3 transition hover:bg-stone-50/60"
+                 :class="idx !== 0 ? 'border-t border-stone-100/60' : ''">
+              <!-- 類型色條 -->
+              <div class="w-1 self-stretch rounded-full flex-shrink-0"
+                   :class="(item.type||'regular')==='vacuum' ? 'bg-purple-400' : 'bg-green-500'"></div>
+              <!-- 名稱 + 說明 + 組合 -->
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                  <span class="font-black text-stone-800 text-sm">{{ item.name }}</span>
+                  <span v-if="(item.type||'regular')==='vacuum'" class="text-[10px] font-bold px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full">真空包裝</span>
+                  <span v-if="item.isCombo" class="text-[10px] font-bold px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full"><i class="fas fa-layer-group text-[9px]"></i> 組合</span>
                 </div>
-                
-                <div class="flex gap-2 sm:flex-shrink-0">
-                  <button @click="editItem(item)" class="g-btn g-btn-glass g-btn-sm flex-1 sm:flex-none text-blue-600">
-                    <i class="fas fa-edit"></i>編輯
-                  </button>
-                  <button @click="deleteItem(item)" class="g-btn g-btn-danger g-btn-sm flex-1 sm:flex-none">
-                    <i class="fas fa-trash"></i>刪除
-                  </button>
+                <div v-if="item.description" class="text-xs text-stone-400 truncate mt-0.5">{{ item.description }}</div>
+                <div v-if="item.isCombo && item.combos && item.combos.length" class="flex flex-wrap gap-1 mt-1">
+                  <span v-for="comp in item.combos" :key="comp.itemName" class="text-[10px] bg-stone-100 text-stone-400 px-1.5 py-0.5 rounded">{{ comp.itemName }} ×{{ comp.qty }}</span>
                 </div>
+              </div>
+              <!-- 價格 -->
+              <span class="font-black text-brand-600 text-sm flex-shrink-0 w-20 text-right">NT$ {{ item.price }}</span>
+              <!-- 操作 -->
+              <div class="flex gap-1 flex-shrink-0">
+                <button @click="editItem(item)" class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition" title="編輯">
+                  <i class="fas fa-edit text-sm"></i>
+                </button>
+                <button @click="deleteItem(item)" class="w-8 h-8 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 transition" title="刪除">
+                  <i class="fas fa-trash text-sm"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -1096,7 +1259,7 @@
               <div class="flex flex-col md:flex-row md:items-center gap-2 px-4 pt-3 pb-2">
                 <div class="md:flex-1"></div>
                 <div class="flex items-center gap-2 flex-shrink-0 self-end md:self-auto">
-                  <select v-model.number="reviewPageSize" class="g-select" style="height:32px;font-size:12px;padding-right:28px;">
+                  <select v-model.number="reviewPageSize" class="g-select" style="height:40px;font-size:14px;padding-right:28px;">
                     <option :value="10">每頁10筆</option>
                     <option :value="20">每頁20筆</option>
                     <option :value="50">每頁50筆</option>
@@ -1104,8 +1267,8 @@
                   </select>
                   <!-- 欄位設定按鈕 -->
                   <div class="relative flex-shrink-0">
-                    <button @click="showReviewColumnSettings = !showReviewColumnSettings" :class="['w-8 h-8 flex items-center justify-center border transition', showReviewColumnSettings ? 'bg-stone-800 text-white border-stone-800' : 'bg-white/60 border-stone-200/60 text-stone-500 hover:bg-white/80']" style="border-radius:var(--glass-radius-xs);" title="欄位設定">
-                      <i class="fas fa-columns text-xs"></i>
+                    <button @click="showReviewColumnSettings = !showReviewColumnSettings" :class="['w-10 h-10 flex items-center justify-center border transition', showReviewColumnSettings ? 'bg-stone-800 text-white border-stone-800' : 'bg-white/60 border-stone-200/60 text-stone-500 hover:bg-white/80']" style="border-radius:var(--glass-radius-xs);" title="欄位設定">
+                      <i class="fas fa-columns text-sm"></i>
                     </button>
                     <div v-if="showReviewColumnSettings" class="fixed inset-0 z-40" @click="showReviewColumnSettings = false"></div>
                     <div v-if="showReviewColumnSettings" class="absolute right-0 top-10 z-50 g-card-solid p-3 min-w-[140px] animate-slide-down" @click.stop>
@@ -1132,10 +1295,10 @@
               <div class="flex items-center justify-between px-4 pb-3 gap-2 flex-wrap">
                 <span class="text-xs text-stone-400 font-bold">第 {{ reviewPage }} / {{ totalReviewPages }} 頁　共 {{ sortedReviewList.length }} 筆</span>
                 <div class="flex items-center gap-1">
-                  <button @click="reviewPage = 1" :disabled="reviewPage === 1" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">«</button>
-                  <button @click="reviewPage--" :disabled="reviewPage === 1" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">‹</button>
-                  <button @click="reviewPage++" :disabled="reviewPage === totalReviewPages" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">›</button>
-                  <button @click="reviewPage = totalReviewPages" :disabled="reviewPage === totalReviewPages" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">»</button>
+                  <button @click="reviewPage = 1" :disabled="reviewPage === 1" class="g-btn g-btn-glass g-btn-sm" style="width:36px;height:36px;padding:0;font-size:15px;">«</button>
+                  <button @click="reviewPage--" :disabled="reviewPage === 1" class="g-btn g-btn-glass g-btn-sm" style="width:36px;height:36px;padding:0;font-size:15px;">‹</button>
+                  <button @click="reviewPage++" :disabled="reviewPage === totalReviewPages" class="g-btn g-btn-glass g-btn-sm" style="width:36px;height:36px;padding:0;font-size:15px;">›</button>
+                  <button @click="reviewPage = totalReviewPages" :disabled="reviewPage === totalReviewPages" class="g-btn g-btn-glass g-btn-sm" style="width:36px;height:36px;padding:0;font-size:15px;">»</button>
                 </div>
               </div>
               <!-- 表格 -->
@@ -1250,25 +1413,25 @@
             <div class="g-card-solid">
               <!-- Row 1: 狀態按鈕 + 類型按鈕 + 搜尋欄 + 每頁筆數 -->
               <div class="flex flex-col md:flex-row md:items-center gap-2 px-4 pt-3 pb-2">
-                <div class="flex overflow-hidden flex-shrink-0 self-start" style="border-radius:var(--glass-radius-xs);border:1px solid var(--glass-border-strong);">
-                  <button @click="detailsStatus = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', detailsStatus === 'all' ? 'bg-stone-800 text-white' : 'bg-white/60 text-stone-500 hover:bg-white/80']">全部</button>
-                  <button @click="detailsStatus = 'approved'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsStatus === 'approved' ? 'bg-green-600 text-white' : 'bg-white/60 text-green-700 hover:bg-green-50']">已接單</button>
-                  <button @click="detailsStatus = 'pending'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsStatus === 'pending' ? 'bg-amber-500 text-white' : 'bg-white/60 text-amber-600 hover:bg-amber-50']">待審核</button>
-                  <button @click="detailsStatus = 'rejected'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsStatus === 'rejected' ? 'bg-red-600 text-white' : 'bg-white/60 text-red-600 hover:bg-red-50']">已拒絕</button>
-                  <button @click="detailsStatus = 'expired'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsStatus === 'expired' ? 'bg-stone-500 text-white' : 'bg-white/60 text-stone-400 hover:bg-stone-50']">已過期</button>
+                <div class="flex w-full md:w-auto overflow-hidden flex-shrink-0 self-start" style="border-radius:var(--glass-radius-xs);border:1px solid var(--glass-border-strong);">
+                  <button @click="detailsStatus = 'all'" :class="['flex-1 md:flex-none md:px-4 py-2 text-sm font-bold whitespace-nowrap transition', detailsStatus === 'all' ? 'bg-stone-800 text-white' : 'bg-white/60 text-stone-500 hover:bg-white/80']">全部</button>
+                  <button @click="detailsStatus = 'approved'" :class="['flex-1 md:flex-none md:px-4 py-2 text-sm font-bold whitespace-nowrap border-l border-stone-200/60 transition', detailsStatus === 'approved' ? 'bg-green-600 text-white' : 'bg-white/60 text-green-700 hover:bg-green-50']">已接單</button>
+                  <button @click="detailsStatus = 'pending'" :class="['flex-1 md:flex-none md:px-4 py-2 text-sm font-bold whitespace-nowrap border-l border-stone-200/60 transition', detailsStatus === 'pending' ? 'bg-amber-500 text-white' : 'bg-white/60 text-amber-600 hover:bg-amber-50']">待審核</button>
+                  <button @click="detailsStatus = 'rejected'" :class="['flex-1 md:flex-none md:px-4 py-2 text-sm font-bold whitespace-nowrap border-l border-stone-200/60 transition', detailsStatus === 'rejected' ? 'bg-red-600 text-white' : 'bg-white/60 text-red-600 hover:bg-red-50']">已拒絕</button>
+                  <button @click="detailsStatus = 'expired'" :class="['flex-1 md:flex-none md:px-4 py-2 text-sm font-bold whitespace-nowrap border-l border-stone-200/60 transition', detailsStatus === 'expired' ? 'bg-stone-500 text-white' : 'bg-white/60 text-stone-400 hover:bg-stone-50']">已過期</button>
                 </div>
                 <!-- 訂單類型篩選 -->
                 <div class="flex overflow-hidden flex-shrink-0 self-start" style="border-radius:var(--glass-radius-xs);border:1px solid var(--glass-border-strong);">
-                  <button @click="detailsTypeFilter = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', detailsTypeFilter === 'all' ? 'bg-stone-800 text-white' : 'bg-white/60 text-stone-500 hover:bg-white/80']">全部類型</button>
-                  <button @click="detailsTypeFilter = 'regular'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsTypeFilter === 'regular' ? 'bg-green-600 text-white' : 'bg-white/60 text-green-700 hover:bg-green-50']"></i>一般</button>
-                  <button @click="detailsTypeFilter = 'vacuum'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsTypeFilter === 'vacuum' ? 'bg-purple-600 text-white' : 'bg-white/60 text-purple-700 hover:bg-purple-50']"></i>真空</button>
+                  <button @click="detailsTypeFilter = 'all'" :class="['px-4 py-2 text-sm font-bold transition', detailsTypeFilter === 'all' ? 'bg-stone-800 text-white' : 'bg-white/60 text-stone-500 hover:bg-white/80']">全部類型</button>
+                  <button @click="detailsTypeFilter = 'regular'" :class="['px-4 py-2 text-sm font-bold border-l border-stone-200/60 transition', detailsTypeFilter === 'regular' ? 'bg-green-600 text-white' : 'bg-white/60 text-green-700 hover:bg-green-50']"></i>一般</button>
+                  <button @click="detailsTypeFilter = 'vacuum'" :class="['px-4 py-2 text-sm font-bold border-l border-stone-200/60 transition', detailsTypeFilter === 'vacuum' ? 'bg-purple-600 text-white' : 'bg-white/60 text-purple-700 hover:bg-purple-50']"></i>真空</button>
                 </div>
                 <div class="flex items-center gap-2 md:flex-1 md:min-w-0">
                   <div class="relative flex-1 min-w-0">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-xs z-[1] pointer-events-none"></i>
-                    <input type="text" v-model="detailsKeyword" placeholder="關鍵字搜尋..." class="g-input w-full pl-8" style="height:32px;">
+                    <input type="text" v-model="detailsKeyword" placeholder="關鍵字搜尋..." class="g-input w-full pl-8">
                   </div>
-                  <select v-model.number="detailsPageSize" class="g-select flex-shrink-0" style="height:32px;font-size:12px;padding-right:28px;">
+                  <select v-model.number="detailsPageSize" class="g-select flex-shrink-0" style="height:40px;font-size:14px;padding-right:28px;">
                     <option :value="10">每頁10筆</option>
                     <option :value="20">每頁20筆</option>
                     <option :value="50">每頁50筆</option>
@@ -1276,8 +1439,8 @@
                   </select>
                   <!-- 欄位設定按鈕 -->
                   <div class="relative flex-shrink-0">
-                    <button @click="showColumnSettings = !showColumnSettings" :class="['w-8 h-8 flex items-center justify-center border transition', showColumnSettings ? 'bg-stone-800 text-white border-stone-800' : 'bg-white/60 border-stone-200/60 text-stone-500 hover:bg-white/80']" style="border-radius:var(--glass-radius-xs);" title="欄位設定">
-                      <i class="fas fa-columns text-xs"></i>
+                    <button @click="showColumnSettings = !showColumnSettings" :class="['w-10 h-10 flex items-center justify-center border transition', showColumnSettings ? 'bg-stone-800 text-white border-stone-800' : 'bg-white/60 border-stone-200/60 text-stone-500 hover:bg-white/80']" style="border-radius:var(--glass-radius-xs);" title="欄位設定">
+                      <i class="fas fa-columns text-sm"></i>
                     </button>
                     <div v-if="showColumnSettings" class="fixed inset-0 z-40" @click="showColumnSettings = false"></div>
                     <div v-if="showColumnSettings" class="absolute right-0 top-10 z-50 g-card-solid p-3 min-w-[140px] animate-slide-down" @click.stop>
@@ -1326,10 +1489,10 @@
                 </div>
                 <div class="flex items-center gap-1">
                   <i v-if="loading" class="fas fa-circle-notch fa-spin text-stone-300 mr-1" style="font-size:13px;"></i>
-                  <button @click="goToFirstDetailsPage" :disabled="detailsPage === 1 || loading" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">«</button>
-                  <button @click="goToPrevDetailsPage" :disabled="detailsPage === 1 || loading" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">‹</button>
-                  <button @click="goToNextDetailsPage" :disabled="detailsPage === totalDetailsPages || loading" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">›</button>
-                  <button @click="goToLastDetailsPage" :disabled="detailsPage === totalDetailsPages || loading" class="g-btn g-btn-glass g-btn-sm" style="width:28px;height:28px;padding:0;">»</button>
+                  <button @click="goToFirstDetailsPage" :disabled="detailsPage === 1 || loading" class="g-btn g-btn-glass g-btn-sm" style="width:36px;height:36px;padding:0;font-size:15px;">«</button>
+                  <button @click="goToPrevDetailsPage" :disabled="detailsPage === 1 || loading" class="g-btn g-btn-glass g-btn-sm" style="width:36px;height:36px;padding:0;font-size:15px;">‹</button>
+                  <button @click="goToNextDetailsPage" :disabled="detailsPage === totalDetailsPages || loading" class="g-btn g-btn-glass g-btn-sm" style="width:36px;height:36px;padding:0;font-size:15px;">›</button>
+                  <button @click="goToLastDetailsPage" :disabled="detailsPage === totalDetailsPages || loading" class="g-btn g-btn-glass g-btn-sm" style="width:36px;height:36px;padding:0;font-size:15px;">»</button>
                 </div>
               </div>
               <!-- 表格 -->
@@ -1424,8 +1587,8 @@
 
           <!-- 訂單狀態修改 Modal -->
           <teleport to="body">
-          <div v-if="statusEditOrder" class="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" style="z-index:2147483646;" @click.self="statusEditOrder = null">
-            <div class="g-modal w-full max-w-xs p-6 animate-zoom-in" style="z-index:2147483647; position:relative;">
+          <div v-if="statusEditOrder" class="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" style="z-index:70;" @click.self="statusEditOrder = null">
+            <div class="g-modal w-full max-w-xs p-6 animate-zoom-in" style="z-index:71; position:relative;">
               <h3 class="text-base font-black mb-1">變更訂單狀態</h3>
               <p class="text-sm text-stone-500 mb-5">{{ statusEditOrder.companyName }}</p>
               <div class="flex flex-col gap-2">
@@ -1449,8 +1612,8 @@
 
           <!-- 詳細資訊 Modal -->
           <teleport to="body">
-          <div v-if="detailModalOrder" class="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" style="z-index:2147483644;" @click.self="closeDetailModal">
-            <div class="g-modal w-full max-w-xl flex flex-col overflow-hidden animate-zoom-in" style="z-index:2147483645; position:relative; height:80vh;min-height:80vh;max-height:80vh;">
+          <div v-if="detailModalOrder" class="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" style="z-index:60;" @click.self="closeDetailModal">
+            <div class="g-modal w-full max-w-xl flex flex-col overflow-hidden animate-zoom-in" style="z-index:61; position:relative; height:80vh;min-height:80vh;max-height:80vh;">
 
               <!-- Modal Header -->
               <div class="flex items-start justify-between px-6 pt-5 pb-4">
@@ -2309,7 +2472,7 @@
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <div class="g-card-solid p-4">
                 <div class="flex items-center gap-2 mb-2">
-                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:rgba(200,75,49,0.12);color:var(--brand-600);">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:rgba(176,115,106,0.12);color:var(--brand-600);">
                     <i class="fas fa-dollar-sign"></i>
                   </div>
                   <span class="text-xs font-bold text-stone-500">年度總營收</span>
@@ -2491,6 +2654,37 @@
             <button @click="fetchAnalytics" class="g-btn g-btn-primary">
               <i class="fas fa-chart-bar"></i>載入統計
             </button>
+          </div>
+        </div>
+
+        <!-- 更多（手機版 Tab Bar 的「更多」頁面） -->
+        <div v-if="adminTab === 'more'" class="space-y-4">
+          <h2 class="text-xl font-black text-stone-800 mb-4">更多功能</h2>
+          <div class="more-grid">
+            <div v-if="user && user.role === 'admin'" class="more-grid-item" @click="adminTab='accounts'; fetchAdminAccounts()">
+              <i class="fas fa-users"></i>
+              <span>帳號管理</span>
+            </div>
+            <div class="more-grid-item" @click="adminTab='items'; fetchAdminItems()">
+              <i class="fas fa-box"></i>
+              <span>產品管理</span>
+            </div>
+            <div class="more-grid-item" @click="adminTab='analytics'; fetchAnalytics()">
+              <i class="fas fa-chart-bar"></i>
+              <span>統計分析</span>
+            </div>
+            <a href="https://192.168.50.102:8000/" target="_blank" rel="noopener" class="more-grid-item" style="text-decoration:none;">
+              <i class="fas fa-shield-alt"></i>
+              <span>列印認證</span>
+            </a>
+            <div class="more-grid-item" @click="toggleDarkMode">
+              <i :class="isDark ? 'fas fa-sun' : 'fas fa-moon'"></i>
+              <span>{{ isDark ? '淺色模式' : '深色模式' }}</span>
+            </div>
+            <div class="more-grid-item" @click="logout()" style="color:var(--color-danger);">
+              <i class="fas fa-sign-out-alt" style="color:var(--color-danger);"></i>
+              <span style="color:var(--color-danger);">登出</span>
+            </div>
           </div>
         </div>
 
@@ -2795,8 +2989,8 @@
     </div>
 
     <!-- 新訂單彈跳通知 -->
-    <div v-if="newOrderNotif.show" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[200] flex items-center justify-center p-6 animate-fade-in">
-      <div class="g-modal p-8 max-w-sm w-full relative overflow-hidden animate-zoom-in">
+    <div v-if="newOrderNotif.show" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[90] flex items-center justify-center p-4 animate-fade-in">
+      <div class="g-modal g-modal-compact p-8 max-w-sm w-full relative overflow-hidden animate-zoom-in">
         <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-500 to-orange-500"></div>
         <div class="flex flex-col items-center text-center">
           <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4 relative">
@@ -2825,8 +3019,8 @@
     </div>
 
     <!-- 自訂提示對話框 -->
-    <div v-if="customAlert.show" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[100] flex items-center justify-center p-6 animate-fade-in">
-      <div class="g-modal p-8 max-w-sm w-full relative overflow-hidden animate-zoom-in">
+    <div v-if="customAlert.show" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[80] flex items-center justify-center p-4 animate-fade-in">
+      <div class="g-modal g-modal-compact p-8 max-w-sm w-full relative overflow-hidden animate-zoom-in">
         <div :class="['absolute top-0 left-0 w-full h-1.5', customAlert.type === 'success' ? 'bg-green-500' : customAlert.type === 'error' ? 'bg-red-500' : 'bg-gradient-to-r from-red-500 to-orange-500']"></div>
         <div class="flex flex-col items-center text-center">
           <div :class="['w-16 h-16 rounded-full flex items-center justify-center mb-4', customAlert.type === 'success' ? 'bg-green-100 text-red-800' : customAlert.type === 'error' ? 'bg-red-100 text-red-800' : 'bg-brand-100 text-brand-600']">
@@ -2841,7 +3035,7 @@
     </div>
 
     <!-- NAS 列印預覽對話框 -->
-    <div v-if="nasPreview.show" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[102] flex items-center justify-center p-4 animate-fade-in">
+    <div v-if="nasPreview.show" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[80] flex items-center justify-center p-4 animate-fade-in">
       <div class="g-modal p-6 w-full max-w-xs relative overflow-hidden animate-zoom-in">
         <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-stone-600 to-stone-800"></div>
         <div class="flex items-center gap-2 mb-3">
@@ -3068,8 +3262,8 @@
     </div>
 
     <!-- 自訂確認對話框 -->
-    <div v-if="customConfirm.show" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[101] flex items-center justify-center p-6 animate-fade-in">
-      <div class="g-modal p-8 max-w-sm w-full relative overflow-hidden animate-zoom-in">
+    <div v-if="customConfirm.show" class="fixed inset-0 bg-black/30 backdrop-blur-md z-[80] flex items-center justify-center p-4 animate-fade-in">
+      <div class="g-modal g-modal-compact p-8 max-w-sm w-full relative overflow-hidden animate-zoom-in">
         <div :class="['absolute top-0 left-0 w-full h-1.5', customConfirm.type === 'danger' ? 'bg-red-500' : 'bg-amber-400']"></div>
         <div class="flex flex-col items-center text-center">
           <div :class="['w-16 h-16 rounded-full flex items-center justify-center mb-4', customConfirm.type === 'danger' ? 'bg-red-100' : 'bg-amber-50']">
@@ -3270,7 +3464,7 @@
         const currentView = ref(sessionStorage.getItem('currentView') || 'login');
         const loading = ref(false);
         const showAdminMenu = ref(false);
-        const adminTab = ref(sessionStorage.getItem('adminTab') || 'accounts');
+        const adminTab = ref(sessionStorage.getItem('adminTab') || 'details');
         const customAlert = ref({ show: false, message: '', type: 'info' });
         const customConfirm = ref({ show: false, message: '', type: 'confirm', resolve: null });
         const showConfirm = (message, type = 'confirm') => new Promise(resolve => {
