@@ -32,7 +32,7 @@ PRINTER_USB_DEV = os.getenv("PRINTER_USB_DEV", "/dev/usb/lp0")
 ITEMS_PER_PAGE  = 10
 
 DPI = 203
-W   = round(75  * DPI / 25.4)   # 600 dots
+W   = round(70  * DPI / 25.4)   # 559 dots
 H   = round(100 * DPI / 25.4)   # 813 dots
 
 
@@ -192,6 +192,7 @@ class PrintRequest(BaseModel):
     items:      List[Item]
     remark:     Optional[str] = ""
     total:      int
+    orderType:  Optional[str] = "regular"
 
 
 # ── 備貨單資料模型 ─────────────────────────────────────────────────────
@@ -205,6 +206,7 @@ class StockPrintRequest(BaseModel):
     date:    str
     company: str
     items:   List[StockItem]
+    orderType: Optional[str] = "regular"
 
 
 # ======================================================================
@@ -258,6 +260,12 @@ def draw_label(req: PrintRequest, page_items: List[Item],
 
     # ── 公司名 (14pt bold, line-height 1.25) ─────────────────────────
     draw.text((PAD, Y_COMPANY), req.company, font=fnt["company"], fill=BK)
+
+    # ── 真空包裝標記 ([真空]) ──────────────────────────────────────────
+    if getattr(req, 'orderType', 'regular') == 'vacuum':
+        vac_label = '[真空]'
+        x_vac = PAD + _tw(draw, req.company, fnt["company"]) + mm(1.5)
+        draw.text((x_vac, Y_COMPANY), vac_label, font=fnt["delivery"], fill=BK)
 
     # ── 配送日期 (10pt, margin-top 0.5mm) ────────────────────────────
     try:
@@ -349,10 +357,10 @@ def image_to_tspl(img: Image.Image) -> bytes:
         img = img.resize((W, H), Image.LANCZOS)
 
     raw  = img.convert("1").tobytes()
-    wb   = (W + 7) // 8    # 600 bits / 8 = 75 bytes per row
+    wb   = (W + 7) // 8    # 559 bits / 8 = 70 bytes per row
 
     header = (
-        "SIZE 75 mm, 100 mm\r\n"
+        "SIZE 70 mm, 100 mm\r\n"
         "GAP 3 mm, 0 mm\r\n"
         "DIRECTION 0\r\n"
         "REFERENCE 0,0\r\n"
@@ -430,12 +438,13 @@ def draw_stock_label(req: StockPrintRequest, page_items: List[StockItem],
     draw.text((PAD, Y_STITLE), "健美滷味 備料清單",
               font=fnt["title"], fill=BK)
 
-    # ── Meta：公司名 + 配送日期 (10pt, color #444 → gray 80) ─────────
+    # ── Meta：公司名 + 配送日期 + 真空標記 (10pt, color #444 → gray 80) ───────────
     try:
         ds = datetime.strptime(req.date, "%Y-%m-%d").strftime("%m/%d")
     except Exception:
         ds = req.date
-    meta_txt = f"{req.company}　{ds}"
+    type_tag = "【真空】" if getattr(req, 'orderType', 'regular') == 'vacuum' else ""
+    meta_txt = f"{req.company}{type_tag}　{ds}"
     draw.text((PAD, Y_SMETA), meta_txt, font=fnt["meta"], fill=80)
 
     # ── Header 分隔線 (border-bottom 1.5px) ──────────────────────────

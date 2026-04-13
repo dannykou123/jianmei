@@ -1022,7 +1022,14 @@
               <i class="fas fa-plus"></i><span>新增產品</span>
             </button>
           </div>
-          
+
+          <!-- 類型篩選 -->
+          <div class="flex overflow-hidden self-start" style="border-radius:var(--glass-radius-xs);border:1px solid var(--glass-border-strong);">
+            <button @click="itemTypeFilter = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', itemTypeFilter === 'all' ? 'bg-stone-800 text-white' : 'bg-white/60 text-stone-500 hover:bg-white/80']">全部</button>
+            <button @click="itemTypeFilter = 'regular'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', itemTypeFilter === 'regular' ? 'bg-green-600 text-white' : 'bg-white/60 text-green-700 hover:bg-green-50']">一般</button>
+            <button @click="itemTypeFilter = 'vacuum'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', itemTypeFilter === 'vacuum' ? 'bg-purple-600 text-white' : 'bg-white/60 text-purple-700 hover:bg-purple-50']">真空包裝</button>
+          </div>
+
           <div v-if="loading || !itemsHasLoaded" class="text-center py-20"><i class="fas fa-circle-notch fa-spin text-3xl text-stone-300"></i></div>
           
           <div v-else-if="adminData.itemsList.length === 0" class="text-center py-20 g-card">
@@ -1031,7 +1038,7 @@
           </div>
           
           <div v-else class="space-y-3">
-            <div v-for="item in adminData.itemsList" :key="item.id" class="g-card px-5 py-4 hover:translate-y-[-1px]">
+            <div v-for="item in adminData.itemsList.filter(i => itemTypeFilter === 'all' || (i.type||'regular') === itemTypeFilter)" :key="item.id" class="g-card px-5 py-4 hover:translate-y-[-1px]">
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div class="flex-1 min-w-0">
                   <div class="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3 mb-1">
@@ -1040,6 +1047,8 @@
                     <span v-if="item.isCombo" class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
                       <i class="fas fa-layer-group text-[10px]"></i>組合 {{ item.combos ? item.combos.length : 0 }}項
                     </span>
+                    <span v-if="(item.type||'regular')==='vacuum'" class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold"></i>真空包裝</span>
+                    <span v-else class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold"></i>一般</span>
                   </div>
                   <p v-if="item.description" class="text-sm text-stone-500 line-clamp-2">{{ item.description }}</p>
                   <div v-if="item.isCombo && item.combos && item.combos.length" class="mt-1 flex flex-wrap gap-1">
@@ -1233,13 +1242,13 @@
                 <button @click="setTomorrowFilter" :class="['g-btn g-btn-sm flex-1 sm:flex-none', isTomorrowFilter ? 'g-btn-primary' : 'g-btn-glass']">明日訂單</button>
               </div>
               <!-- 清除篩選 -->
-              <div v-if="detailsStart || detailsEnd || detailsKeyword || detailsStatus !== 'all' || selectedOrderIds.length > 0" class="flex items-center gap-1.5 w-full sm:w-auto sm:ml-auto">
+              <div v-if="detailsStart || detailsEnd || detailsKeyword || detailsStatus !== 'all' || detailsTypeFilter !== 'all' || selectedOrderIds.length > 0" class="flex items-center gap-1.5 w-full sm:w-auto sm:ml-auto">
                 <button @click="clearDetailsFilter" class="g-btn g-btn-glass g-btn-sm flex-1 sm:flex-none"><i class="fas fa-undo"></i>清除篩選</button>
               </div>
             </div>
             <!-- 篩選 + 表格：一體卡片 -->
             <div class="g-card-solid">
-              <!-- Row 1: 狀態按鈕 + 搜尋欄 + 每頁筆數 -->
+              <!-- Row 1: 狀態按鈕 + 類型按鈕 + 搜尋欄 + 每頁筆數 -->
               <div class="flex flex-col md:flex-row md:items-center gap-2 px-4 pt-3 pb-2">
                 <div class="flex overflow-hidden flex-shrink-0 self-start" style="border-radius:var(--glass-radius-xs);border:1px solid var(--glass-border-strong);">
                   <button @click="detailsStatus = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', detailsStatus === 'all' ? 'bg-stone-800 text-white' : 'bg-white/60 text-stone-500 hover:bg-white/80']">全部</button>
@@ -1247,6 +1256,12 @@
                   <button @click="detailsStatus = 'pending'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsStatus === 'pending' ? 'bg-amber-500 text-white' : 'bg-white/60 text-amber-600 hover:bg-amber-50']">待審核</button>
                   <button @click="detailsStatus = 'rejected'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsStatus === 'rejected' ? 'bg-red-600 text-white' : 'bg-white/60 text-red-600 hover:bg-red-50']">已拒絕</button>
                   <button @click="detailsStatus = 'expired'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsStatus === 'expired' ? 'bg-stone-500 text-white' : 'bg-white/60 text-stone-400 hover:bg-stone-50']">已過期</button>
+                </div>
+                <!-- 訂單類型篩選 -->
+                <div class="flex overflow-hidden flex-shrink-0 self-start" style="border-radius:var(--glass-radius-xs);border:1px solid var(--glass-border-strong);">
+                  <button @click="detailsTypeFilter = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', detailsTypeFilter === 'all' ? 'bg-stone-800 text-white' : 'bg-white/60 text-stone-500 hover:bg-white/80']">全部類型</button>
+                  <button @click="detailsTypeFilter = 'regular'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsTypeFilter === 'regular' ? 'bg-green-600 text-white' : 'bg-white/60 text-green-700 hover:bg-green-50']"></i>一般</button>
+                  <button @click="detailsTypeFilter = 'vacuum'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', detailsTypeFilter === 'vacuum' ? 'bg-purple-600 text-white' : 'bg-white/60 text-purple-700 hover:bg-purple-50']"></i>真空</button>
                 </div>
                 <div class="flex items-center gap-2 md:flex-1 md:min-w-0">
                   <div class="relative flex-1 min-w-0">
@@ -1334,6 +1349,7 @@
                       </th>
                       <th v-else-if="col.key === 'totalAmount'" class="hidden sm:table-cell px-4 py-3 text-right">總金額</th>
                       <th v-else-if="col.key === 'orderNo'" class="hidden sm:table-cell px-2 py-3 text-left">訂單編號</th>
+                      <th v-else-if="col.key === 'orderType'" class="hidden sm:table-cell px-4 py-3 text-left">訂單類型</th>
                       <th v-else class="hidden sm:table-cell px-4 py-3 text-left">{{ col.label }}</th>
                     </template>
                     <th class="hidden sm:table-cell px-4 py-3 text-center">操作</th>
@@ -1361,6 +1377,10 @@
                       <td v-else-if="col.key === 'contactPhone'" class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.contactPhone || '-' }}</td>
                       <td v-else-if="col.key === 'address'" class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.address || '-' }}</td>
                       <td v-else-if="col.key === 'resource'" class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ order.resource || '-' }}</td>
+                      <td v-else-if="col.key === 'orderType'" class="hidden sm:table-cell px-4 py-3 whitespace-nowrap">
+                        <span v-if="(order.orderType || 'regular') === 'vacuum'" class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold"></i>真空</span>
+                        <span v-else class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">一般</span>
+                      </td>
                       <td v-else-if="col.key === 'totalAmount'" class="hidden sm:table-cell px-4 py-3 text-right font-bold text-red-700 whitespace-nowrap">
                         {{ groupTotalAmountMap[order.id] > 0 ? '$' + groupTotalAmountMap[order.id].toLocaleString() : '-' }}
                       </td>
@@ -1550,6 +1570,16 @@
                       </div>
                       <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
                         <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                          <i class="fas fa-tag text-stone-500 text-xs"></i>
+                        </div>
+                        <div class="min-w-0">
+                          <p class="text-xs text-stone-400">訂單類型</p>
+                          <span v-if="(detailModalOrder.orderType||'regular')==='vacuum'" class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">真空包裝</span>
+                          <span v-else class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">一般訂單</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                        <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
                           <i class="fas fa-flag text-stone-500 text-xs"></i>
                         </div>
                         <div class="min-w-0">
@@ -1661,6 +1691,24 @@
                             <label :class="['flex-none inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border cursor-pointer transition select-none text-xs whitespace-nowrap', editFormData.resource === '傳真' ? 'bg-brand-50 border-brand-300 text-brand-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
                               <input type="radio" v-model="editFormData.resource" value="傳真" class="accent-brand-600 w-3.5 h-3.5">
                               <span>傳真</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3 px-4 py-3 border-b border-stone-100">
+                        <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <i class="fas fa-tag text-stone-500 text-xs"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <p class="text-xs text-stone-400">訂單類型</p>
+                          <div class="mt-1.5 flex gap-2">
+                            <label :class="['flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition select-none text-sm', editFormData.orderType === 'regular' ? 'bg-green-50 border-green-400 text-green-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
+                              <input type="radio" v-model="editFormData.orderType" value="regular" class="accent-green-600 w-3.5 h-3.5">
+                              <span>一般訂單</span>
+                            </label>
+                            <label :class="['flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition select-none text-sm', editFormData.orderType === 'vacuum' ? 'bg-purple-50 border-purple-400 text-purple-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
+                              <input type="radio" v-model="editFormData.orderType" value="vacuum" class="accent-purple-600 w-3.5 h-3.5">
+                              <span>真空包裝</span>
                             </label>
                           </div>
                         </div>
@@ -1964,6 +2012,25 @@
                           </div>
                         </div>
                       </div>
+                      <!-- 訂單類型 -->
+                      <div class="flex items-start gap-3 px-4 py-3 border-b border-stone-100">
+                        <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <i class="fas fa-tag text-stone-500 text-xs"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <p class="text-xs text-stone-400">訂單類型 <span class="text-red-400">*</span></p>
+                          <div class="mt-1.5 flex gap-2">
+                            <label :class="['flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition select-none text-sm', createOrderForm.orderType === 'regular' ? 'bg-green-50 border-green-400 text-green-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
+                              <input type="radio" v-model="createOrderForm.orderType" value="regular" class="accent-green-600 w-3.5 h-3.5">
+                              <span>一般訂單</span>
+                            </label>
+                            <label :class="['flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition select-none text-sm', createOrderForm.orderType === 'vacuum' ? 'bg-purple-50 border-purple-400 text-purple-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
+                              <input type="radio" v-model="createOrderForm.orderType" value="vacuum" class="accent-purple-600 w-3.5 h-3.5">
+                              <span>真空包裝</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 <!-- 訂購明細 -->
@@ -2140,9 +2207,12 @@
               <span class="text-sm text-stone-400">共 {{ adminData.stockList.length }} 項產品</span>
             </div>
 
-            <div v-for="item in adminData.stockList" :key="item.name" class="g-card px-5 py-4 hover:translate-y-[-1px] flex justify-between items-center">
-              <span class="font-black text-stone-800">{{ item.name }}</span>
-              <span class="text-lg font-black text-brand-600 tabular-nums">× {{ item.qty }}</span>
+            <div v-for="item in adminData.stockList" :key="item.name" class="g-card px-5 py-4 hover:translate-y-[-1px] flex justify-between items-center gap-3">
+              <div class="flex flex-col">
+                <span class="font-black text-stone-800">{{ item.name }}</span>
+                <span v-if="item.regularQty > 0 && item.vacuumQty > 0" class="text-xs text-stone-400 mt-0.5">一般 {{ item.regularQty }} + 真空 {{ item.vacuumQty }}</span>
+              </div>
+              <span class="text-lg font-black text-brand-600 tabular-nums flex-shrink-0">× {{ item.qty }}</span>
             </div>
           </div>
         </div>
@@ -2187,7 +2257,10 @@
               <div class="flex items-center gap-3 px-5 py-4 border-b" style="background:var(--glass-bg-light);border-color:var(--glass-border-subtle);">
                 <input type="checkbox" :checked="isGroupAllSelected(group)" @change="toggleGroupLabels(group)" class="w-5 h-5 rounded accent-stone-800 cursor-pointer flex-shrink-0">
                 <div class="flex-1 min-w-0">
-                  <p class="font-black text-stone-800 truncate">{{ group.companyName }}</p>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <p class="font-black text-stone-800 truncate">{{ group.companyName }}</p>
+                    <span v-if="(group.orderType||'regular')==='vacuum'" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold flex-shrink-0"><i class="fas fa-wind text-[10px]"></i>真空</span>
+                  </div>
                   <div class="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
                     <span class="text-xs text-stone-500"><i class="fas fa-truck mr-1"></i>{{ fmtTs(group.deliveryTime, 'short') }}</span>
                     <span class="text-xs text-stone-500"><i class="fas fa-user mr-1"></i>{{ group.contactName }}<span v-if="group.contactPhone"> {{ group.contactPhone }}</span></span>
@@ -2542,6 +2615,20 @@
           </div>
           
           <div>
+            <label class="g-label mb-2 block">訂單類型 <span class="text-red-500">*</span></label>
+            <div class="flex gap-2 mt-1">
+              <label :class="['flex-1 flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer transition select-none text-sm', itemForm.type === 'regular' ? 'bg-green-50 border-green-400 text-green-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
+                <input type="radio" v-model="itemForm.type" value="regular" class="accent-green-600 w-4 h-4">
+                <span>一般訂單</span>
+              </label>
+              <label :class="['flex-1 flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer transition select-none text-sm', itemForm.type === 'vacuum' ? 'bg-purple-50 border-purple-400 text-purple-700 font-bold' : 'bg-white/60 border-stone-200 text-stone-500 hover:bg-stone-50']">
+                <input type="radio" v-model="itemForm.type" value="vacuum" class="accent-purple-600 w-4 h-4">
+                <span>真空包裝</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
             <label class="g-label mb-2 block">價格 <span class="text-red-500">*</span></label>
             <input v-model.number="itemForm.price" type="number" placeholder="0" class="g-input g-input-lg w-full">
           </div>
@@ -2559,7 +2646,7 @@
             </label>
             <p class="text-xs text-stone-400 mb-3 ml-6">備貨單將自動展開為內容物，不顯示組合名稱</p>
             <div v-if="itemForm.isCombo" class="ml-2 mt-2 grid gap-1.5 max-h-52 overflow-y-auto pr-1">
-              <div v-for="it in adminData.itemsList.filter(i => !i.isCombo)" :key="it.id"
+              <div v-for="it in adminData.itemsList.filter(i => !i.isCombo && (i.type||'regular') === (itemForm.type||'regular'))" :key="it.id"
                    class="flex items-center justify-between px-3 py-2 rounded-lg border transition"
                    :class="comboQty(it.name) > 0 ? 'bg-amber-50 border-amber-300' : 'bg-stone-50 border-stone-200'">
                 <span class="text-sm font-medium" :class="comboQty(it.name) > 0 ? 'text-stone-800' : 'text-stone-400'">{{ it.name }}</span>
@@ -3297,7 +3384,7 @@
         // 新增訂單 Modal
         const showCreateOrderModal = ref(false);
         const createOrderTab = ref('info');
-        const createOrderForm = ref({ companyName: '', contactName: '', contactPhone: '', address: '', deliveryTime: '' });
+        const createOrderForm = ref({ companyName: '', contactName: '', contactPhone: '', address: '', deliveryTime: '', orderType: 'regular' });
         const createOrderSubmitted = ref(false);
         const fieldErr = (f) => createOrderSubmitted.value && !createOrderForm.value[f];
         // 日期格式化
@@ -3321,26 +3408,38 @@
         const openCreateOrderModal = async () => {
           if (adminData.value.itemsList.length === 0) await fetchAdminItems();
           if (frequentContacts.value.length === 0) await fetchFrequentContacts();
-          createOrderForm.value = { companyName: '', contactName: '', contactPhone: '', address: '', deliveryTime: '', resource: '', status: 'pending' };
+          createOrderForm.value = { companyName: '', contactName: '', contactPhone: '', address: '', deliveryTime: '', resource: '', status: 'pending', orderType: 'regular' };
           createOrderSubmitted.value = false;
           createOrderCustomers.value = [];
           addingCreateCustomer.value = false;
           createOrderTab.value = 'info';
           selectedContactId.value = '';
-          newCreateCustomerData.value = { customerName: '', customerUnit: '', note: '', items: adminData.value.itemsList.map(i => ({ itemName: i.name, qty: 0 })) };
+          const _filteredItems = adminData.value.itemsList.filter(i => (i.type || 'regular') === 'regular');
+          newCreateCustomerData.value = { customerName: '', customerUnit: '', note: '', items: _filteredItems.map(i => ({ itemName: i.name, qty: 0 })) };
           showCreateOrderModal.value = true;
         };
+
+        // 訂單類型切換時重置訂購人和品項清單
+        watch(() => createOrderForm.value.orderType, (newType) => {
+          if (!showCreateOrderModal.value) return;
+          createOrderCustomers.value = [];
+          addingCreateCustomer.value = false;
+          const t = newType || 'regular';
+          const filtered = adminData.value.itemsList.filter(i => (i.type || 'regular') === t);
+          newCreateCustomerData.value = { customerName: '', customerUnit: '', note: '', items: filtered.map(i => ({ itemName: i.name, qty: 0 })) };
+        });
 
         const calcCreateCustomerTotal = (customer) =>
           enrichItemsWithPrice((customer.items || []).filter(i => i.qty > 0)).reduce((s, i) => s + (i.subtotal || 0), 0);
 
         const startEditCreateCustomer = (cidx) => {
           const c = createOrderCustomers.value[cidx];
+          const _t = createOrderForm.value.orderType || 'regular';
           editingCreateCustomerData.value = {
             customerName: c.customerName,
             customerUnit: c.customerUnit || '',
             note: c.note || '',
-            items: adminData.value.itemsList.map(i => ({ itemName: i.name, qty: (c.items.find(x => x.itemName === i.name)?.qty) || 0 }))
+            items: adminData.value.itemsList.filter(i => (i.type || 'regular') === _t).map(i => ({ itemName: i.name, qty: (c.items.find(x => x.itemName === i.name)?.qty) || 0 }))
           };
           editingCreateCustomerIdx.value = cidx;
           addingCreateCustomer.value = false;
@@ -3366,15 +3465,22 @@
             note: data.note || '',
             items: validItems
           });
-          newCreateCustomerData.value = { customerName: '', customerUnit: '', note: '', items: adminData.value.itemsList.map(i => ({ itemName: i.name, qty: 0 })) };
+          const _t = createOrderForm.value.orderType || 'regular';
+          newCreateCustomerData.value = { customerName: '', customerUnit: '', note: '', items: adminData.value.itemsList.filter(i => (i.type || 'regular') === _t).map(i => ({ itemName: i.name, qty: 0 })) };
           addingCreateCustomer.value = false;
         };
 
         // 為品項補上 price / subtotal（用於出貨單顯示）
-        const enrichItemsWithPrice = (items) => {
+        // orderType: 'regular' | 'vacuum' | null — 為 null 時不過濾類型
+        const enrichItemsWithPrice = (items, orderType = null) => {
           if (adminData.value.itemsList.length === 0) return items;
           const priceMap = {};
-          adminData.value.itemsList.forEach(it => { priceMap[it.name] = it.price || 0; });
+          adminData.value.itemsList.forEach(it => {
+            // 若指定類型，只取同類型產品的價格；否則全部納入（向下相容）
+            if (!orderType || (it.type || 'regular') === orderType) {
+              priceMap[it.name] = it.price || 0;
+            }
+          });
           return items.map(item => {
             const price = priceMap[item.itemName] || item.price || 0;
             const qty = parseInt(item.qty) || 0;
@@ -3455,6 +3561,7 @@
         const getDetailsBaseConstraints = () => {
           const constraints = [];
           if (detailsStatus.value !== 'all') constraints.push(where('status', '==', detailsStatus.value));
+          if (detailsTypeFilter.value !== 'all') constraints.push(where('orderType', '==', detailsTypeFilter.value));
           constraints.push(...getDetailsRangeTimestamps());
           return constraints;
         };
@@ -3534,6 +3641,7 @@
               address: f.address,
               resource: f.resource || '',
               status: 'approved',
+              orderType: f.orderType || 'regular',
               createdAt: new Date(),
               updatedAt: new Date().toISOString(),
               updatedBy: user.value.id,
@@ -3552,7 +3660,7 @@
             await setDoc(groupRef, groupData);
             let grandTotal = 0;
             for (const customer of createOrderCustomers.value) {
-              const enrichedItems = enrichItemsWithPrice(customer.items.filter(i => i.itemName && i.qty > 0));
+              const enrichedItems = enrichItemsWithPrice(customer.items.filter(i => i.itemName && i.qty > 0), f.orderType || 'regular');
               const orderTotal = enrichedItems.reduce((s, i) => s + (i.subtotal || 0), 0);
               grandTotal += orderTotal;
               await addDoc(collection(db, 'Orders'), {
@@ -3589,6 +3697,7 @@
             address: order.address || '',
             resource: order.resource || '',
             status: order.status || 'pending',
+            orderType: order.orderType || 'regular',
             deliveryTime: _origDT,
             _originalDeliveryTime: _origDT
           };
@@ -3660,11 +3769,12 @@
           editingCustomerOrderId.value = customerOrder.id;
           const existingQtyMap = {};
           (customerOrder.items || []).forEach(i => { existingQtyMap[i.itemName] = i.qty; });
+          const _ot = detailModalOrder.value?.orderType || 'regular';
           editingCustomerOrderData.value = {
             customerName: customerOrder.customerName || '',
             customerUnit: customerOrder.customerUnit || '',
             note: customerOrder.note || '',
-            items: adminData.value.itemsList.map(p => ({ itemName: p.name, qty: existingQtyMap[p.name] || null }))
+            items: adminData.value.itemsList.filter(p => (p.type || 'regular') === _ot).map(p => ({ itemName: p.name, qty: existingQtyMap[p.name] || null }))
           };
         };
 
@@ -3682,8 +3792,9 @@
               updatedAt: new Date().toISOString()
             });
             // 重新計算金額
+            const _ot2 = detailModalOrder.value?.orderType || 'regular';
             const priceMap = {};
-            adminData.value.itemsList.forEach(item => { priceMap[item.name] = item.price || 0; });
+            adminData.value.itemsList.filter(item => (item.type || 'regular') === _ot2).forEach(item => { priceMap[item.name] = item.price || 0; });
             const newTotal = validItems.reduce((s, i) => s + (priceMap[i.itemName] || 0) * (parseInt(i.qty) || 0), 0);
             groupOrders.value[idx] = { ...groupOrders.value[idx], customerName: data.customerName, customerUnit: data.customerUnit, note: data.note, items: validItems, totalAmount: newTotal };
             editingCustomerOrderId.value = null;
@@ -3710,11 +3821,12 @@
         };
 
         const addNewCustomerOrderInline = () => {
+          const _ot = detailModalOrder.value?.orderType || 'regular';
           newCustomerOrderData.value = {
             customerName: '',
             customerUnit: '',
             note: '',
-            items: adminData.value.itemsList.map(p => ({ itemName: p.name, qty: null }))
+            items: adminData.value.itemsList.filter(p => (p.type || 'regular') === _ot).map(p => ({ itemName: p.name, qty: null }))
           };
           editingNewCustomerOrder.value = true;
         };
@@ -3726,7 +3838,7 @@
           if (!validItems.length) { showAlert('請至少新增一個有效品項', 'error'); return; }
           loading.value = true;
           try {
-            const enrichedItems = enrichItemsWithPrice(validItems);
+            const enrichedItems = enrichItemsWithPrice(validItems, detailModalOrder.value?.orderType || 'regular');
             const newTotal = enrichedItems.reduce((s, i) => s + (i.subtotal || 0), 0);
             const newDocRef = await addDoc(collection(db, 'Orders'), {
               groupOrderId: detailModalOrder.value.id,
@@ -3771,17 +3883,20 @@
         // 產品管理
         const showItemModal = ref(false);
         const editingItem = ref({});
+        const itemTypeFilter = ref('all'); // 'all' | 'regular' | 'vacuum' — 產品管理篩選
         const itemForm = ref({
           name: '',
           price: 0,
           description: '',
           isCombo: false,
-          combos: [] // [{itemName, qty}]
+          combos: [], // [{itemName, qty}]
+          type: 'regular' // 'regular' | 'vacuum'
         });
         const itemsSort = ref('createdAt-asc'); // 預設排序：建立時間從舊到新
         
         // 查詢及篩選
         const detailsStatus = ref('all');
+        const detailsTypeFilter = ref('all'); // 'all' | 'regular' | 'vacuum'
         const detailsSort = ref('deliveryTime-desc');
         const detailsKeyword = ref('');
         const detailsPage = ref(1);
@@ -3796,15 +3911,15 @@
         const detailsRangeSummary = ref(null); // { total, approvedTotal, pendingTotal, count, approvedCount, pendingCount } — 時間範圍全部合計
         const statusEditOrder = ref(null);
         const showColumnSettings = ref(false);
-        const tableColumns = ref(JSON.parse(localStorage.getItem('tableColumns') || JSON.stringify({orderNo:true,contactName:true,contactPhone:true,address:false,resource:false,totalAmount:true})));
+        const tableColumns = ref(JSON.parse(localStorage.getItem('tableColumns') || JSON.stringify({orderNo:true,contactName:true,contactPhone:true,address:false,resource:false,orderType:true,totalAmount:true})));
         watch(tableColumns, val => localStorage.setItem('tableColumns', JSON.stringify(val)), { deep: true });
-        const _defaultColOrder = ['orderNo','deliveryTime','companyName','contactName','contactPhone','address','resource','totalAmount'];
+        const _defaultColOrder = ['orderNo','deliveryTime','companyName','contactName','contactPhone','address','resource','orderType','totalAmount'];
         const columnOrder = ref(JSON.parse(localStorage.getItem('columnOrder') || JSON.stringify(_defaultColOrder)));
         // 遷移：補上舊版 localStorage 中缺少的欄位
-        { const co = columnOrder.value; if (!co.includes('address')) { const ri = co.indexOf('resource'); ri >= 0 ? co.splice(ri, 0, 'address') : co.push('address'); } }
+        { const co = columnOrder.value; if (!co.includes('address')) { const ri = co.indexOf('resource'); ri >= 0 ? co.splice(ri, 0, 'address') : co.push('address'); } if (!co.includes('orderType')) { const ri = co.indexOf('totalAmount'); ri >= 0 ? co.splice(ri, 0, 'orderType') : co.push('orderType'); } }
         watch(columnOrder, val => localStorage.setItem('columnOrder', JSON.stringify(val)), { deep: true });
         const colDragFrom = ref(null);
-        const colMetaMap = { orderNo:{label:'訂單編號',toggleable:true}, deliveryTime:{label:'配送時間',toggleable:false}, companyName:{label:'公司名稱',toggleable:false}, contactName:{label:'聯絡人',toggleable:true}, contactPhone:{label:'連絡電話',toggleable:true}, address:{label:'地址',toggleable:true}, resource:{label:'來源',toggleable:true}, totalAmount:{label:'總金額',toggleable:true} };
+        const colMetaMap = { orderNo:{label:'訂單編號',toggleable:true}, deliveryTime:{label:'配送時間',toggleable:false}, companyName:{label:'公司名稱',toggleable:false}, contactName:{label:'聯絡人',toggleable:true}, contactPhone:{label:'連絡電話',toggleable:true}, address:{label:'地址',toggleable:true}, resource:{label:'來源',toggleable:true}, orderType:{label:'訂單類型',toggleable:true}, totalAmount:{label:'總金額',toggleable:true} };
         function columnDrop(idx) { if (colDragFrom.value === null || colDragFrom.value === idx) { colDragFrom.value = null; return; } const arr = [...columnOrder.value]; const [item] = arr.splice(colDragFrom.value, 1); arr.splice(idx, 0, item); columnOrder.value = arr; colDragFrom.value = null; }
         const orderedVisibleColumns = computed(() => columnOrder.value.filter(k => tableColumns.value[k] !== false).map(k => ({ key: k, ...colMetaMap[k] })));
         const reviewSort = ref('createdAt-desc'); // 待審核排序
@@ -4048,6 +4163,10 @@
           if (detailsStatus.value !== 'all') {
             list = list.filter(o => o.status === detailsStatus.value);
           }
+          // 類型篩選（local mode）
+          if (detailsTypeFilter.value !== 'all') {
+            list = list.filter(o => (o.orderType || 'regular') === detailsTypeFilter.value);
+          }
           // 日期範圍篩選（依配送時間，UTC+8）
           if (detailsStart.value && detailsEnd.value) {
             const startMs = new Date(detailsStart.value + 'T00:00:00+08:00').getTime();
@@ -4247,7 +4366,7 @@
         const goToLastDetailsPage = () => { if (detailsPage.value !== totalDetailsPages.value) fetchOrderDetails('last'); };
 
         // 篩選/排序改變時重置頁碼並重新查詢
-        watch([detailsSort, detailsStatus, detailsKeyword, detailsStart, detailsEnd, detailsPageSize], () => {
+        watch([detailsSort, detailsStatus, detailsTypeFilter, detailsKeyword, detailsStart, detailsEnd, detailsPageSize], () => {
           detailsPage.value = 1;
           scheduleDetailsFetch(detailsKeyword.value.trim() ? 250 : 120);
         });
@@ -4295,6 +4414,7 @@
           detailsEnd.value = '';
           detailsKeyword.value = '';
           detailsStatus.value = 'all';
+          detailsTypeFilter.value = 'all';
           detailsShouldAutoSelectApproved.value = false;
           selectedOrderIds.value = [];
         };
@@ -4692,7 +4812,7 @@
         // 打開新增產品對話框
         const openAddItemModal = () => {
           editingItem.value = {};
-          itemForm.value = { name: '', price: 0, description: '', isCombo: false, combos: [] };
+          itemForm.value = { name: '', price: 0, description: '', isCombo: false, combos: [], type: itemTypeFilter.value !== 'all' ? itemTypeFilter.value : 'regular' };
           showItemModal.value = true;
         };
         
@@ -4704,7 +4824,8 @@
             price: item.price || 0,
             description: item.description || '',
             isCombo: item.isCombo || false,
-            combos: item.combos ? item.combos.map(c => ({ itemName: c.itemName, qty: c.qty })) : []
+            combos: item.combos ? item.combos.map(c => ({ itemName: c.itemName, qty: c.qty })) : [],
+            type: item.type || 'regular'
           };
           showItemModal.value = true;
         };
@@ -4713,7 +4834,7 @@
         const closeItemModal = () => {
           showItemModal.value = false;
           editingItem.value = {};
-          itemForm.value = { name: '', price: 0, description: '', isCombo: false, combos: [] };
+          itemForm.value = { name: '', price: 0, description: '', isCombo: false, combos: [], type: 'regular' };
         };
         
         // 儲存產品
@@ -4738,6 +4859,7 @@
               combos: (itemForm.value.isCombo && itemForm.value.combos)
                 ? itemForm.value.combos.filter(c => c.itemName && parseInt(c.qty) > 0).map(c => ({ itemName: c.itemName, qty: parseInt(c.qty) }))
                 : [],
+              type: itemForm.value.type || 'regular',
               updatedAt: new Date().toISOString()
             };
             
@@ -5343,6 +5465,12 @@
             
             const groupOrdersSnapshot = await getDocs(q);
             const groupOrderIds = groupOrdersSnapshot.docs.map(doc => doc.id);
+
+            // 建立 groupOrderId → orderType 的映射
+            const groupOrderTypeMap = {};
+            groupOrdersSnapshot.docs.forEach(doc => {
+              groupOrderTypeMap[doc.id] = doc.data().orderType || 'regular';
+            });
             
             if (groupOrderIds.length === 0) {
               adminData.value.stockList = [];
@@ -5350,6 +5478,7 @@
             }
             
             // 查詢所有相關的訂單（分批查詢，因為 Firestore in 查詢最多 10 個）
+            // stockMap[itemName] = { total, regular, vacuum }
             const stockMap = {};
             
             // 分批處理，每次最多 10 個 ID
@@ -5363,12 +5492,16 @@
               
               ordersSnapshot.docs.forEach(doc => {
                 const orderData = doc.data();
+                const gType = groupOrderTypeMap[orderData.groupOrderId] || 'regular';
                 if (orderData.items && Array.isArray(orderData.items)) {
                   orderData.items.forEach(item => {
                     const itemName = item.itemName;
                     const qty = parseInt(item.qty) || 0;
                     if (itemName) {
-                      stockMap[itemName] = (stockMap[itemName] || 0) + qty;
+                      if (!stockMap[itemName]) stockMap[itemName] = { total: 0, regular: 0, vacuum: 0 };
+                      stockMap[itemName].total += qty;
+                      if (gType === 'vacuum') stockMap[itemName].vacuum += qty;
+                      else stockMap[itemName].regular += qty;
                     }
                   });
                 }
@@ -5379,7 +5512,9 @@
             adminData.value.stockList = Object.keys(stockMap)
               .map(name => ({
                 name,
-                qty: stockMap[name]
+                qty: stockMap[name].total,
+                regularQty: stockMap[name].regular,
+                vacuumQty: stockMap[name].vacuum
               }))
               .sort((a, b) => b.qty - a.qty); // 按數量降序排序
               
@@ -5669,6 +5804,7 @@
             items,
             remark:     order.note || '',
             total,
+            orderType:  groupOrder.orderType || 'regular',
           };
         };
 
@@ -5976,6 +6112,7 @@
             date:    dateStr,
             company: groupOrder.companyName || '',
             items:   expandedItems,   // [{ name, qty }]
+            orderType: groupOrder.orderType || 'regular',
           };
         };
 
@@ -6253,6 +6390,7 @@
           contactsHasLoaded,
           itemsHasLoaded,
           detailsStatus,
+          detailsTypeFilter,
           detailsSort,
           detailsKeyword,
           detailsStart,
@@ -6322,6 +6460,7 @@
           editingItem,
           itemForm,
           itemsSort,
+          itemTypeFilter,
           sortedReviewList,
           sortedDetailsList,
           pagedDetailsList,
