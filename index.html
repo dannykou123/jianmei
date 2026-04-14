@@ -3998,19 +3998,18 @@
           if (!data.customerName) { showAlert('請填寫訂購人', 'error'); return; }
           loading.value = true;
           try {
+            const _ot2 = detailModalOrder.value?.orderType || 'regular';
+            const enrichedItems = enrichItemsWithPrice(validItems, _ot2);
+            const newTotal = enrichedItems.reduce((s, i) => s + (i.subtotal || 0), 0);
             await updateDoc(doc(db, 'Orders', orderId), {
               customerName: data.customerName,
               customerUnit: data.customerUnit || '',
               note: data.note || '',
-              items: validItems,
+              items: enrichedItems,
+              totalAmount: newTotal,
               updatedAt: new Date().toISOString()
             });
-            // 重新計算金額
-            const _ot2 = detailModalOrder.value?.orderType || 'regular';
-            const priceMap = {};
-            adminData.value.itemsList.filter(item => (item.type || 'regular') === _ot2).forEach(item => { priceMap[item.name] = item.price || 0; });
-            const newTotal = validItems.reduce((s, i) => s + (priceMap[i.itemName] || 0) * (parseInt(i.qty) || 0), 0);
-            groupOrders.value[idx] = { ...groupOrders.value[idx], customerName: data.customerName, customerUnit: data.customerUnit, note: data.note, items: validItems, totalAmount: newTotal };
+            groupOrders.value[idx] = { ...groupOrders.value[idx], customerName: data.customerName, customerUnit: data.customerUnit, note: data.note, items: enrichedItems, totalAmount: newTotal };
             editingCustomerOrderId.value = null;
             showAlert('已更新', 'success');
             // 重新計算總金額
@@ -5133,12 +5132,57 @@
           adminData.value.itemsList.forEach(item => {
             if (item.isCombo && item.combos && item.combos.length) comboMap[item.name] = item.combos;
           });
+          // Normalize full-width brackets/digits in a name string
+          const _norm = s => s
+            .replace(/（/g, '(').replace(/）/g, ')')
+            .replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 65248));
+
           const expanded = {};
           for (const [name, qty] of Object.entries(rawStockMap)) {
-            if (comboMap[name]) {
+            const norm = _norm(name);
+            const countMatch  = norm.match(/^(.+?)\((\d+)\s*(支|個|片|隻|條|顆|包|串)\)/);
+            const weightMatch = norm.match(/^(.+?)\((\d+)\s*(g|kg|公克|公斤)\)/);
+
+            if (countMatch) {
+              // Direct order with bracket qty: 雞爪(3支)×N → 雞爪 × N*3
+              const baseName   = countMatch[1].trim();
+              const multiplier = parseInt(countMatch[2]) || 1;
+              expanded[baseName] = (expanded[baseName] || 0) + qty * multiplier;
+            } else if (weightMatch) {
+              // Direct order with weight: 大腸頭(500g)×N → 大腸頭 N*500g
+              const baseName = weightMatch[1].trim();
+              let   amount   = parseFloat(weightMatch[2]) || 1;
+              let   unit     = weightMatch[3];
+              if (unit === 'kg' || unit === '公斤') { amount *= 1000; unit = 'g'; }
+              if (unit === '公克') unit = 'g';
+              if (!expanded[baseName]) expanded[baseName] = `0${unit}`;
+              expanded[baseName] = `${parseFloat(expanded[baseName]) + qty * amount}${unit}`;
+            } else if (comboMap[name]) {
+              // Combo: expand each component using comp.qty as authoritative count.
+              // If a component name has bracket notation (e.g. 雞爪(3支)), strip the bracket
+              // and use comp.qty only — so {itemName:'雞爪(3支)', qty:1} → 雞爪 × 1 (not × 3).
               comboMap[name].forEach(comp => {
-                const k = comp.itemName;
-                expanded[k] = (expanded[k] || 0) + qty * (parseInt(comp.qty) || 0);
+                const cn = _norm(comp.itemName);
+                const ccm = cn.match(/^(.+?)\((\d+)\s*(支|個|片|隻|條|顆|包|串)\)/);
+                const cwm = cn.match(/^(.+?)\((\d+)\s*(g|kg|公克|公斤)\)/);
+                const compQty = parseInt(comp.qty) || 0;
+                if (cwm) {
+                  // Weight component: {itemName:'大腸頭(500g)', qty:2} → 大腸頭 qty*2*500g
+                  const base = cwm[1].trim();
+                  let amt = parseFloat(cwm[2]) || 1;
+                  let unit = cwm[3];
+                  if (unit === 'kg' || unit === '公斤') { amt *= 1000; unit = 'g'; }
+                  if (unit === '公克') unit = 'g';
+                  if (!expanded[base]) expanded[base] = `0${unit}`;
+                  expanded[base] = `${parseFloat(expanded[base]) + qty * compQty * amt}${unit}`;
+                } else if (ccm) {
+                  // Count component: strip bracket, use comp.qty as count
+                  // {itemName:'雞爪(3支)', qty:1} → 雞爪 × qty*1
+                  const base = ccm[1].trim();
+                  expanded[base] = (expanded[base] || 0) + qty * compQty;
+                } else {
+                  expanded[comp.itemName] = (expanded[comp.itemName] || 0) + qty * compQty;
+                }
               });
             } else {
               expanded[name] = (expanded[name] || 0) + qty;

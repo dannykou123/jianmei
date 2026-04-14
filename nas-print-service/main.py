@@ -22,7 +22,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Union
 from PIL import Image, ImageDraw, ImageFont
 
 # ======================================================================
@@ -198,7 +198,7 @@ class PrintRequest(BaseModel):
 # ── 備貨單資料模型 ─────────────────────────────────────────────────────
 class StockItem(BaseModel):
     name: str
-    qty:  int
+    qty:  Union[int, str]
 
 
 class StockPrintRequest(BaseModel):
@@ -462,7 +462,8 @@ def draw_stock_label(req: StockPrintRequest, page_items: List[StockItem],
         y_qty  = y_name + lh(FS_SNAME, 1.2)
 
         draw.text((x, y_name), item.name, font=fnt["name"], fill=BK)
-        draw.text((x, y_qty),  f"×{item.qty}", font=fnt["qty"], fill=BK)
+        qty_str = item.qty if isinstance(item.qty, str) else f"×{item.qty}"
+        draw.text((x, y_qty),  qty_str, font=fnt["qty"], fill=BK)
 
         # 每行底部虛分隔（border-bottom 0.5px #ddd）
         y_sep = y + SROW_H - 1
