@@ -6,7 +6,7 @@ services:
     container_name: jianmei-print-service
     restart: unless-stopped
     ports:
-      - "8000:8000"          # 前端呼叫 https://192.168.50.103:8000/api/print-label
+      - "8000:8000"          # 前端呼叫 https://dannykou123.asuscomm.com/api/print-label
     environment:
       - PRINTER_USB_DEV=/dev/usb_printer   # mknod c 180 0 建立的真實字元裝置
     devices:

@@ -226,9 +226,9 @@ FS_SFOOTER  = pt(10)    # 28  regular
 # ── 備貨單 Y 座標 ─────────────────────────────────────────────────────
 # CSS: padding 3mm (same PAD=24)
 Y_STITLE       = PAD                                              # 24
-Y_SMETA        = Y_STITLE + lh(FS_STITLE, 1.0) + mm(0.3)         # 24+42+2 = 68
-Y_SHEADER_LINE = Y_SMETA  + FS_SMETA + mm(1.0)                    # 68+28+8 = 104
-Y_SITEMS       = Y_SHEADER_LINE + 2 + mm(1.2)                     # 104+2+10 = 116
+Y_SMETA        = Y_STITLE + lh(FS_STITLE, 1.0) + mm(2)           # 24+42+15 = 81
+Y_SHEADER_LINE = Y_SMETA  + FS_SMETA + mm(1.0)                    # 81+28+8 = 117
+Y_SITEMS       = Y_SHEADER_LINE + 2 + mm(1.2)                     # 117+2+10 = 129
 
 # Footer 從下錨定
 Y_SFOOTER      = H - PAD - FS_SFOOTER                             # 813-24-28 = 761
