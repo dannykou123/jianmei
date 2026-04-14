@@ -992,22 +992,22 @@
                <button @click="adminTab='details'" :class="['g-btn g-btn-sm transition-all', adminTab=='details'?'g-btn-primary':'g-btn-glass']">
                  <i class="fas fa-file-alt"></i>訂單管理
                </button>
-               <button @click="adminTab='items'; fetchAdminItems()" :class="['g-btn g-btn-sm transition-all', adminTab=='items'?'g-btn-primary':'g-btn-glass']">
-                 <i class="fas fa-box"></i>產品管理
+               <button @click="adminTab='contacts'; fetchFrequentContacts()" :class="['g-btn g-btn-sm transition-all', adminTab=='contacts'?'g-btn-primary':'g-btn-glass']">
+                 <i class="fas fa-address-book"></i>常用聯絡人
                </button>
                <div class="w-px h-5 bg-stone-200/60 mx-0.5"></div>
                <!-- 設定齒輪下拉選單 -->
                <div class="relative">
                  <div v-if="showSettingsMenu" class="fixed inset-0 z-40" @click="showSettingsMenu = false"></div>
-                 <button @click="showSettingsMenu = !showSettingsMenu" :class="['g-btn g-btn-sm transition-all', (adminTab=='accounts'||adminTab=='contacts'||adminTab=='analytics') ? 'g-btn-primary' : 'g-btn-glass']">
+                 <button @click="showSettingsMenu = !showSettingsMenu" :class="['g-btn g-btn-sm transition-all', (adminTab=='accounts'||adminTab=='items'||adminTab=='analytics') ? 'g-btn-primary' : 'g-btn-glass']">
                    <i class="fas fa-cog"></i>
                  </button>
                  <div v-if="showSettingsMenu" class="absolute right-0 top-full mt-2 w-52 g-card-solid py-2 z-50 animate-slide-down" style="border-radius:var(--glass-radius-sm);">
                    <button v-if="user && user.role === 'admin'" @click="adminTab='accounts'; fetchAdminAccounts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='accounts' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
                      <i class="fas fa-users w-4"></i>帳號管理
                    </button>
-                   <button @click="adminTab='contacts'; fetchFrequentContacts(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='contacts' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
-                     <i class="fas fa-address-book w-4"></i>常用聯絡人
+                   <button @click="adminTab='items'; fetchAdminItems(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='items' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
+                     <i class="fas fa-box w-4"></i>產品管理
                    </button>
                    <div class="border-t my-1" style="border-color:var(--glass-border-subtle);"></div>
                    <button @click="adminTab='analytics'; fetchAnalytics(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='analytics' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
@@ -1037,11 +1037,11 @@
           <i class="fas fa-file-alt"></i>
           <span>訂單管理</span>
         </button>
-        <button @click="adminTab='contacts'; fetchFrequentContacts()" :class="['bottom-tab-item', adminTab==='contacts' ? 'is-active' : '']">
-          <i class="fas fa-address-book"></i>
-          <span>聯絡人</span>
+        <button @click="adminTab='items'; fetchAdminItems()" :class="['bottom-tab-item', adminTab==='items' ? 'is-active' : '']">
+          <i class="fas fa-box"></i>
+          <span>產品管理</span>
         </button>
-        <button @click="adminTab='more'" :class="['bottom-tab-item', adminTab==='more'||adminTab==='accounts'||adminTab==='items'||adminTab==='analytics' ? 'is-active' : '']">
+        <button @click="adminTab='more'" :class="['bottom-tab-item', adminTab==='more'||adminTab==='accounts'||adminTab==='contacts'||adminTab==='analytics' ? 'is-active' : '']">
           <i class="fas fa-ellipsis-h"></i>
           <span>更多</span>
         </button>
@@ -1173,11 +1173,10 @@
           <!-- 工具列：篩選 + 排序 + 計數 -->
           <div class="flex flex-wrap items-center gap-2 mb-4">
             <div class="flex overflow-hidden" style="border-radius:var(--glass-radius-xs);border:1px solid var(--glass-border-strong);">
-              <button @click="itemTypeFilter = 'all'" :class="['px-3 py-1.5 text-xs font-bold transition', itemTypeFilter === 'all' ? 'bg-stone-800 text-white' : 'bg-white/60 text-stone-500 hover:bg-white/80']">全部</button>
-              <button @click="itemTypeFilter = 'regular'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', itemTypeFilter === 'regular' ? 'bg-green-600 text-white' : 'bg-white/60 text-green-700 hover:bg-green-50']">一般</button>
-              <button @click="itemTypeFilter = 'vacuum'" :class="['px-3 py-1.5 text-xs font-bold border-l border-stone-200/60 transition', itemTypeFilter === 'vacuum' ? 'bg-purple-600 text-white' : 'bg-white/60 text-purple-700 hover:bg-purple-50']">真空包裝</button>
+              <button @click="itemTypeFilter = 'regular'" :class="['px-4 py-2 text-sm font-bold transition', itemTypeFilter === 'regular' ? 'bg-green-600 text-white' : 'bg-white/60 text-green-700 hover:bg-green-50']">一般</button>
+              <button @click="itemTypeFilter = 'vacuum'" :class="['px-4 py-2 text-sm font-bold border-l border-stone-200/60 transition', itemTypeFilter === 'vacuum' ? 'bg-purple-600 text-white' : 'bg-white/60 text-purple-700 hover:bg-purple-50']">真空</button>
             </div>
-            <select v-model="itemsSort" @change="fetchAdminItems" class="g-select" style="height:32px;font-size:12px;padding-top:0;padding-bottom:0;">
+            <select v-model="itemsSort" @change="fetchAdminItems" class="g-select" style="height:40px;font-size:14px;padding-right:28px;">
               <option value="createdAt-asc">建立時間 (舊→新)</option>
               <option value="createdAt-desc">建立時間 (新→舊)</option>
               <option value="name-asc">名稱 (A→Z)</option>
@@ -1185,7 +1184,7 @@
               <option value="price-asc">價格 (低→高)</option>
               <option value="price-desc">價格 (高→低)</option>
             </select>
-            <span class="text-xs text-stone-400 ml-auto">
+            <span class="text-sm text-stone-400 ml-auto">
               共 {{ adminData.itemsList.filter(i => itemTypeFilter === 'all' || (i.type||'regular') === itemTypeFilter).length }} 項
             </span>
           </div>
@@ -1208,17 +1207,16 @@
               <!-- 名稱 + 說明 + 組合 -->
               <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                  <span class="font-black text-stone-800 text-sm">{{ item.name }}</span>
-                  <span v-if="(item.type||'regular')==='vacuum'" class="text-[10px] font-bold px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full">真空包裝</span>
-                  <span v-if="item.isCombo" class="text-[10px] font-bold px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full"><i class="fas fa-layer-group text-[9px]"></i> 組合</span>
+                  <span class="font-black text-stone-800 text-base">{{ item.name }}</span>
+                  <span v-if="item.isCombo" class="text-xs font-bold px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full"><i class="fas fa-layer-group text-[10px]"></i> 組合</span>
                 </div>
-                <div v-if="item.description" class="text-xs text-stone-400 truncate mt-0.5">{{ item.description }}</div>
+                <div v-if="item.description" class="text-sm text-stone-400 truncate mt-0.5">{{ item.description }}</div>
                 <div v-if="item.isCombo && item.combos && item.combos.length" class="flex flex-wrap gap-1 mt-1">
                   <span v-for="comp in item.combos" :key="comp.itemName" class="text-[10px] bg-stone-100 text-stone-400 px-1.5 py-0.5 rounded">{{ comp.itemName }} ×{{ comp.qty }}</span>
                 </div>
               </div>
               <!-- 價格 -->
-              <span class="font-black text-brand-600 text-sm flex-shrink-0 w-20 text-right">NT$ {{ item.price }}</span>
+              <span class="font-black text-brand-600 text-base flex-shrink-0 w-24 text-right">NT$ {{ item.price }}</span>
               <!-- 操作 -->
               <div class="flex gap-1 flex-shrink-0">
                 <button @click="editItem(item)" class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition" title="編輯">
@@ -1255,8 +1253,16 @@
             </div>
             <!-- 篩選 + 表格：一體卡片 -->
             <div class="g-card-solid">
-              <!-- Row 1: 每頁筆數 + 欄位設定 -->
+              <!-- Row 1: 類型篩選 + 每頁筆數 + 欄位設定 -->
               <div class="flex flex-col md:flex-row md:items-center gap-2 px-4 pt-3 pb-2">
+                <!-- 訂單類型篩選 -->
+                <div class="flex justify-center w-full md:w-auto">
+                  <div class="flex overflow-hidden flex-shrink-0" style="border-radius:var(--glass-radius-xs);border:1px solid var(--glass-border-strong);">
+                    <button @click="reviewTypeFilter = 'all'" :class="['px-4 py-2 text-sm font-bold transition', reviewTypeFilter === 'all' ? 'bg-stone-800 text-white' : 'bg-white/60 text-stone-500 hover:bg-white/80']">全部類型</button>
+                    <button @click="reviewTypeFilter = 'regular'" :class="['px-4 py-2 text-sm font-bold border-l border-stone-200/60 transition', reviewTypeFilter === 'regular' ? 'bg-green-600 text-white' : 'bg-white/60 text-green-700 hover:bg-green-50']">一般</button>
+                    <button @click="reviewTypeFilter = 'vacuum'" :class="['px-4 py-2 text-sm font-bold border-l border-stone-200/60 transition', reviewTypeFilter === 'vacuum' ? 'bg-purple-600 text-white' : 'bg-white/60 text-purple-700 hover:bg-purple-50']">真空</button>
+                  </div>
+                </div>
                 <div class="md:flex-1"></div>
                 <div class="flex items-center gap-2 flex-shrink-0 self-end md:self-auto">
                   <select v-model.number="reviewPageSize" class="g-select" style="height:40px;font-size:14px;padding-right:28px;">
@@ -1335,6 +1341,10 @@
                       <td v-else-if="col.key === 'contactName'" class="hidden sm:table-cell px-4 py-3 text-stone-600 whitespace-nowrap">{{ g.contactName }}</td>
                       <td v-else-if="col.key === 'contactPhone'" class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ g.contactPhone || '-' }}</td>
                       <td v-else-if="col.key === 'address'" class="hidden sm:table-cell px-4 py-3 text-stone-500 whitespace-nowrap">{{ g.address || '-' }}</td>
+                      <td v-else-if="col.key === 'orderType'" class="hidden sm:table-cell px-4 py-3 whitespace-nowrap">
+                        <span v-if="(g.orderType||'regular')==='vacuum'" class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">真空</span>
+                        <span v-else class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">一般</span>
+                      </td>
                       <td v-else-if="col.key === 'totalAmount'" class="hidden sm:table-cell px-4 py-3 text-right font-bold text-red-700 whitespace-nowrap">
                         {{ groupTotalAmountMap[g.id] > 0 ? '$' + groupTotalAmountMap[g.id].toLocaleString() : '-' }}
                       </td>
@@ -1412,7 +1422,7 @@
             <!-- 篩選 + 表格：一體卡片 -->
             <div class="g-card-solid">
               <!-- Row 1: 狀態按鈕 + 類型按鈕 + 搜尋欄 + 每頁筆數 -->
-              <div class="flex flex-col md:flex-row md:items-center gap-2 px-4 pt-3 pb-2">
+              <div class="flex flex-col md:flex-row md:flex-wrap md:items-center gap-2 px-4 pt-3 pb-2">
                 <div class="flex w-full md:w-auto overflow-hidden flex-shrink-0 self-start" style="border-radius:var(--glass-radius-xs);border:1px solid var(--glass-border-strong);">
                   <button @click="detailsStatus = 'all'" :class="['flex-1 md:flex-none md:px-4 py-2 text-sm font-bold whitespace-nowrap transition', detailsStatus === 'all' ? 'bg-stone-800 text-white' : 'bg-white/60 text-stone-500 hover:bg-white/80']">全部</button>
                   <button @click="detailsStatus = 'approved'" :class="['flex-1 md:flex-none md:px-4 py-2 text-sm font-bold whitespace-nowrap border-l border-stone-200/60 transition', detailsStatus === 'approved' ? 'bg-green-600 text-white' : 'bg-white/60 text-green-700 hover:bg-green-50']">已接單</button>
@@ -1421,12 +1431,12 @@
                   <button @click="detailsStatus = 'expired'" :class="['flex-1 md:flex-none md:px-4 py-2 text-sm font-bold whitespace-nowrap border-l border-stone-200/60 transition', detailsStatus === 'expired' ? 'bg-stone-500 text-white' : 'bg-white/60 text-stone-400 hover:bg-stone-50']">已過期</button>
                 </div>
                 <!-- 訂單類型篩選 -->
-                <div class="flex overflow-hidden flex-shrink-0 self-start" style="border-radius:var(--glass-radius-xs);border:1px solid var(--glass-border-strong);">
+                <div class="flex overflow-hidden flex-shrink-0 self-center md:self-start" style="border-radius:var(--glass-radius-xs);border:1px solid var(--glass-border-strong);">
                   <button @click="detailsTypeFilter = 'all'" :class="['px-4 py-2 text-sm font-bold transition', detailsTypeFilter === 'all' ? 'bg-stone-800 text-white' : 'bg-white/60 text-stone-500 hover:bg-white/80']">全部類型</button>
                   <button @click="detailsTypeFilter = 'regular'" :class="['px-4 py-2 text-sm font-bold border-l border-stone-200/60 transition', detailsTypeFilter === 'regular' ? 'bg-green-600 text-white' : 'bg-white/60 text-green-700 hover:bg-green-50']"></i>一般</button>
                   <button @click="detailsTypeFilter = 'vacuum'" :class="['px-4 py-2 text-sm font-bold border-l border-stone-200/60 transition', detailsTypeFilter === 'vacuum' ? 'bg-purple-600 text-white' : 'bg-white/60 text-purple-700 hover:bg-purple-50']"></i>真空</button>
                 </div>
-                <div class="flex items-center gap-2 md:flex-1 md:min-w-0">
+                <div class="flex items-center gap-2 w-full md:w-full lg:flex-1 lg:min-w-0">
                   <div class="relative flex-1 min-w-0">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-300 text-xs z-[1] pointer-events-none"></i>
                     <input type="text" v-model="detailsKeyword" placeholder="關鍵字搜尋..." class="g-input w-full pl-8">
@@ -2422,7 +2432,7 @@
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
                     <p class="font-black text-stone-800 truncate">{{ group.companyName }}</p>
-                    <span v-if="(group.orderType||'regular')==='vacuum'" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold flex-shrink-0"><i class="fas fa-wind text-[10px]"></i>真空</span>
+                    <span v-if="(group.orderType||'regular')==='vacuum'" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold flex-shrink-0">真空</span>
                   </div>
                   <div class="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
                     <span class="text-xs text-stone-500"><i class="fas fa-truck mr-1"></i>{{ fmtTs(group.deliveryTime, 'short') }}</span>
@@ -2665,9 +2675,9 @@
               <i class="fas fa-users"></i>
               <span>帳號管理</span>
             </div>
-            <div class="more-grid-item" @click="adminTab='items'; fetchAdminItems()">
-              <i class="fas fa-box"></i>
-              <span>產品管理</span>
+            <div class="more-grid-item" @click="adminTab='contacts'; fetchFrequentContacts()">
+              <i class="fas fa-address-book"></i>
+              <span>常用聯絡人</span>
             </div>
             <div class="more-grid-item" @click="adminTab='analytics'; fetchAnalytics()">
               <i class="fas fa-chart-bar"></i>
@@ -3227,6 +3237,16 @@
                 <div class="min-w-0">
                   <p class="text-xs text-stone-400">訂單編號</p>
                   <p class="text-sm font-mono text-stone-800 select-all">{{ reviewModal.group && reviewModal.group.id }}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 px-4 py-3 border-t border-stone-100">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" :class="(reviewModal.group && reviewModal.group.orderType)==='vacuum' ? 'bg-purple-100' : 'bg-green-100'">
+                  <i class="fas fa-tag text-xs" :class="(reviewModal.group && reviewModal.group.orderType)==='vacuum' ? 'text-purple-600' : 'text-green-600'"></i>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs text-stone-400">訂單類型</p>
+                  <span v-if="(reviewModal.group && reviewModal.group.orderType)==='vacuum'" class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-sm font-bold">真空包裝</span>
+                  <span v-else class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-sm font-bold">一般訂單</span>
                 </div>
               </div>
             </div>
@@ -4077,7 +4097,7 @@
         // 產品管理
         const showItemModal = ref(false);
         const editingItem = ref({});
-        const itemTypeFilter = ref('all'); // 'all' | 'regular' | 'vacuum' — 產品管理篩選
+        const itemTypeFilter = ref('regular'); // 'regular' | 'vacuum' — 產品管理篩選
         const itemForm = ref({
           name: '',
           price: 0,
@@ -4117,18 +4137,23 @@
         function columnDrop(idx) { if (colDragFrom.value === null || colDragFrom.value === idx) { colDragFrom.value = null; return; } const arr = [...columnOrder.value]; const [item] = arr.splice(colDragFrom.value, 1); arr.splice(idx, 0, item); columnOrder.value = arr; colDragFrom.value = null; }
         const orderedVisibleColumns = computed(() => columnOrder.value.filter(k => tableColumns.value[k] !== false).map(k => ({ key: k, ...colMetaMap[k] })));
         const reviewSort = ref('createdAt-desc'); // 待審核排序
+        const reviewTypeFilter = ref('all'); // 待審核訂單類型篩選
         const reviewPage = ref(1);
         const reviewPageSize = ref(20);
         const reviewSelectedIds = ref([]);
         // 待審核欄位設定
         const showReviewColumnSettings = ref(false);
-        const reviewColumns = ref(JSON.parse(localStorage.getItem('reviewColumns') || JSON.stringify({deliveryTime:true,companyName:true,contactName:true,contactPhone:true,address:false,totalAmount:true})));
+        const reviewColumns = ref(JSON.parse(localStorage.getItem('reviewColumns') || JSON.stringify({deliveryTime:true,companyName:true,contactName:true,contactPhone:true,address:false,orderType:true,totalAmount:true})));
+        // 遷移：補上舊版缺少的欄位
+        if (reviewColumns.value.orderType === undefined) reviewColumns.value.orderType = true;
         watch(reviewColumns, val => localStorage.setItem('reviewColumns', JSON.stringify(val)), { deep: true });
-        const _defaultReviewColOrder = ['deliveryTime','companyName','contactName','contactPhone','address','totalAmount'];
+        const _defaultReviewColOrder = ['deliveryTime','companyName','contactName','contactPhone','address','orderType','totalAmount'];
         const reviewColumnOrder = ref(JSON.parse(localStorage.getItem('reviewColumnOrder') || JSON.stringify(_defaultReviewColOrder)).filter(k => _defaultReviewColOrder.includes(k)));
+        // 遷移：補上舊版缺少的欄位
+        { const ro = reviewColumnOrder.value; if (!ro.includes('orderType')) { const ti = ro.indexOf('totalAmount'); ti >= 0 ? ro.splice(ti, 0, 'orderType') : ro.push('orderType'); } }
         watch(reviewColumnOrder, val => localStorage.setItem('reviewColumnOrder', JSON.stringify(val)), { deep: true });
         const reviewColDragFrom = ref(null);
-        const reviewColMetaMap = { deliveryTime:{label:'配送時間',toggleable:true}, companyName:{label:'公司名稱',toggleable:true}, contactName:{label:'聯絡人',toggleable:true}, contactPhone:{label:'連絡電話',toggleable:true}, address:{label:'地址',toggleable:true}, totalAmount:{label:'總金額',toggleable:true} };
+        const reviewColMetaMap = { deliveryTime:{label:'配送時間',toggleable:true}, companyName:{label:'公司名稱',toggleable:true}, contactName:{label:'聯絡人',toggleable:true}, contactPhone:{label:'連絡電話',toggleable:true}, address:{label:'地址',toggleable:true}, orderType:{label:'訂單類型',toggleable:true}, totalAmount:{label:'總金額',toggleable:true} };
         function reviewColumnDrop(idx) { if (reviewColDragFrom.value === null || reviewColDragFrom.value === idx) { reviewColDragFrom.value = null; return; } const arr = [...reviewColumnOrder.value]; const [item] = arr.splice(reviewColDragFrom.value, 1); arr.splice(idx, 0, item); reviewColumnOrder.value = arr; reviewColDragFrom.value = null; }
         const orderedVisibleReviewColumns = computed(() => reviewColumnOrder.value.filter(k => reviewColumns.value[k] !== false).map(k => ({ key: k, ...reviewColMetaMap[k] })));
         function reviewSortByField(field) {
@@ -4283,7 +4308,10 @@
 
         // 排序待審核列表
         const sortedReviewList = computed(() => {
-          const list = [...adminData.value.reviewList];
+          let list = [...adminData.value.reviewList];
+          if (reviewTypeFilter.value !== 'all') {
+            list = list.filter(o => (o.orderType || 'regular') === reviewTypeFilter.value);
+          }
           const [field, order] = reviewSort.value.split('-');
           
           return list.sort((a, b) => {
@@ -6613,6 +6641,7 @@
           setTomorrowFilter,
           clearDetailsFilter,
           reviewSort,
+          reviewTypeFilter,
           showReviewColumnSettings,
           reviewColumns,
           reviewColumnOrder,
