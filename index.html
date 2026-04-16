@@ -1013,7 +1013,7 @@
                    <button @click="adminTab='analytics'; fetchAnalytics(); showSettingsMenu=false" :class="['w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3', adminTab=='analytics' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50/80']">
                      <i class="fas fa-chart-bar w-4"></i>統計分析
                    </button>
-                   <a href="http://dannykuo123.synology.me/health" target="_blank" rel="noopener" @click="showSettingsMenu=false" class="w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3 text-stone-600 hover:bg-stone-50/80">
+                   <a href="https://dannykuo123.synology.me/health" target="_blank" rel="noopener" @click="showSettingsMenu=false" class="w-full text-left px-4 py-2.5 text-sm font-bold transition flex items-center gap-3 text-stone-600 hover:bg-stone-50/80">
                      <i class="fas fa-shield-alt w-4"></i>列印認證
                    </a>
                  </div>
@@ -2683,7 +2683,7 @@
               <i class="fas fa-chart-bar"></i>
               <span>統計分析</span>
             </div>
-            <a href="http://dannykuo123.synology.me/" target="_blank" rel="noopener" class="more-grid-item" style="text-decoration:none;">
+            <a href="https://dannykuo123.synology.me/" target="_blank" rel="noopener" class="more-grid-item" style="text-decoration:none;">
               <i class="fas fa-shield-alt"></i>
               <span>列印認證</span>
             </a>
@@ -6167,7 +6167,7 @@
         const SINGLE_LABEL_PER_PAGE = 10;
 
         // ── NAS 列印 API ──
-        const NAS_API_BASE = 'http://dannykuo123.synology.me';
+        const NAS_API_BASE = 'https://dannykuo123.synology.me';
         const nasPrintingId = ref(null);
 
         // NAS 預覽 Modal 狀態

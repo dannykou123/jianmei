@@ -6,7 +6,7 @@ services:
     container_name: jianmei-print-service
     restart: unless-stopped
     ports:
-      - "8000:8000"          # 前端呼叫 http://dannykuo123.synology.me/api/print-label
+      - "8000:8000"          # 前端呼叫 https://dannykuo123.synology.me/api/print-label
     environment:
       - PRINTER_USB_DEV=/dev/usb/lp0       # Linux 標準 USB 列印裝置路徑
     devices:
