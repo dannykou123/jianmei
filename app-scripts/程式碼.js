@@ -148,14 +148,21 @@ function processAndUpload(fileId) {
   // A. 解析日期與基本資訊
   var rawDateText = rows[1][2] || rows[1][1];
   var finalDateObj = smartParseDate(rawDateText);
-  
+  // 若日期無法解析或已是過去時間，視為空值
+  var importNow = new Date();
+  var deliveryIsValid = finalDateObj !== null && !isNaN(finalDateObj.getTime()) && finalDateObj > importNow;
+  if (!deliveryIsValid) finalDateObj = null;
+
   // 格式化為 LINE 顯示用的字串
-  var deliveryTimeStr = Utilities.formatDate(finalDateObj, "GMT+8", "yyyy/MM/dd HH:mm");
-  
+  var deliveryTimeStr = deliveryIsValid
+    ? Utilities.formatDate(finalDateObj, "GMT+8", "yyyy/MM/dd HH:mm")
+    : "（待確認⚠️）";
+
   var companyName = String(rows[2][2] || rows[2][1] || "").trim();
+  if (!companyName) deliveryTimeStr += "\t⚠️ 公司名稱未填";
 
   var groupData = {
-    deliveryTime: finalDateObj.toISOString(), 
+    deliveryTime: deliveryIsValid ? finalDateObj.toISOString() : "",
     companyName: companyName,
     contactName: String(rows[3][2] || rows[3][1] || "").trim(),
     contactPhone: String(rows[4][2] || rows[4][1] || "").trim(),
@@ -172,6 +179,7 @@ function processAndUpload(fileId) {
   // --- 品項解析迴圈 (維持原有邏輯) ---
   var unitRow = rows[6];
   var nameRow = rows[7];
+  var orderCount = 0;
   var totalRowIndex = -1; 
   var noteRowIndex = -1;
   for (var i = 0; i < rows.length; i++) {
@@ -218,8 +226,11 @@ function processAndUpload(fileId) {
         createdAt: new Date().toISOString(),
         orderType: orderType
       });
+      orderCount++;
     }
   }
+
+  if (orderCount === 0) deliveryTimeStr += "\t⚠️ 無訂購品項";
 
   // 刪除暫存檔並回傳資料物件
   Drive.Files.remove(tempFile.id);
@@ -264,7 +275,7 @@ function createGroupOrderInFirestore(data) {
   
   const payload = {
     fields: {
-      deliveryTime: { timestampValue: data.deliveryTime }, 
+      deliveryTime: data.deliveryTime ? { timestampValue: data.deliveryTime } : { stringValue: "" },
       companyName: { stringValue: data.companyName },
       contactName: { stringValue: data.contactName },
       contactPhone: { stringValue: data.contactPhone },
@@ -447,7 +458,7 @@ function deleteFirestoreDoc(path) {
  */
 function smartParseDate(input) {
   if (input instanceof Date) return input;
-  if (!input) return new Date();
+  if (!input) return null;
 
   var now = new Date();
   var str = String(input).trim()
@@ -527,6 +538,6 @@ function smartParseDate(input) {
 
   targetDate.setHours(hour, min, 0, 0);
 
-  if (isNaN(targetDate.getTime())) return now;
+  if (isNaN(targetDate.getTime())) return null;
   return targetDate;
 }

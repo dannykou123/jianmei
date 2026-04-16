@@ -3164,92 +3164,154 @@
           </div>
           <!-- 聯絡資訊 -->
           <div v-else-if="reviewModal.tab === 'contact'">
-            <!-- 聯絡資料 -->
-            <div class="bg-white rounded-xl border border-stone-100 overflow-hidden">
-              <!-- 摘要行 -->
-              <div class="flex items-center gap-6 px-5 py-4 border-b border-stone-100 bg-stone-50/50">
-                <div class="flex items-center gap-2">
-                  <i class="fa-solid fa-sack-dollar text-stone-400 text-base"></i>
-                  <div class="flex flex-col">
-                    <span class="text-xs text-stone-400 font-medium">總金額</span>
-                    <span class="text-lg font-black text-red-700">${{ (reviewModal.group && groupTotalAmountMap[reviewModal.group.id] || 0).toLocaleString() }}</span>
+            <!-- 唯讀模式 -->
+            <template v-if="!reviewInfoEditing">
+              <div class="flex justify-end mb-3">
+                <button @click="reviewInfoEditing = true" class="g-btn g-btn-glass g-btn-sm"><i class="fas fa-edit mr-1"></i>編輯</button>
+              </div>
+              <div class="bg-white rounded-xl border border-stone-100 overflow-hidden">
+                <!-- 摘要行 -->
+                <div class="flex items-center gap-6 px-5 py-4 border-b border-stone-100 bg-stone-50/50">
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-sack-dollar text-stone-400 text-base"></i>
+                    <div class="flex flex-col">
+                      <span class="text-xs text-stone-400 font-medium">總金額</span>
+                      <span class="text-lg font-black text-red-700">${{ (reviewModal.group && groupTotalAmountMap[reviewModal.group.id] || 0).toLocaleString() }}</span>
+                    </div>
+                  </div>
+                  <div class="w-px h-8 bg-stone-200"></div>
+                  <div class="flex items-center gap-2">
+                    <i class="fas fa-users text-stone-400 text-base"></i>
+                    <div class="flex flex-col">
+                      <span class="text-xs text-stone-400 font-medium">訂單數</span>
+                      <span class="text-lg font-black text-stone-800">{{ groupOrders.length }} 筆</span>
+                    </div>
                   </div>
                 </div>
-                <div class="w-px h-8 bg-stone-200"></div>
-                <div class="flex items-center gap-2">
-                  <i class="fas fa-users text-stone-400 text-base"></i>
-                  <div class="flex flex-col">
-                    <span class="text-xs text-stone-400 font-medium">訂單數</span>
-                    <span class="text-lg font-black text-stone-800">{{ groupOrders.length }} 筆</span>
+                <!-- 詳細資料 -->
+                <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                  <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-building text-stone-500 text-xs"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs text-stone-400">公司名稱</p>
+                    <p class="text-sm font-bold text-stone-800">{{ reviewModal.group && reviewModal.group.companyName || '-' }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                  <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-user text-stone-500 text-xs"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs text-stone-400">聯絡人</p>
+                    <p class="text-sm font-bold text-stone-800">{{ reviewModal.group && reviewModal.group.contactName || '-' }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                  <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-phone text-stone-500 text-xs"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs text-stone-400">連絡電話</p>
+                    <p class="text-sm font-bold text-stone-800">{{ reviewModal.group && reviewModal.group.contactPhone || '-' }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                  <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-truck text-stone-500 text-xs"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs text-stone-400">配送時間</p>
+                    <p class="text-sm font-bold text-stone-800">{{ reviewModal.group && fmtTs(reviewModal.group.deliveryTime, 'full') }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                  <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-map-marker-alt text-stone-500 text-xs"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs text-stone-400">地址</p>
+                    <p class="text-sm font-bold text-stone-800">{{ reviewModal.group && (reviewModal.group.address || '-') }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 px-4 py-3">
+                  <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-hashtag text-stone-500 text-xs"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs text-stone-400">訂單編號</p>
+                    <p class="text-sm font-mono text-stone-800 select-all">{{ reviewModal.group && reviewModal.group.id }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 px-4 py-3 border-t border-stone-100">
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" :class="(reviewModal.group && reviewModal.group.orderType)==='vacuum' ? 'bg-purple-100' : 'bg-green-100'">
+                    <i class="fas fa-tag text-xs" :class="(reviewModal.group && reviewModal.group.orderType)==='vacuum' ? 'text-purple-600' : 'text-green-600'"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs text-stone-400">訂單類型</p>
+                    <span v-if="(reviewModal.group && reviewModal.group.orderType)==='vacuum'" class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-sm font-bold">真空包裝</span>
+                    <span v-else class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-sm font-bold">一般訂單</span>
                   </div>
                 </div>
               </div>
-              <!-- 詳細資料 -->
-              <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
-                <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
-                  <i class="fas fa-building text-stone-500 text-xs"></i>
+            </template>
+            <!-- 編輯模式 -->
+            <template v-else>
+              <div class="bg-white rounded-xl border border-stone-100 overflow-hidden">
+                <div class="flex items-center justify-between gap-3 px-4 py-4 border-b border-stone-100 bg-stone-50/50">
+                  <span class="text-sm font-bold text-stone-700">編輯基本資訊</span>
+                  <div class="flex gap-2">
+                    <button @click="saveReviewBasicInfo" class="g-btn g-btn-primary g-btn-sm"><i class="fas fa-save mr-1"></i>保存</button>
+                    <button @click="reviewInfoEditing = false" class="g-btn g-btn-glass g-btn-sm">取消</button>
+                  </div>
                 </div>
-                <div class="min-w-0">
-                  <p class="text-xs text-stone-400">公司名稱</p>
-                  <p class="text-sm font-bold text-stone-800">{{ reviewModal.group && reviewModal.group.companyName || '-' }}</p>
+                <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                  <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-building text-stone-500 text-xs"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-xs text-stone-400">公司名稱</p>
+                    <input v-model="editFormData.companyName" type="text" class="w-full mt-0.5 bg-transparent border-0 border-b border-stone-200 rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0 focus:border-brand-400" style="height:24px;">
+                  </div>
                 </div>
-              </div>
-              <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
-                <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
-                  <i class="fas fa-user text-stone-500 text-xs"></i>
+                <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                  <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-user text-stone-500 text-xs"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-xs text-stone-400">聯絡人</p>
+                    <input v-model="editFormData.contactName" type="text" class="w-full mt-0.5 bg-transparent border-0 border-b border-stone-200 rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0 focus:border-brand-400" style="height:24px;">
+                  </div>
                 </div>
-                <div class="min-w-0">
-                  <p class="text-xs text-stone-400">聯絡人</p>
-                  <p class="text-sm font-bold text-stone-800">{{ reviewModal.group && reviewModal.group.contactName || '-' }}</p>
+                <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                  <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-phone text-stone-500 text-xs"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-xs text-stone-400">電話</p>
+                    <input v-model="editFormData.contactPhone" type="text" class="w-full mt-0.5 bg-transparent border-0 border-b border-stone-200 rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0 focus:border-brand-400" style="height:24px;">
+                  </div>
                 </div>
-              </div>
-              <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
-                <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
-                  <i class="fas fa-phone text-stone-500 text-xs"></i>
+                <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
+                  <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-truck text-stone-500 text-xs"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-xs text-stone-400">交貨時間</p>
+                    <input v-model="editFormData.deliveryTime" type="datetime-local" :min="new Date().toISOString().slice(0,16)" class="w-full mt-0.5 bg-transparent border-0 border-b border-stone-200 rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0 focus:border-brand-400" style="height:28px;">
+                  </div>
                 </div>
-                <div class="min-w-0">
-                  <p class="text-xs text-stone-400">連絡電話</p>
-                  <p class="text-sm font-bold text-stone-800">{{ reviewModal.group && reviewModal.group.contactPhone || '-' }}</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
-                <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
-                  <i class="fas fa-truck text-stone-500 text-xs"></i>
-                </div>
-                <div class="min-w-0">
-                  <p class="text-xs text-stone-400">配送時間</p>
-                  <p class="text-sm font-bold text-stone-800">{{ reviewModal.group && fmtTs(reviewModal.group.deliveryTime, 'full') }}</p>
-                </div>
-              </div>
-              <div v-if="reviewModal.group && reviewModal.group.address" class="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
-                <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
-                  <i class="fas fa-map-marker-alt text-stone-500 text-xs"></i>
-                </div>
-                <div class="min-w-0">
-                  <p class="text-xs text-stone-400">地址</p>
-                  <p class="text-sm font-bold text-stone-800">{{ reviewModal.group.address }}</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-3 px-4 py-3">
-                <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
-                  <i class="fas fa-hashtag text-stone-500 text-xs"></i>
-                </div>
-                <div class="min-w-0">
-                  <p class="text-xs text-stone-400">訂單編號</p>
-                  <p class="text-sm font-mono text-stone-800 select-all">{{ reviewModal.group && reviewModal.group.id }}</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-3 px-4 py-3 border-t border-stone-100">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" :class="(reviewModal.group && reviewModal.group.orderType)==='vacuum' ? 'bg-purple-100' : 'bg-green-100'">
-                  <i class="fas fa-tag text-xs" :class="(reviewModal.group && reviewModal.group.orderType)==='vacuum' ? 'text-purple-600' : 'text-green-600'"></i>
-                </div>
-                <div class="min-w-0">
-                  <p class="text-xs text-stone-400">訂單類型</p>
-                  <span v-if="(reviewModal.group && reviewModal.group.orderType)==='vacuum'" class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-sm font-bold">真空包裝</span>
-                  <span v-else class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-sm font-bold">一般訂單</span>
+                <div class="flex items-center gap-3 px-4 py-3">
+                  <div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-map-marker-alt text-stone-500 text-xs"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-xs text-stone-400">交貨地點</p>
+                    <input v-model="editFormData.address" type="text" class="w-full mt-0.5 bg-transparent border-0 border-b border-stone-200 rounded-none px-0 py-0 text-sm font-bold text-stone-800 focus:outline-none focus:ring-0 focus:border-brand-400" style="height:24px;" placeholder="請輸入交貨地點">
+                  </div>
                 </div>
               </div>
-            </div>
+            </template>
           </div>
           <!-- 備貨統計 -->
           <div v-else-if="reviewModal.tab === 'stock'">
@@ -3274,7 +3336,7 @@
         </div>
         <!-- Footer -->
         <div class="px-6 py-4 border-t border-stone-100/60 flex gap-3 justify-end">
-          <button @click="confirmGroup(reviewModal.group); closeReviewModal()" class="g-btn g-btn-success"><i class="fas fa-check mr-1"></i>接單</button>
+          <button @click="confirmAndCloseReview" class="g-btn g-btn-success"><i class="fas fa-check mr-1"></i>接單</button>
           <button @click="rejectGroup(reviewModal.group); closeReviewModal()" class="g-btn g-btn-danger"><i class="fas fa-times mr-1"></i>拒絕</button>
           <button @click="closeReviewModal" class="g-btn g-btn-glass">關閉</button>
         </div>
@@ -3574,6 +3636,7 @@
         const expandedStockGroupId = ref(null);
         // 待審核 modal
         const reviewModal = ref({ show: false, group: null, tab: 'contact' });
+        const reviewInfoEditing = ref(false);
         const groupOrders = ref([]);
         const groupStock = ref([]);
         const groupTotalAmount = ref(0);
@@ -3973,6 +4036,43 @@
             detailInfoEditing.value = false;
             showAlert('儲存成功', 'success');
             fetchOrderDetails();
+          } catch (e) {
+            showAlert('儲存失敗：' + e.message, 'error');
+          } finally { loading.value = false; }
+        };
+
+        // 待確認 modal 儲存基本資訊
+        const saveReviewBasicInfo = async () => {
+          const f = editFormData.value;
+          if (!f.companyName || !f.companyName.trim()) { showAlert('請填寫公司名稱', 'error'); return; }
+          if (!f.contactName || !f.contactName.trim()) { showAlert('請填寫職絡人', 'error'); return; }
+          if (!f.contactPhone || !String(f.contactPhone).trim()) { showAlert('請填寫電話', 'error'); return; }
+          if (!f.address || !f.address.trim()) { showAlert('請填寫交貨地點', 'error'); return; }
+          if (!f.deliveryTime) { showAlert('請設定交貨時間', 'error'); return; }
+          if (new Date(f.deliveryTime) < new Date()) { showAlert('交貨時間不可早於現在', 'error'); return; }
+          loading.value = true;
+          try {
+            const groupDocRef = doc(db, 'GroupOrders', editingOrderId.value);
+            await updateDoc(groupDocRef, {
+              companyName: f.companyName,
+              contactName: f.contactName,
+              contactPhone: f.contactPhone,
+              address: f.address,
+              deliveryTime: new Date(f.deliveryTime),
+              updatedAt: new Date().toISOString(),
+              updatedBy: user.value.id
+            });
+            reviewModal.value.group = {
+              ...reviewModal.value.group,
+              companyName: f.companyName,
+              contactName: f.contactName,
+              contactPhone: f.contactPhone,
+              address: f.address,
+              deliveryTime: { seconds: Math.floor(new Date(f.deliveryTime).getTime() / 1000) }
+            };
+            reviewInfoEditing.value = false;
+            showAlert('儲存成功', 'success');
+            fetchReviewList();
           } catch (e) {
             showAlert('儲存失敗：' + e.message, 'error');
           } finally { loading.value = false; }
@@ -5236,10 +5336,71 @@
           }
         };
 
+        // 接單前完整驗證
+        const validateGroupBeforeConfirm = async (group) => {
+          const errors = [];
+          // 必填欄位
+          if (!group.contactName || !group.contactName.trim()) errors.push('職絡人未填寫');
+          if (!group.contactPhone || !String(group.contactPhone).trim()) errors.push('電話未填寫');
+          if (!group.address || !group.address.trim()) errors.push('交貨地點未填寫');
+          // 配送時間
+          if (!group.deliveryTime || !group.deliveryTime.seconds) {
+            errors.push('交貨時間未設定');
+          } else if (new Date(group.deliveryTime.seconds * 1000) < new Date()) {
+            errors.push('交貨時間已過期，請修正');
+          }
+          // 確保產品列表已載入
+          if (adminData.value.itemsList.length === 0) await fetchAdminItems();
+          // 查詢訂單明細
+          const ordersSnap = await getDocs(query(collection(db, 'Orders'), where('groupOrderId', '==', group.id)));
+          const orders = ordersSnap.docs.map(d => d.data());
+          // 至少一位訂購人有品項
+          const hasValidOrder = orders.some(o => o.items && o.items.length > 0);
+          if (!hasValidOrder) errors.push('沒有任何訂購人有品項');
+          // 品項名稱 + 價格比對
+          const orderType = group.orderType || 'regular';
+          const catalogMap = {};
+          adminData.value.itemsList
+            .filter(i => (i.type || 'regular') === orderType)
+            .forEach(i => { catalogMap[i.name] = i.price ?? 0; });
+          const unknownNames = new Set();
+          const priceMismatches = [];
+          for (const order of orders) {
+            for (const item of (order.items || [])) {
+              if (!Object.prototype.hasOwnProperty.call(catalogMap, item.itemName)) {
+                unknownNames.add(item.itemName);
+              } else {
+                const catalogPrice = catalogMap[item.itemName];
+                const orderPrice = item.price ?? 0;
+                if (Math.abs(catalogPrice - orderPrice) >= 0.01) {
+                  const key = `${item.itemName}（訂單 $${orderPrice} / 目錄 $${catalogPrice}）`;
+                  if (!priceMismatches.includes(key)) priceMismatches.push(key);
+                }
+              }
+            }
+          }
+          if (unknownNames.size > 0) errors.push(`品項不在目錄中：${[...unknownNames].join('、')}`);
+          if (priceMismatches.length > 0) errors.push(`品項價格不符：${priceMismatches.join('、')}`);
+          return errors;
+        };
+
         // 確認團購
         const confirmGroup = async (group) => {
-          if (!await showConfirm(`確定要確認「${group.companyName}」嗎？`)) return;
-          
+          loading.value = true;
+          let errors;
+          try {
+            errors = await validateGroupBeforeConfirm(group);
+          } catch (e) {
+            showAlert('驗證失敗：' + e.message, 'error');
+            return false;
+          } finally {
+            loading.value = false;
+          }
+          if (errors.length > 0) {
+            showAlert('無法接單，請先修正以下問題：\n\u2022 ' + errors.join('\n\u2022 '), 'error');
+            return false;
+          }
+          if (!await showConfirm(`確定要確認「${group.companyName}」嗎？`)) return false;
           loading.value = true;
           try {
             const docRef = doc(db, "GroupOrders", group.id);
@@ -5250,9 +5411,11 @@
             });
             showAlert('已確認團購', 'success');
             fetchReviewList();
+            return true;
           } catch (error) {
             console.error('確認團購錯誤:', error);
             showAlert('確認失敗', 'error');
+            return false;
           } finally {
             loading.value = false;
           }
@@ -5286,16 +5449,29 @@
           if (count === 0) return;
           if (!await showConfirm(`確定要批次接單 ${count} 筆訂單嗎？`)) return;
           loading.value = true;
+          const skipped = [];
+          let successCount = 0;
           try {
             for (const id of reviewSelectedIds.value) {
+              const group = adminData.value.reviewList.find(g => g.id === id);
+              if (!group) continue;
+              const errors = await validateGroupBeforeConfirm(group);
+              if (errors.length > 0) {
+                skipped.push(`${group.companyName}：${errors[0]}`);
+                continue;
+              }
               const docRef = doc(db, "GroupOrders", id);
               await updateDoc(docRef, {
                 status: "approved",
                 approvedAt: new Date().toISOString(),
                 approvedBy: user.value.id
               });
+              successCount++;
             }
-            showAlert(`已批次接單 ${count} 筆`, 'success');
+            const msgs = [];
+            if (successCount > 0) msgs.push(`✅ 已批次接單 ${successCount} 筆`);
+            if (skipped.length > 0) msgs.push(`❌ ${skipped.length} 筆未通過驗證（已略過）：\n\u2022 ${skipped.join('\n\u2022 ')}`);
+            if (msgs.length) showAlert(msgs.join('\n\n'), skipped.length > 0 ? 'error' : 'success');
             reviewSelectedIds.value = [];
             fetchReviewList();
           } catch (error) {
@@ -5359,10 +5535,26 @@
         // 待審核 modal
         const openReviewModal = async (g, tab) => {
           reviewModal.value = { show: true, group: g, tab };
+          reviewInfoEditing.value = false;
+          editingOrderId.value = g.id;
+          const _origDT = g.deliveryTime ? new Date(g.deliveryTime.seconds * 1000).toISOString().slice(0, 16) : '';
+          editFormData.value = {
+            companyName: g.companyName || '',
+            contactName: g.contactName || '',
+            contactPhone: g.contactPhone || '',
+            address: g.address || '',
+            deliveryTime: _origDT,
+            _originalDeliveryTime: _origDT
+          };
           await fetchGroupOrders(g.id);
         };
         const closeReviewModal = () => {
           reviewModal.value = { show: false, group: null, tab: 'contact' };
+          reviewInfoEditing.value = false;
+        };
+        const confirmAndCloseReview = async () => {
+          const ok = await confirmGroup(reviewModal.value.group);
+          if (ok) closeReviewModal();
         };
 
         // 獲取團購訂單
@@ -6737,8 +6929,11 @@
           expandedOrdersGroupId,
           expandedStockGroupId,
           reviewModal,
+          reviewInfoEditing,
           openReviewModal,
           closeReviewModal,
+          confirmAndCloseReview,
+          saveReviewBasicInfo,
           groupOrders,
           groupStock,
           groupTotalAmount,

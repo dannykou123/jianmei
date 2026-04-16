@@ -8,8 +8,8 @@ services:
     ports:
       - "8000:8000"          # 前端呼叫 https://dannykou123.asuscomm.com/api/print-label
     environment:
-      - PRINTER_USB_DEV=/dev/usb_printer   # mknod c 180 0 建立的真實字元裝置
+      - PRINTER_USB_DEV=/dev/usb/lp0       # Linux 標準 USB 列印裝置路徑
     devices:
-      - "/dev/usb_printer:/dev/usb_printer:rw"  # 掛入真實字元裝置
+      - "/dev/usb/lp0:/dev/usb/lp0:rw"    # 掛入標準 USB 列印裝置
     privileged: true
     user: root
