@@ -5047,6 +5047,20 @@
 
         const handleGoogleLogin = async () => {
           loading.value = true;
+          const loginTimeout = setTimeout(() => { loading.value = false; }, 60000);
+
+          // 使用者關閉 popup → 主視窗重新取得焦點 → 給 Firebase 500ms 緩衝，之後立即重置
+          let focusTimer = null;
+          const onFocus = () => {
+            focusTimer = setTimeout(() => {
+              if (loading.value) {
+                clearTimeout(loginTimeout);
+                loading.value = false;
+              }
+            }, 500);
+          };
+          window.addEventListener('focus', onFocus);
+
           try {
             const result = await signInWithPopup(auth, googleProvider);
             const gUser  = result.user;
@@ -5086,10 +5100,15 @@
             }
             await finishLogin(accData, `歡迎回來，${accData.name || accData.accountId}！`);
           } catch (e) {
-            if (e.code !== 'auth/popup-closed-by-user') {
+            // 使用者主動關閉/取消 popup，靜默處理
+            const cancelled = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request'];
+            if (!cancelled.includes(e.code)) {
               showAlert('Google 登入失敗：' + e.message, 'error');
             }
           } finally {
+            clearTimeout(loginTimeout);
+            clearTimeout(focusTimer);
+            window.removeEventListener('focus', onFocus);
             loading.value = false;
           }
         };

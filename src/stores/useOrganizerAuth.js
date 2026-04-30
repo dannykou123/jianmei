@@ -54,6 +54,9 @@ export const useOrganizerAuth = defineStore('organizerAuth', () => {
         photoURL: user.photoURL,
       });
     } catch (e) {
+      // 使用者主動取消 popup，靜默結束（不 re-throw，呼叫端視為未登入）
+      const cancelled = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request'];
+      if (cancelled.includes(e.code)) return;
       error.value = e.message;
       throw e;
     }

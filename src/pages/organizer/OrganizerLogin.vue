@@ -14,6 +14,20 @@ const alertState = ref({ show: false, title: '', message: '', type: 'info' });
 async function handleLogin() {
   if (submitting.value) return;
   submitting.value = true;
+  const timeout = setTimeout(() => { submitting.value = false; }, 60000);
+
+  // 使用者關閉 popup → 主視窗重新取得焦點 → 給 Firebase 500ms 緩衝，之後立即重置
+  let focusTimer = null;
+  const onFocus = () => {
+    focusTimer = setTimeout(() => {
+      if (submitting.value) {
+        clearTimeout(timeout);
+        submitting.value = false;
+      }
+    }, 500);
+  };
+  window.addEventListener('focus', onFocus);
+
   try {
     await auth.login();
     if (auth.isLoggedIn) {
@@ -21,8 +35,15 @@ async function handleLogin() {
       router.replace(redirect);
     }
   } catch (e) {
-    alertState.value = { show: true, title: '登入錯誤', message: e.message || String(e), type: 'error' };
+    // 使用者主動關閉 / 取消 popup，不顯示錯誤
+    const cancelled = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request'];
+    if (!cancelled.includes(e.code)) {
+      alertState.value = { show: true, title: '登入錯誤', message: e.message || String(e), type: 'error' };
+    }
   } finally {
+    clearTimeout(timeout);
+    clearTimeout(focusTimer);
+    window.removeEventListener('focus', onFocus);
     submitting.value = false;
   }
 }
