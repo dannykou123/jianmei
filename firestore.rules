@@ -1,0 +1,121 @@
+rules_version = '2';
+
+// Firestore Security Rules — 健美滷味
+// 三入口資料隔離與最小權限原則
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── 工具函式 ────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAnon() {
+      return isSignedIn() && request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+    function isGoogleUser() {
+      return isSignedIn() && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+    function isAdmin() {
+      // 透過 email 對應 Accounts 文件（與既有 index.html 邏輯一致）
+      return isGoogleUser()
+        && exists(/databases/$(database)/documents/Accounts/$(request.auth.uid))
+        && get(/databases/$(database)/documents/Accounts/$(request.auth.uid)).data.isAuthorized == true
+        && get(/databases/$(database)/documents/Accounts/$(request.auth.uid)).data.role == 'admin';
+    }
+    function isAuthorizedAccount() {
+      return isGoogleUser()
+        && exists(/databases/$(database)/documents/Accounts/$(request.auth.uid))
+        && get(/databases/$(database)/documents/Accounts/$(request.auth.uid)).data.isAuthorized == true;
+    }
+
+    // ── Accounts（後台帳號） ────────────────────────────
+    match /Accounts/{uid} {
+      // 自己可讀自己（供登入流程檢查授權狀態）
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      // 自己可初始化（首次登入），admin 可全權管理
+      allow create: if isSignedIn() && request.auth.uid == uid
+                    && request.resource.data.isAuthorized == false;
+      allow read, write: if isAdmin();
+    }
+
+    // ── Items（商品） ──────────────────────────────────
+    match /Items/{id} {
+      // 公開讀（給訂購人列商品）
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── FrequentContacts ───────────────────────────────
+    match /FrequentContacts/{id} {
+      allow read, write: if isAuthorizedAccount();
+    }
+
+    // ── GroupOrders（後台正式訂單） ─────────────────────
+    match /GroupOrders/{id} {
+      // admin 全權
+      allow read, write: if isAuthorizedAccount();
+
+      // 團購人可建立並關聯自己 session（送審用）
+      allow create: if isGoogleUser()
+                    && request.resource.data.organizerUid == request.auth.uid
+                    && request.resource.data.status == 'pending';
+
+      // 團購人可讀／刪除自己關聯的 GroupOrder（收回用）
+      allow read, delete: if isGoogleUser()
+                         && resource.data.organizerUid == request.auth.uid;
+    }
+
+    // ── Orders（後台訂單明細） ──────────────────────────
+    match /Orders/{id} {
+      allow read, write: if isAuthorizedAccount();
+
+      // 團購人可建立關聯自己 GroupOrder 的 Orders（送審）
+      allow create: if isGoogleUser()
+                    && exists(/databases/$(database)/documents/GroupOrders/$(request.resource.data.groupOrderId))
+                    && get(/databases/$(database)/documents/GroupOrders/$(request.resource.data.groupOrderId)).data.organizerUid == request.auth.uid;
+
+      // 團購人可讀／刪除（收回時用）
+      allow read, delete: if isGoogleUser()
+                         && exists(/databases/$(database)/documents/GroupOrders/$(resource.data.groupOrderId))
+                         && get(/databases/$(database)/documents/GroupOrders/$(resource.data.groupOrderId)).data.organizerUid == request.auth.uid;
+    }
+
+    // ── Organizers（團購人 profile） ───────────────────
+    match /Organizers/{uid} {
+      // 自己可全權
+      allow read, write: if isGoogleUser() && request.auth.uid == uid;
+      // admin 可讀
+      allow read: if isAdmin();
+    }
+
+    // ── GroupSessions（開團即時狀態） ───────────────────
+    match /GroupSessions/{sessionId} {
+      // 公開讀（給訂購人 /order/:id 顯示商品）
+      allow read: if true;
+      // 只有 owner organizer 可建立／編輯／刪除
+      allow create: if isGoogleUser()
+                    && request.resource.data.organizerUid == request.auth.uid;
+      allow update, delete: if isGoogleUser()
+                            && resource.data.organizerUid == request.auth.uid;
+      // admin 可讀寫
+      allow read, write: if isAdmin();
+    }
+
+    // ── GroupSessionOrders（訂購人下單暫存） ───────────
+    match /GroupSessionOrders/{id} {
+      // 任何人（含匿名訂購人）可讀（給團購人/訂購人共享狀態）
+      allow read: if true;
+
+      // 訂購人可建立：sessionId 對應的 session 必須是 open
+      allow create: if isSignedIn()
+                    && exists(/databases/$(database)/documents/GroupSessions/$(request.resource.data.sessionId))
+                    && get(/databases/$(database)/documents/GroupSessions/$(request.resource.data.sessionId)).data.status == 'open';
+
+      // 訂購人不可修改／刪除（只有 organizer owner 與 admin 可）
+      allow update, delete: if isGoogleUser() && (
+        isAdmin() ||
+        get(/databases/$(database)/documents/GroupSessions/$(resource.data.sessionId)).data.organizerUid == request.auth.uid
+      );
+    }
+  }
+}

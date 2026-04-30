@@ -68,3 +68,11 @@ node_modules/
 # dataconnect generated files
 .dataconnect
 /images
+
+# Vue + Vite build outputs
+node_modules/
+dist/
+.vite/
+*.local
+.env
+.env.local
