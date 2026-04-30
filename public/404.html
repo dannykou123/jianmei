@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>健美滷味</title>
+  <script>
+    // GitHub Pages SPA 重新導向技巧
+    // 當使用者直接輸入子路由（如 /jianmei/admin），GitHub Pages 找不到對應檔案
+    // 就會回傳這個 404.html，此腳本把路徑編碼成 query string 再導向到 index.html
+    // 參考：https://github.com/rafgraph/spa-github-pages
+    var pathSegmentsToKeep = 1; // 保留 /jianmei 這一段
+
+    var l = window.location;
+    l.replace(
+      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+      l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+      (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+      l.hash
+    );
+  </script>
+</head>
+<body></body>
+</html>

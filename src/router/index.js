@@ -60,8 +60,10 @@ const routes = [
   { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/pages/NotFound.vue') },
 ];
 
+// 使用 import.meta.env.BASE_URL 讓 Vite build 時自動帶入正確的 base 路徑
+// GitHub Pages: /jianmei/，Firebase Hosting: /
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
   scrollBehavior: () => ({ top: 0 }),
 });
