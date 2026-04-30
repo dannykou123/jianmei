@@ -1,33 +1,10 @@
-// Vue Router：三入口（admin / organizer / customer）+ 中性 landing + 404
+// Vue Router：organizer / customer + 中性 landing + 404
+// 後台管理系統改用 legacy HTML（admin.html），不走 Vue Router
 import { createRouter, createWebHistory } from 'vue-router';
-import { useAdminAuth } from '@/stores/useAdminAuth';
 import { useOrganizerAuth } from '@/stores/useOrganizerAuth';
 
 const routes = [
   { path: '/', name: 'landing', component: () => import('@/pages/LandingNotice.vue') },
-
-  // ── Admin 後台 ──────────────────────────────
-  {
-    path: '/admin/login',
-    name: 'admin-login',
-    component: () => import('@/pages/admin/AdminLogin.vue'),
-    meta: { requiresAdminAuth: false },
-  },
-  {
-    path: '/admin',
-    component: () => import('@/pages/admin/AdminLayout.vue'),
-    meta: { requiresAdminAuth: true },
-    children: [
-      { path: '', redirect: '/admin/review' },
-      { path: 'review', name: 'admin-review', component: () => import('@/pages/admin/AdminReview.vue') },
-      { path: 'details', name: 'admin-details', component: () => import('@/pages/admin/AdminDetails.vue') },
-      { path: 'items', name: 'admin-items', component: () => import('@/pages/admin/AdminItems.vue'), meta: { adminOnly: true } },
-      { path: 'accounts', name: 'admin-accounts', component: () => import('@/pages/admin/AdminAccounts.vue'), meta: { adminOnly: true } },
-      { path: 'contacts', name: 'admin-contacts', component: () => import('@/pages/admin/AdminContacts.vue') },
-      { path: 'analytics', name: 'admin-analytics', component: () => import('@/pages/admin/AdminAnalytics.vue'), meta: { adminOnly: true } },
-      { path: 'more', name: 'admin-more', component: () => import('@/pages/admin/AdminMore.vue') },
-    ],
-  },
 
   // ── Organizer 團購人 ────────────────────────
   {
@@ -69,12 +46,6 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to) => {
-  if (to.meta.requiresAdminAuth) {
-    const store = useAdminAuth();
-    if (store.loading) await store.init();
-    if (!store.isLoggedIn) return { name: 'admin-login', query: { redirect: to.fullPath } };
-    if (to.meta.adminOnly && !store.isAdmin) return { name: 'admin-review' };
-  }
   if (to.meta.requiresOrganizerAuth) {
     const store = useOrganizerAuth();
     if (store.loading) await store.init();
