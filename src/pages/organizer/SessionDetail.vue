@@ -234,7 +234,7 @@ async function doReopen() {
 }
 
 // ── 分享網址 ────────────────────────────────────
-const shareUrl = computed(() => `${window.location.origin}/order/${auth.firebaseUser?.uid}`);
+const shareUrl = computed(() => `${window.location.origin}${import.meta.env.BASE_URL}order/${auth.firebaseUser?.uid}`);
 async function copyShareUrl() {
   try {
     await navigator.clipboard.writeText(shareUrl.value);

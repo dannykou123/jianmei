@@ -35,7 +35,7 @@ const closedSessions = computed(() =>
 
 // 固定永久網址：用 organizerUid 而非 sessionId，換團後同一網址持續有效
 function shareUrl() {
-  return `${window.location.origin}/order/${auth.firebaseUser?.uid}`;
+  return `${window.location.origin}${import.meta.env.BASE_URL}order/${auth.firebaseUser?.uid}`;
 }
 
 async function copyShareUrl() {
