@@ -8,6 +8,20 @@ import { db } from '@/firebase';
 const COL = 'GroupSessionOrders';
 
 /**
+ * 產生訂單編號：年(2碼)+月(2碼)+日(2碼)+時(2碼)+亂數(5碼)，共 13 碼
+ * 例：2604301212345
+ */
+function generateOrderNo() {
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const hh = String(now.getHours()).padStart(2, '0');
+  const rand = String(Math.floor(Math.random() * 100000)).padStart(5, '0');
+  return `${yy}${mm}${dd}${hh}${rand}`;
+}
+
+/**
  * GroupSessionOrders/{id}：
  * {
  *   sessionId,
@@ -36,6 +50,7 @@ export async function createSessionOrder(data) {
   const payload = {
     paid: false,
     note: '',
+    orderNo: generateOrderNo(),
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
     ...data,

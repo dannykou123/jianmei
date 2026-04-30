@@ -14,7 +14,7 @@ const iconMap = {
   error: 'fa-circle-xmark',
 };
 const colorMap = {
-  info: 'text-blue-600',
+  info: 'text-stone-800',
   success: 'text-green-600',
   warn: 'text-amber-600',
   error: 'text-red-600',

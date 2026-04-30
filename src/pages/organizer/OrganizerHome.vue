@@ -42,7 +42,7 @@ async function copyShareUrl() {
   const url = shareUrl();
   try {
     await navigator.clipboard.writeText(url);
-    alertState.value = { show: true, title: '已複製', message: url, type: 'success' };
+    alertState.value = { show: true, title: '已複製', message: '', type: 'success' };
   } catch {
     alertState.value = { show: true, title: '複製失敗', message: url, type: 'warn' };
   }

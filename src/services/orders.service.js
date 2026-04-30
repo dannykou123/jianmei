@@ -7,6 +7,11 @@ import { db } from '@/firebase';
 
 const GROUP = 'GroupOrders';
 const ORDERS = 'Orders';
+const GSO = 'GroupSessionOrders';
+const SESSIONS = 'GroupSessions';
+
+// 允許從 Orders 同步回 GroupSessionOrders 的欄位
+const ORDER_SYNC_FIELDS = new Set(['paid', 'items', 'totalAmount', 'note', 'customerName', 'customerUnit']);
 
 // ── GroupOrders ─────────────────────────────────────────────
 export async function listGroupOrders({ status } = {}) {
@@ -33,6 +38,35 @@ export async function setGroupOrder(id, data) {
 
 export async function updateGroupOrder(id, data) {
   await updateDoc(doc(db, GROUP, id), data);
+  // 同步回 GroupSessions（best-effort）
+  try {
+    const snap = await getDoc(doc(db, GROUP, id));
+    if (!snap.exists()) return;
+    const linkedSessionId = snap.data().linkedSessionId;
+    if (!linkedSessionId) return;
+
+    const sessionUpdate = { updatedAt: Timestamp.now() };
+
+    // 同步狀態欄位
+    const STATUS_FIELDS = ['status', 'approvedAt', 'rejectedAt', 'rejectedReason'];
+    for (const k of STATUS_FIELDS) {
+      if (k in data) sessionUpdate[k] = data[k];
+    }
+
+    // 重算總金額（只要有異動 status 或 totalAmount 就重算）
+    if ('status' in data || 'totalAmount' in data) {
+      const ordersSnap = await getDocs(
+        query(collection(db, ORDERS), where('groupOrderId', '==', id))
+      );
+      sessionUpdate.totalAmount = ordersSnap.docs.reduce(
+        (s, d) => s + (Number(d.data().totalAmount) || 0), 0
+      );
+    }
+
+    await updateDoc(doc(db, SESSIONS, linkedSessionId), sessionUpdate);
+  } catch (e) {
+    console.warn('[updateGroupOrder] sync to GroupSessions failed:', e);
+  }
 }
 
 export async function deleteGroupOrder(id) {
@@ -61,6 +95,48 @@ export async function createOrder(data) {
 
 export async function updateOrder(id, data) {
   await updateDoc(doc(db, ORDERS, id), data);
+  // best-effort：同步回 GroupSessionOrders 並重算 GroupOrders / GroupSessions 總金額
+  try {
+    const snap = await getDoc(doc(db, ORDERS, id));
+    if (!snap.exists()) return;
+    const orderData = snap.data();
+
+    // 1. 同步指定欄位回 GroupSessionOrders
+    const linkedId = orderData.linkedSessionOrderId;
+    if (linkedId) {
+      const syncData = {};
+      for (const [k, v] of Object.entries(data)) {
+        if (ORDER_SYNC_FIELDS.has(k)) syncData[k] = v;
+      }
+      if (Object.keys(syncData).length > 0) {
+        await updateDoc(doc(db, GSO, linkedId), { ...syncData, updatedAt: Timestamp.now() });
+      }
+    }
+
+    // 2. 重算同一 GroupOrder 下所有 Orders 總金額
+    const groupOrderId = orderData.groupOrderId;
+    if (groupOrderId && 'totalAmount' in data) {
+      const ordersSnap = await getDocs(
+        query(collection(db, ORDERS), where('groupOrderId', '==', groupOrderId))
+      );
+      const newTotal = ordersSnap.docs.reduce((s, d) => s + (Number(d.data().totalAmount) || 0), 0);
+
+      // 更新 GroupOrders.totalAmount
+      await updateDoc(doc(db, GROUP, groupOrderId), { totalAmount: newTotal, updatedAt: new Date().toISOString() });
+
+      // 3. 取 linkedSessionId，更新 GroupSessions.totalAmount
+      const groupSnap = await getDoc(doc(db, GROUP, groupOrderId));
+      const linkedSessionId = groupSnap.exists() ? groupSnap.data().linkedSessionId : null;
+      if (linkedSessionId) {
+        await updateDoc(doc(db, SESSIONS, linkedSessionId), {
+          totalAmount: newTotal,
+          updatedAt: Timestamp.now(),
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('[updateOrder] sync failed:', e);
+  }
 }
 
 export async function deleteOrder(id) {

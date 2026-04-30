@@ -44,7 +44,15 @@ export const useOrganizerAuth = defineStore('organizerAuth', () => {
   async function login() {
     error.value = '';
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      // 直接載入 profile，不等 onAuthStateChanged callback
+      const user = result.user;
+      firebaseUser.value = user;
+      profile.value = await ensureOrganizer(user.uid, {
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+      });
     } catch (e) {
       error.value = e.message;
       throw e;

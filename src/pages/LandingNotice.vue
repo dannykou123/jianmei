@@ -17,7 +17,7 @@ import ThemeToggle from '@/components/ThemeToggle.vue';
       </p>
       <ul class="text-left text-sm space-y-2" style="color: var(--text-secondary)">
         <li><i class="fas fa-store mr-2"></i>店家後台：<a href="admin.html" class="underline"><code class="px-1">admin.html</code></a></li>
-        <li><i class="fas fa-people-group mr-2"></i>團購人：<code class="px-1">/organizer</code></li>
+        <li><i class="fas fa-people-group mr-2"></i>團購人：<router-link to="/organizer" class="underline"><code class="px-1">/organizer</code></router-link></li>
         <li><i class="fas fa-cart-shopping mr-2"></i>訂購人：<code class="px-1">/order/:開團編號</code></li>
       </ul>
     </div>

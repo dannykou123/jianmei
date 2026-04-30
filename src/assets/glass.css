@@ -240,6 +240,8 @@ textarea.g-input { height: auto; padding: 12px 14px; resize: none; }
 .g-badge-info::before { background: var(--color-info); }
 .g-badge-neutral { background: rgba(168,158,152,0.12); color: #6B6560; border: 1px solid rgba(168,158,152,0.25); }
 .g-badge-neutral::before { background: var(--text-muted); }
+.g-badge-active { background: var(--brand); color: #fff; border: 1px solid var(--brand); }
+.g-badge-active::before { background: #fff; }
 
 /* Glass Table */
 .g-table { width: 100%; font-size: var(--fs-body); border-collapse: collapse; }

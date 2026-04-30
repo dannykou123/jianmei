@@ -140,18 +140,20 @@ async function submit() {
         <div><label class="g-label block mb-1">電話 *</label><input v-model="form.contactPhone" class="g-input" /></div>
       </div>
       <div><label class="g-label block mb-1">地址 *</label><textarea v-model="form.address" class="g-input" rows="2"></textarea></div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="g-label block mb-1">交貨時間 *</label>
-          <input v-model="form.deliveryTime" type="datetime-local" class="g-input" />
-        </div>
-        <div>
-          <label class="g-label block mb-1">訂單類型</label>
-          <select v-model="form.orderType" class="g-select">
-            <option value="regular">一般</option>
-            <option value="vacuum">真空</option>
-          </select>
-        </div>
+      <div>
+        <label class="g-label block mb-1">交貨時間 *</label>
+        <input v-model="form.deliveryTime" type="datetime-local" class="g-input text-sm" />
+      </div>
+      <div>
+        <label class="g-label block mb-1">訂單類型</label>
+        <select v-if="!isEdit" v-model="form.orderType" class="g-select">
+          <option value="regular">一般</option>
+          <option value="vacuum">真空</option>
+        </select>
+        <p v-else class="g-input text-sm flex items-center" style="color: var(--text-secondary)">
+          {{ form.orderType === 'vacuum' ? '真空' : '一般' }}
+          <span class="text-xs ml-2" style="color: var(--text-muted)">（開團後不可修改）</span>
+        </p>
       </div>
       <div>
         <label class="g-label block mb-1">本次開團單位 *</label>

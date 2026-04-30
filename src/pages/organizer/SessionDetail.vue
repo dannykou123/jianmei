@@ -36,8 +36,8 @@ const useSessionData = computed(() => session.value?.status === SESSION_STATUS.O
 
 const displayedOrders = computed(() => useSessionData.value ? sessionOrders.value : groupOrders.value);
 
-const totalAmount = computed(() => displayedOrders.value.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0));
-const paidAmount = computed(() => displayedOrders.value.filter((o) => o.paid).reduce((s, o) => s + (Number(o.totalAmount) || 0), 0));
+const totalAmount = computed(() => filteredOrders.value.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0));
+const paidAmount = computed(() => filteredOrders.value.filter((o) => o.paid).reduce((s, o) => s + (Number(o.totalAmount) || 0), 0));
 
 onMounted(() => {
   unsubSession = subscribeSession(props.id, (s) => {
@@ -182,6 +182,7 @@ async function doSubmitForReview() {
     updatedAt: new Date().toISOString(),
   };
   const ordersList = sessionOrders.value.map((o) => ({
+    linkedSessionOrderId: o.id,
     customerName: o.customerName,
     customerUnit: o.customerUnit,
     items: o.items || [],
@@ -237,7 +238,7 @@ const shareUrl = computed(() => `${window.location.origin}/order/${auth.firebase
 async function copyShareUrl() {
   try {
     await navigator.clipboard.writeText(shareUrl.value);
-    alertState.value = { show: true, title: '已複製', message: shareUrl.value, type: 'success' };
+    alertState.value = { show: true, title: '已複製', message: '', type: 'success' };
   } catch {
     alertState.value = { show: true, title: '複製失敗', message: shareUrl.value, type: 'warn' };
   }
@@ -250,6 +251,13 @@ function toggleExpand(id) {
   s.has(id) ? s.delete(id) : s.add(id);
   expandedRows.value = s;
 }
+
+// 單位篩選
+const filterUnit = ref('');
+const filteredOrders = computed(() => {
+  if (!filterUnit.value) return displayedOrders.value;
+  return displayedOrders.value.filter((o) => o.customerUnit === filterUnit.value);
+});
 
 const confirmInfo = computed(() => {
   switch (confirmState.value.kind) {
@@ -265,13 +273,35 @@ const confirmInfo = computed(() => {
 
 <template>
   <section v-if="!loading && session" class="space-y-4">
-    <!-- 關團 / 編輯開團：open 狀態顯示於 header card 上方 -->
-    <div v-if="session.status === SESSION_STATUS.OPEN" class="flex justify-between">
-      <button class="g-btn g-btn-danger" @click="askClose">
+    <!-- 關團 / 編輯開團：open 狀態；收回訂單：pending 狀態 -->
+    <div class="flex justify-between">
+      <div>
+        <button v-if="session.status === SESSION_STATUS.OPEN" class="g-btn g-btn-danger" @click="askClose">
+          <i class="fas fa-power-off"></i> 關團
+        </button>
+        <button v-if="session.status === SESSION_STATUS.PENDING" class="g-btn g-btn-danger" @click="askRecall">
+          <i class="fas fa-rotate-left"></i> 收回訂單
+        </button>
+      </div>
+      <button v-if="session.status === SESSION_STATUS.OPEN" class="g-btn g-btn-glass" @click="router.push(`/organizer/session/${id}/edit`)">
+        <i class="fas fa-pen"></i> 編輯開團
+      </button>
+    </div>
+
+    <!-- 已拒絕：關團（左）、重新編輯（右） -->
+    <div v-if="session.status === SESSION_STATUS.REJECTED" class="flex justify-between">
+      <button class="g-btn g-btn-danger g-btn-sm" @click="askClose">
         <i class="fas fa-power-off"></i> 關團
       </button>
-      <button class="g-btn g-btn-glass" @click="router.push(`/organizer/session/${id}/edit`)">
-        <i class="fas fa-pen"></i> 編輯開團
+      <button class="g-btn g-btn-brand g-btn-sm" @click="askReopen">
+        <i class="fas fa-pen-to-square"></i> 重新編輯
+      </button>
+    </div>
+
+    <!-- 已接單：關團（左）、已接單無法修改（右） -->
+    <div v-if="session.status === SESSION_STATUS.APPROVED" class="flex justify-between">
+      <button class="g-btn g-btn-danger g-btn-sm" @click="askClose">
+        <i class="fas fa-power-off"></i> 關團
       </button>
     </div>
 
@@ -308,37 +338,24 @@ const confirmInfo = computed(() => {
 
 
 
-    <!-- Action bar：open 狀態按鈕已分散至各處，僅保留其他狀態的操作列 -->
-    <div v-if="session.status !== SESSION_STATUS.OPEN" class="flex flex-wrap gap-2">
-      <template v-if="session.status === SESSION_STATUS.PENDING">
-        <button class="g-btn g-btn-danger" @click="askRecall">
-          <i class="fas fa-rotate-left"></i> 收回訂單
-        </button>
-        <span class="g-btn g-btn-glass cursor-default" disabled>等候店家審核</span>
-      </template>
-      <template v-else-if="session.status === SESSION_STATUS.APPROVED">
-        <span class="g-btn g-btn-glass cursor-default" disabled><i class="fas fa-lock"></i> 已接單，無法修改</span>
-        <button class="g-btn g-btn-danger" @click="askClose">
-          <i class="fas fa-power-off"></i> 關團
-        </button>
-      </template>
-      <template v-else-if="session.status === SESSION_STATUS.REJECTED">
-        <button class="g-btn g-btn-brand" @click="askReopen">
-          <i class="fas fa-pen-to-square"></i> 重新編輯
-        </button>
-        <button class="g-btn g-btn-danger" @click="askClose">
-          <i class="fas fa-power-off"></i> 關團
-        </button>
-      </template>
-    </div>
-
     <!-- Orders list -->
     <div class="g-card-solid p-4">
       <div class="flex items-center justify-between mb-3">
-        <h3 class="font-bold">訂購人列表（{{ displayedOrders.length }}）</h3>
+        <h3 class="font-bold">訂購人列表（{{ filteredOrders.length }}{{ filterUnit ? ` / ${displayedOrders.length}` : '' }}）</h3>
         <button v-if="useSessionData" class="g-btn g-btn-brand g-btn-sm" @click="openNewOrder">
           <i class="fas fa-plus"></i> 新增
         </button>
+      </div>
+
+      <!-- 單位篩選 -->
+      <div v-if="displayedOrders.length" class="flex flex-wrap gap-2 mb-3">
+        <button class="g-badge cursor-pointer transition-colors"
+                :class="filterUnit === '' ? 'g-badge-active' : 'g-badge-neutral'"
+                @click="filterUnit = ''">全部</button>
+        <button v-for="u in (session.units || [])" :key="u"
+                class="g-badge cursor-pointer transition-colors"
+                :class="filterUnit === u ? 'g-badge-active' : 'g-badge-neutral'"
+                @click="filterUnit = u">{{ u }}</button>
       </div>
 
       <div v-if="!displayedOrders.length" class="text-center py-8 text-stone-400 text-sm">尚無訂購人下單</div>
@@ -348,15 +365,15 @@ const confirmInfo = computed(() => {
             <tr class="border-b border-stone-200 text-xs" style="color: var(--text-muted)">
               <th class="py-2 pr-2 text-center whitespace-nowrap w-10">付款</th>
               <th class="py-2 px-2 text-left">姓名</th>
-              <th class="py-2 px-2 text-left">單位</th>
+              <th class="py-2 px-2 text-left hidden sm:table-cell">單位</th>
               <th class="py-2 px-2 text-right">金額</th>
               <th class="py-2 pl-2 text-right">操作</th>
             </tr>
           </thead>
           <tbody>
-            <template v-for="o in displayedOrders" :key="o.id">
+            <template v-for="o in filteredOrders" :key="o.id">
               <!-- 主列 -->
-              <tr class="border-b border-stone-100 hover:bg-stone-50 transition-colors"
+              <tr class="border-b border-stone-100"
                   :class="{}">
                 <!-- 付款勾選 -->
                 <td class="py-2.5 pr-2 text-center">
@@ -371,10 +388,10 @@ const confirmInfo = computed(() => {
                        :class="expandedRows.has(o.id) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
                     {{ o.customerName }}
                   </button>
-                  <p v-if="o.note" class="text-xs mt-0.5" style="color: var(--text-muted)">備註：{{ o.note }}</p>
+                  <p v-if="o.note" class="text-xs mt-0.5" style="color: var(--text-muted)">{{ o.note }}</p>
                 </td>
                 <!-- 單位 -->
-                <td class="py-2.5 px-2">
+                <td class="py-2.5 px-2 hidden sm:table-cell">
                   <span class="g-badge g-badge-neutral">{{ o.customerUnit }}</span>
                 </td>
                 <!-- 金額 -->
@@ -396,17 +413,21 @@ const confirmInfo = computed(() => {
                 </td>
               </tr>
               <!-- 明細展開列 -->
-              <tr v-if="expandedRows.has(o.id)" class="bg-stone-50">
+              <tr v-if="expandedRows.has(o.id)">
                 <td></td>
                 <td colspan="4" class="py-2 px-2 pb-3">
-                  <ul class="space-y-0.5 text-xs" style="color: var(--text-secondary)">
-                    <li v-for="(it, i) in o.items || []" :key="i"
-                        class="flex gap-2">
+                  <!-- 手機發首顯示單位（桌機已有單位欄） -->
+                  <p class="sm:hidden text-xs mb-1.5 font-medium" style="color: var(--text-secondary)">
+                    <i class="fas fa-location-dot mr-1"></i>{{ o.customerUnit }}
+                  </p>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 text-xs" style="color: var(--text-secondary)">
+                    <div v-for="(it, i) in o.items || []" :key="i"
+                         class="flex gap-2 py-0.5">
                       <span class="flex-1">{{ it.itemName }}</span>
                       <span>×{{ it.qty }}</span>
-                      <span class="w-16 text-right">{{ fmtMoney(it.subtotal) }}</span>
-                    </li>
-                  </ul>
+                      <span class="w-14 text-right">{{ fmtMoney(it.subtotal) }}</span>
+                    </div>
+                  </div>
                 </td>
               </tr>
             </template>

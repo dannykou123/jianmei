@@ -5409,6 +5409,13 @@
               approvedAt: new Date().toISOString(),
               approvedBy: user.value.id
             });
+            // 同步更新連結的 GroupSession 狀態
+            if (group.linkedSessionId) {
+              await updateDoc(doc(db, "GroupSessions", group.linkedSessionId), {
+                status: "approved",
+                approvedAt: new Date().toISOString(),
+              });
+            }
             showAlert('已確認團購', 'success');
             fetchReviewList();
             return true;
@@ -5433,6 +5440,14 @@
               rejectedAt: new Date().toISOString(),
               rejectedBy: user.value.id
             });
+            // 同步更新連結的 GroupSession 狀態
+            if (group.linkedSessionId) {
+              await updateDoc(doc(db, "GroupSessions", group.linkedSessionId), {
+                status: "rejected",
+                rejectedAt: new Date().toISOString(),
+                rejectedReason: '',
+              });
+            }
             showAlert('已拒絕接單', 'success');
             fetchReviewList();
           } catch (error) {
