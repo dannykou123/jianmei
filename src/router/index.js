@@ -34,6 +34,14 @@ const routes = [
     props: true,
   },
 
+  // ── LINE 相關頁面 ──────────────────────────
+  // LIFF App 的訂單查詢頁（可在 LINE 內部瀏覽器開啟）
+  {
+    path: '/line/order-status',
+    name: 'line-order-status',
+    component: () => import('@/pages/customer/LineOrderStatus.vue'),
+  },
+
   { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/pages/NotFound.vue') },
 ];
 

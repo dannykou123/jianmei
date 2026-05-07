@@ -8,6 +8,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Leaflet 地圖 -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -918,6 +921,12 @@
     html.dark .hover\:text-stone-800:hover { color: #e2e2e7 !important; }
     /* Opacity */
     html.dark .bg-black\/30 { background-color: rgba(0,0,0,0.45) !important; }
+    /* ── Leaflet 地圖 ── */
+    .leaflet-container { z-index: 0; font-family: inherit; }
+    .leaflet-popup-content-wrapper { border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+    .leaflet-popup-content { margin: 10px 14px; line-height: 1.5; }
+    .leaflet-control-attribution { font-size: 10px; }
+    html.dark .leaflet-tile { filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9); }
   </style>
 </head>
 <body>
@@ -2464,11 +2473,25 @@
 
         <!-- 統計分析 -->
         <div v-if="adminTab === 'analytics'" class="space-y-5">
+          <!-- 標題列 -->
           <div class="flex items-center justify-between mb-2">
             <h2 class="text-xl font-black text-stone-800">統計分析</h2>
             <button @click="fetchAnalytics" :disabled="analyticsLoading" class="g-btn g-btn-glass g-btn-sm">
               <i :class="analyticsLoading ? 'fas fa-circle-notch fa-spin' : 'fas fa-sync-alt'"></i>
               <span class="hidden sm:inline">重新整理</span>
+            </button>
+          </div>
+
+          <!-- 子頁籤（資料載入後才顯示） -->
+          <div v-if="analyticsHasLoaded" class="flex border-b border-stone-200 -mt-1">
+            <button @click="analyticsSubTab='overview'" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', analyticsSubTab==='overview' ? 'border-brand-500 text-brand-600' : 'border-transparent text-stone-400 hover:text-stone-600']">
+              <i class="fas fa-chart-bar mr-1.5"></i>統計總覽
+            </button>
+            <button @click="analyticsSubTab='map'; initMapAnalysis()" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', analyticsSubTab==='map' ? 'border-brand-500 text-brand-600' : 'border-transparent text-stone-400 hover:text-stone-600']">
+              <i class="fas fa-map-marked-alt mr-1.5"></i>地圖分析
+            </button>
+            <button @click="analyticsSubTab='route'; initRouteTab()" :class="['px-4 py-2.5 text-sm font-bold border-b-2 transition -mb-px', analyticsSubTab==='route' ? 'border-brand-500 text-brand-600' : 'border-transparent text-stone-400 hover:text-stone-600']">
+              <i class="fas fa-route mr-1.5"></i>路徑規劃
             </button>
           </div>
 
@@ -2478,184 +2501,379 @@
           </div>
 
           <template v-else-if="analyticsHasLoaded && analyticsData">
-            <!-- KPI 卡片 -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <div class="g-card-solid p-4">
-                <div class="flex items-center gap-2 mb-2">
-                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:rgba(176,115,106,0.12);color:var(--brand-600);">
-                    <i class="fas fa-dollar-sign"></i>
-                  </div>
-                  <span class="text-xs font-bold text-stone-500">年度總營收</span>
-                </div>
-                <p class="text-xl font-black text-stone-800">${{ analyticsData.totalRevenue.toLocaleString() }}</p>
-              </div>
-              <div class="g-card-solid p-4">
-                <div class="flex items-center gap-2 mb-2">
-                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:rgba(59,130,246,0.12);color:#3b82f6;">
-                    <i class="fas fa-file-alt"></i>
-                  </div>
-                  <span class="text-xs font-bold text-stone-500">已確認訂單</span>
-                </div>
-                <p class="text-xl font-black text-stone-800">{{ analyticsData.totalOrders }} 筆</p>
-              </div>
-              <div class="g-card-solid p-4">
-                <div class="flex items-center gap-2 mb-2">
-                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:rgba(16,185,129,0.12);color:#10b981;">
-                    <i class="fas fa-chart-line"></i>
-                  </div>
-                  <span class="text-xs font-bold text-stone-500">平均訂單金額</span>
-                </div>
-                <p class="text-xl font-black text-stone-800">${{ analyticsData.avgOrderValue.toLocaleString() }}</p>
-              </div>
-              <div class="g-card-solid p-4">
-                <div class="flex items-center gap-2 mb-2">
-                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:rgba(245,158,11,0.12);color:#f59e0b;">
-                    <i class="fas fa-inbox"></i>
-                  </div>
-                  <span class="text-xs font-bold text-stone-500">待確認訂單</span>
-                </div>
-                <p class="text-xl font-black text-stone-800">{{ analyticsData.statusBreakdown.pending }} 筆</p>
-              </div>
-            </div>
 
-            <!-- 月度營收圖表 + 訂單狀態 -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <!-- 月度營收長條圖 -->
-              <div class="g-card-solid p-5 lg:col-span-2">
-                <h3 class="font-black text-stone-800 mb-4 flex items-center gap-2">
-                  <i class="fas fa-chart-bar text-brand-600"></i>每月營收（近12個月）
-                </h3>
-                <!-- 金額標籤列 -->
-                <div class="flex gap-1 mb-1">
-                  <div v-for="m in analyticsData.monthlyRevenue" :key="m.month+'v'" class="flex-1 text-center overflow-hidden" style="font-size:9px;font-weight:700;color:var(--brand-600);min-height:13px;line-height:13px;">
-                    <span v-if="m.amount > 0">{{ m.amount >= 10000 ? (m.amount/10000).toFixed(1)+'萬' : '$'+m.amount.toLocaleString() }}</span>
+            <!-- ══════════ 統計總覽 ══════════ -->
+            <template v-if="analyticsSubTab === 'overview'">
+              <!-- KPI 卡片 -->
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div class="g-card-solid p-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:rgba(176,115,106,0.12);color:var(--brand-600);">
+                      <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <span class="text-xs font-bold text-stone-500">年度總營收</span>
                   </div>
+                  <p class="text-xl font-black text-stone-800">${{ analyticsData.totalRevenue.toLocaleString() }}</p>
                 </div>
-                <!-- 長條圖：直接用 flex items-end 對齊底部 -->
-                <div class="flex items-end gap-1" style="height:80px;">
-                  <div v-for="m in analyticsData.monthlyRevenue" :key="m.month" class="flex-1 rounded-t transition-all"
-                    :style="{
-                      height: analyticsData.monthlyRevenue.reduce((mx,x)=>Math.max(mx,x.amount),1) > 0
-                        ? Math.max(3, Math.round(m.amount / analyticsData.monthlyRevenue.reduce((mx,x)=>Math.max(mx,x.amount),1) * 76)) + 'px'
-                        : '3px',
-                      background: m.amount > 0 ? 'var(--brand-600)' : 'var(--glass-border-subtle)'
-                    }">
+                <div class="g-card-solid p-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:rgba(59,130,246,0.12);color:#3b82f6;">
+                      <i class="fas fa-file-alt"></i>
+                    </div>
+                    <span class="text-xs font-bold text-stone-500">已確認訂單</span>
                   </div>
+                  <p class="text-xl font-black text-stone-800">{{ analyticsData.totalOrders }} 筆</p>
                 </div>
-                <!-- 月份標籤列 -->
-                <div class="flex gap-1 mt-1.5">
-                  <div v-for="m in analyticsData.monthlyRevenue" :key="m.month+'l'" class="flex-1 text-center text-stone-400 overflow-hidden" style="font-size:9px;">
-                    {{ m.month.slice(5) }}月
+                <div class="g-card-solid p-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:rgba(16,185,129,0.12);color:#10b981;">
+                      <i class="fas fa-chart-line"></i>
+                    </div>
+                    <span class="text-xs font-bold text-stone-500">平均訂單金額</span>
                   </div>
+                  <p class="text-xl font-black text-stone-800">${{ analyticsData.avgOrderValue.toLocaleString() }}</p>
+                </div>
+                <div class="g-card-solid p-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background:rgba(245,158,11,0.12);color:#f59e0b;">
+                      <i class="fas fa-inbox"></i>
+                    </div>
+                    <span class="text-xs font-bold text-stone-500">待確認訂單</span>
+                  </div>
+                  <p class="text-xl font-black text-stone-800">{{ analyticsData.statusBreakdown.pending }} 筆</p>
                 </div>
               </div>
 
-              <!-- 訂單狀態分布 -->
+              <!-- 月度營收圖表 + 訂單狀態 -->
+              <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <!-- 月度營收長條圖 -->
+                <div class="g-card-solid p-5 lg:col-span-2">
+                  <h3 class="font-black text-stone-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-bar text-brand-600"></i>每月營收（近12個月）
+                  </h3>
+                  <!-- 金額標籤列 -->
+                  <div class="flex gap-1 mb-1">
+                    <div v-for="m in analyticsData.monthlyRevenue" :key="m.month+'v'" class="flex-1 text-center overflow-hidden" style="font-size:9px;font-weight:700;color:var(--brand-600);min-height:13px;line-height:13px;">
+                      <span v-if="m.amount > 0">{{ m.amount >= 10000 ? (m.amount/10000).toFixed(1)+'萬' : '$'+m.amount.toLocaleString() }}</span>
+                    </div>
+                  </div>
+                  <!-- 長條圖：直接用 flex items-end 對齊底部 -->
+                  <div class="flex items-end gap-1" style="height:80px;">
+                    <div v-for="m in analyticsData.monthlyRevenue" :key="m.month" class="flex-1 rounded-t transition-all"
+                      :style="{
+                        height: analyticsData.monthlyRevenue.reduce((mx,x)=>Math.max(mx,x.amount),1) > 0
+                          ? Math.max(3, Math.round(m.amount / analyticsData.monthlyRevenue.reduce((mx,x)=>Math.max(mx,x.amount),1) * 76)) + 'px'
+                          : '3px',
+                        background: m.amount > 0 ? 'var(--brand-600)' : 'var(--glass-border-subtle)'
+                      }">
+                    </div>
+                  </div>
+                  <!-- 月份標籤列 -->
+                  <div class="flex gap-1 mt-1.5">
+                    <div v-for="m in analyticsData.monthlyRevenue" :key="m.month+'l'" class="flex-1 text-center text-stone-400 overflow-hidden" style="font-size:9px;">
+                      {{ m.month.slice(5) }}月
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 訂單狀態分布 -->
+                <div class="g-card-solid p-5">
+                  <h3 class="font-black text-stone-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-pie-chart text-stone-500"></i>訂單狀態
+                  </h3>
+                  <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                      <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#10b981;"></div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex justify-between text-sm mb-1">
+                          <span class="font-bold text-stone-700">已確認</span>
+                          <span class="font-black text-stone-800">{{ analyticsData.statusBreakdown.approved }}</span>
+                        </div>
+                        <div class="h-2 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
+                          <div class="h-full rounded-full transition-all" style="background:#10b981;" :style="{width: analyticsData.totalGroupCount > 0 ? (analyticsData.statusBreakdown.approved / analyticsData.totalGroupCount * 100).toFixed(1) + '%' : '0%'}"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#f59e0b;"></div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex justify-between text-sm mb-1">
+                          <span class="font-bold text-stone-700">待確認</span>
+                          <span class="font-black text-stone-800">{{ analyticsData.statusBreakdown.pending }}</span>
+                        </div>
+                        <div class="h-2 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
+                          <div class="h-full rounded-full transition-all" style="background:#f59e0b;" :style="{width: analyticsData.totalGroupCount > 0 ? (analyticsData.statusBreakdown.pending / analyticsData.totalGroupCount * 100).toFixed(1) + '%' : '0%'}"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#ef4444;"></div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex justify-between text-sm mb-1">
+                          <span class="font-bold text-stone-700">已拒絕</span>
+                          <span class="font-black text-stone-800">{{ analyticsData.statusBreakdown.rejected }}</span>
+                        </div>
+                        <div class="h-2 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
+                          <div class="h-full rounded-full transition-all" style="background:#ef4444;" :style="{width: analyticsData.totalGroupCount > 0 ? (analyticsData.statusBreakdown.rejected / analyticsData.totalGroupCount * 100).toFixed(1) + '%' : '0%'}"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#94a3b8;"></div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex justify-between text-sm mb-1">
+                          <span class="font-bold text-stone-700">已過期</span>
+                          <span class="font-black text-stone-800">{{ analyticsData.statusBreakdown.expired }}</span>
+                        </div>
+                        <div class="h-2 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
+                          <div class="h-full rounded-full transition-all" style="background:#94a3b8;" :style="{width: analyticsData.totalGroupCount > 0 ? (analyticsData.statusBreakdown.expired / analyticsData.totalGroupCount * 100).toFixed(1) + '%' : '0%'}"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <p class="text-xs text-stone-400 mt-2 pt-2 border-t" style="border-color:var(--glass-border-subtle)">共 {{ analyticsData.totalGroupCount }} 筆訂單（近12個月）</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 熱銷產品 + 客戶排行 -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <!-- 熱銷產品 -->
+                <div class="g-card-solid p-5">
+                  <h3 class="font-black text-stone-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-fire text-orange-500"></i>熱銷產品（按數量）
+                  </h3>
+                  <div v-if="analyticsData.topProducts.length === 0" class="text-center py-8 text-stone-400 text-sm">尚無資料</div>
+                  <div v-else class="space-y-2.5">
+                    <div v-for="(p, i) in analyticsData.topProducts" :key="p.name" class="flex items-center gap-3">
+                      <span class="text-xs font-black w-5 text-right flex-shrink-0" :style="{color: i<3 ? 'var(--brand-600)' : '#94a3b8'}">{{ i + 1 }}</span>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-baseline mb-1">
+                          <span class="text-sm font-bold text-stone-700 truncate">{{ p.name }}</span>
+                          <span class="text-xs text-stone-500 flex-shrink-0 ml-2">×{{ p.qty }}</span>
+                        </div>
+                        <div class="h-1.5 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
+                          <div class="h-full rounded-full transition-all" :style="{width: analyticsData.topProducts[0].qty > 0 ? (p.qty / analyticsData.topProducts[0].qty * 100).toFixed(1) + '%' : '0%', background: i < 3 ? 'var(--brand-600)' : '#cbd5e1'}"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 客戶排行 -->
+                <div class="g-card-solid p-5">
+                  <h3 class="font-black text-stone-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-building text-blue-500"></i>客戶排行（按營收）
+                  </h3>
+                  <div v-if="analyticsData.topCompanies.length === 0" class="text-center py-8 text-stone-400 text-sm">尚無資料</div>
+                  <div v-else class="space-y-2.5">
+                    <div v-for="(c, i) in analyticsData.topCompanies" :key="c.name" class="flex items-center gap-3">
+                      <span class="text-xs font-black w-5 text-right flex-shrink-0" :style="{color: i<3 ? '#3b82f6' : '#94a3b8'}">{{ i + 1 }}</span>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-baseline mb-1">
+                          <span class="text-sm font-bold text-stone-700 truncate">{{ c.name }}</span>
+                          <span class="text-xs font-black text-stone-600 flex-shrink-0 ml-2">${{ c.revenue.toLocaleString() }}</span>
+                        </div>
+                        <div class="h-1.5 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
+                          <div class="h-full rounded-full transition-all" :style="{width: analyticsData.topCompanies[0].revenue > 0 ? (c.revenue / analyticsData.topCompanies[0].revenue * 100).toFixed(1) + '%' : '0%', background: i < 3 ? '#3b82f6' : '#cbd5e1'}"></div>
+                        </div>
+                        <span class="text-xs text-stone-400">{{ c.orderCount }} 筆訂單</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- ══════════ 地圖分析 ══════════ -->
+            <div v-if="analyticsSubTab === 'map'" class="space-y-4">
+              <!-- 控制列 -->
+              <div class="g-card-solid p-4">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                  <div class="flex gap-2">
+                    <button @click="mapAnalysisMode='orders'; renderMapMarkers()" :class="['g-btn g-btn-sm', mapAnalysisMode==='orders' ? 'g-btn-primary' : 'g-btn-glass']">
+                      <i class="fas fa-hashtag"></i>訂購次數
+                    </button>
+                    <button @click="mapAnalysisMode='revenue'; renderMapMarkers()" :class="['g-btn g-btn-sm', mapAnalysisMode==='revenue' ? 'g-btn-primary' : 'g-btn-glass']">
+                      <i class="fas fa-dollar-sign"></i>訂購金額
+                    </button>
+                  </div>
+                  <span class="text-xs text-stone-400">共 {{ analyticsData.addressStats.length }} 個配送地址</span>
+                </div>
+              </div>
+              <!-- Geocoding 進度 -->
+              <div v-if="mapGeocodingLoading" class="g-card-solid p-4">
+                <div class="flex items-center gap-3">
+                  <i class="fas fa-circle-notch fa-spin text-brand-500 flex-shrink-0"></i>
+                  <div class="flex-1">
+                    <p class="text-sm font-bold text-stone-700">地址定位中… ({{ mapGeocodingProgress.done }}/{{ mapGeocodingProgress.total }})</p>
+                    <div class="h-1.5 rounded-full mt-1.5 overflow-hidden" style="background:var(--glass-border-subtle)">
+                      <div class="h-full rounded-full transition-all" style="background:var(--brand);" :style="{width: mapGeocodingProgress.total > 0 ? (mapGeocodingProgress.done/mapGeocodingProgress.total*100)+'%' : '0%'}"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- 地圖 -->
+              <div class="g-card-solid overflow-hidden" style="border-radius:var(--glass-radius);">
+                <div id="map-analysis" style="height:400px;width:100%;"></div>
+              </div>
+              <!-- 地址排行 -->
               <div class="g-card-solid p-5">
-                <h3 class="font-black text-stone-800 mb-4 flex items-center gap-2">
-                  <i class="fas fa-pie-chart text-stone-500"></i>訂單狀態
+                <h3 class="font-black text-stone-800 mb-3 flex items-center gap-2">
+                  <i class="fas fa-list-ol text-brand-600"></i>
+                  地址排行（{{ mapAnalysisMode === 'orders' ? '按訂購次數' : '按訂購金額' }}）
                 </h3>
-                <div class="space-y-3">
-                  <div class="flex items-center gap-3">
-                    <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#10b981;"></div>
+                <div v-if="analyticsData.addressStats.length === 0" class="text-center py-6 text-stone-400 text-sm">尚無地址資料</div>
+                <div v-else class="space-y-1">
+                  <div v-for="(a, i) in [...analyticsData.addressStats].sort((x,y) => mapAnalysisMode==='orders' ? y.orderCount-x.orderCount : y.revenue-x.revenue).slice(0,15)"
+                       :key="a.address" class="flex items-center gap-3 py-2 border-b last:border-b-0" style="border-color:var(--glass-border-subtle)">
+                    <span class="text-xs font-black w-5 text-right flex-shrink-0" :style="{color: i<3 ? 'var(--brand-600)' : '#94a3b8'}">{{ i+1 }}</span>
                     <div class="flex-1 min-w-0">
-                      <div class="flex justify-between text-sm mb-1">
-                        <span class="font-bold text-stone-700">已確認</span>
-                        <span class="font-black text-stone-800">{{ analyticsData.statusBreakdown.approved }}</span>
-                      </div>
-                      <div class="h-2 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
-                        <div class="h-full rounded-full transition-all" style="background:#10b981;" :style="{width: analyticsData.totalGroupCount > 0 ? (analyticsData.statusBreakdown.approved / analyticsData.totalGroupCount * 100).toFixed(1) + '%' : '0%'}"></div>
+                      <p class="text-sm font-bold text-stone-700 truncate">{{ a.address }}</p>
+                      <div class="flex gap-3 mt-0.5">
+                        <span class="text-xs text-stone-400"><i class="fas fa-file-alt mr-1"></i>{{ a.orderCount }} 次</span>
+                        <span class="text-xs text-stone-400"><i class="fas fa-dollar-sign mr-1"></i>{{ a.revenue.toLocaleString() }}</span>
                       </div>
                     </div>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#f59e0b;"></div>
-                    <div class="flex-1 min-w-0">
-                      <div class="flex justify-between text-sm mb-1">
-                        <span class="font-bold text-stone-700">待確認</span>
-                        <span class="font-black text-stone-800">{{ analyticsData.statusBreakdown.pending }}</span>
-                      </div>
-                      <div class="h-2 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
-                        <div class="h-full rounded-full transition-all" style="background:#f59e0b;" :style="{width: analyticsData.totalGroupCount > 0 ? (analyticsData.statusBreakdown.pending / analyticsData.totalGroupCount * 100).toFixed(1) + '%' : '0%'}"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#ef4444;"></div>
-                    <div class="flex-1 min-w-0">
-                      <div class="flex justify-between text-sm mb-1">
-                        <span class="font-bold text-stone-700">已拒絕</span>
-                        <span class="font-black text-stone-800">{{ analyticsData.statusBreakdown.rejected }}</span>
-                      </div>
-                      <div class="h-2 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
-                        <div class="h-full rounded-full transition-all" style="background:#ef4444;" :style="{width: analyticsData.totalGroupCount > 0 ? (analyticsData.statusBreakdown.rejected / analyticsData.totalGroupCount * 100).toFixed(1) + '%' : '0%'}"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:#94a3b8;"></div>
-                    <div class="flex-1 min-w-0">
-                      <div class="flex justify-between text-sm mb-1">
-                        <span class="font-bold text-stone-700">已過期</span>
-                        <span class="font-black text-stone-800">{{ analyticsData.statusBreakdown.expired }}</span>
-                      </div>
-                      <div class="h-2 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
-                        <div class="h-full rounded-full transition-all" style="background:#94a3b8;" :style="{width: analyticsData.totalGroupCount > 0 ? (analyticsData.statusBreakdown.expired / analyticsData.totalGroupCount * 100).toFixed(1) + '%' : '0%'}"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <p class="text-xs text-stone-400 mt-2 pt-2 border-t" style="border-color:var(--glass-border-subtle)">共 {{ analyticsData.totalGroupCount }} 筆訂單（近12個月）</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- 熱銷產品 + 客戶排行 -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <!-- 熱銷產品 -->
-              <div class="g-card-solid p-5">
-                <h3 class="font-black text-stone-800 mb-4 flex items-center gap-2">
-                  <i class="fas fa-fire text-orange-500"></i>熱銷產品（按數量）
-                </h3>
-                <div v-if="analyticsData.topProducts.length === 0" class="text-center py-8 text-stone-400 text-sm">尚無資料</div>
-                <div v-else class="space-y-2.5">
-                  <div v-for="(p, i) in analyticsData.topProducts" :key="p.name" class="flex items-center gap-3">
-                    <span class="text-xs font-black w-5 text-right flex-shrink-0" :style="{color: i<3 ? 'var(--brand-600)' : '#94a3b8'}">{{ i + 1 }}</span>
-                    <div class="flex-1 min-w-0">
-                      <div class="flex justify-between items-baseline mb-1">
-                        <span class="text-sm font-bold text-stone-700 truncate">{{ p.name }}</span>
-                        <span class="text-xs text-stone-500 flex-shrink-0 ml-2">×{{ p.qty }}</span>
-                      </div>
+                    <div class="flex-shrink-0 w-20">
                       <div class="h-1.5 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
-                        <div class="h-full rounded-full transition-all" :style="{width: analyticsData.topProducts[0].qty > 0 ? (p.qty / analyticsData.topProducts[0].qty * 100).toFixed(1) + '%' : '0%', background: i < 3 ? 'var(--brand-600)' : '#cbd5e1'}"></div>
+                        <div class="h-full rounded-full" :style="{
+                          width: mapAnalysisMode==='orders'
+                            ? (analyticsData.addressStats[0].orderCount > 0 ? (a.orderCount/analyticsData.addressStats[0].orderCount*100)+'%' : '0%')
+                            : (analyticsData.addressStats.reduce((mx,x)=>Math.max(mx,x.revenue),1) > 0 ? (a.revenue/analyticsData.addressStats.reduce((mx,x)=>Math.max(mx,x.revenue),1)*100)+'%' : '0%'),
+                          background:'var(--brand-600)'
+                        }"></div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 客戶排行 -->
-              <div class="g-card-solid p-5">
-                <h3 class="font-black text-stone-800 mb-4 flex items-center gap-2">
-                  <i class="fas fa-building text-blue-500"></i>客戶排行（按營收）
-                </h3>
-                <div v-if="analyticsData.topCompanies.length === 0" class="text-center py-8 text-stone-400 text-sm">尚無資料</div>
-                <div v-else class="space-y-2.5">
-                  <div v-for="(c, i) in analyticsData.topCompanies" :key="c.name" class="flex items-center gap-3">
-                    <span class="text-xs font-black w-5 text-right flex-shrink-0" :style="{color: i<3 ? '#3b82f6' : '#94a3b8'}">{{ i + 1 }}</span>
-                    <div class="flex-1 min-w-0">
-                      <div class="flex justify-between items-baseline mb-1">
-                        <span class="text-sm font-bold text-stone-700 truncate">{{ c.name }}</span>
-                        <span class="text-xs font-black text-stone-600 flex-shrink-0 ml-2">${{ c.revenue.toLocaleString() }}</span>
-                      </div>
-                      <div class="h-1.5 rounded-full overflow-hidden" style="background:var(--glass-border-subtle)">
-                        <div class="h-full rounded-full transition-all" :style="{width: analyticsData.topCompanies[0].revenue > 0 ? (c.revenue / analyticsData.topCompanies[0].revenue * 100).toFixed(1) + '%' : '0%', background: i < 3 ? '#3b82f6' : '#cbd5e1'}"></div>
-                      </div>
-                      <span class="text-xs text-stone-400">{{ c.orderCount }} 筆訂單</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+
+            <!-- ══════════ 路徑規劃 ══════════ -->
+            <div v-if="analyticsSubTab === 'route'" class="space-y-4">
+              <!-- 日期選擇 -->
+              <div class="g-card-solid p-4">
+                <h3 class="font-black text-stone-800 mb-3 flex items-center gap-2">
+                  <i class="fas fa-calendar-day text-brand-600"></i>選擇配送日期
+                </h3>
+                <div class="flex items-center gap-3 flex-wrap">
+                  <input type="date" v-model="routeDate" class="px-3 py-2 rounded-lg border text-sm font-bold text-stone-700 bg-white focus:outline-none focus:ring-2 ring-offset-0" style="border-color:var(--glass-border-strong);--tw-ring-color:rgba(176,115,106,0.4);">
+                  <button @click="fetchRouteOrders" :disabled="!routeDate || routeLoading" class="g-btn g-btn-primary g-btn-sm">
+                    <i :class="routeLoading ? 'fas fa-circle-notch fa-spin' : 'fas fa-search'"></i>
+                    載入當日訂單
+                  </button>
+                </div>
+                <p class="text-xs text-stone-400 mt-2.5"><i class="fas fa-store mr-1"></i>起點：台北市中山區興安街80巷2號1樓（健美滷味）</p>
+              </div>
+
+              <!-- 訂單清單 -->
+              <div v-if="routeGroupOrders.length > 0" class="g-card-solid p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="font-black text-stone-800 flex items-center gap-2">
+                    <i class="fas fa-map-pin text-morandi-rose"></i>
+                    當日訂單（{{ routeDate }}）
+                  </h3>
+                  <div class="flex gap-2">
+                    <button @click="routeSelectedIds = routeGroupOrders.map(g=>g.id)" class="g-btn g-btn-glass g-btn-sm" style="font-size:12px;">全選</button>
+                    <button @click="routeSelectedIds = []" class="g-btn g-btn-glass g-btn-sm" style="font-size:12px;">清除</button>
+                  </div>
+                </div>
+                <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                  <label v-for="g in routeGroupOrders" :key="g.id" class="flex items-start gap-3 p-2.5 rounded-lg cursor-pointer transition hover:bg-stone-50" style="border:1px solid var(--glass-border-subtle);">
+                    <input type="checkbox" :value="g.id" v-model="routeSelectedIds" class="mt-0.5 flex-shrink-0" style="accent-color:var(--brand);">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-bold text-stone-700">{{ g.companyName || '未知客戶' }}</p>
+                      <p class="text-xs text-stone-500 mt-0.5 truncate"><i class="fas fa-map-marker-alt mr-1 text-red-400"></i>{{ g.address || '無地址' }}</p>
+                    </div>
+                    <span class="text-xs font-black text-stone-600 flex-shrink-0 pt-0.5">${{ (g.totalAmount||0).toLocaleString() }}</span>
+                  </label>
+                </div>
+                <div class="mt-3 flex items-center justify-between border-t pt-3" style="border-color:var(--glass-border-subtle);">
+                  <span class="text-sm text-stone-500">已選 <b>{{ routeSelectedIds.length }}</b> / {{ routeGroupOrders.length }} 筆</span>
+                  <button @click="computeOptimalRoute" :disabled="routeSelectedIds.length === 0 || routeGeoLoading" class="g-btn g-btn-primary">
+                    <i :class="routeGeoLoading ? 'fas fa-circle-notch fa-spin' : 'fas fa-route'"></i>
+                    計算最佳路徑
+                  </button>
+                </div>
+              </div>
+
+              <!-- 無訂單 -->
+              <div v-if="routeGroupOrders.length === 0 && routeSearched" class="g-card-solid p-8 text-center">
+                <i class="fas fa-box-open text-4xl text-stone-300 mb-3"></i>
+                <p class="text-stone-400 font-bold">該日期無已確認且含地址的訂單</p>
+              </div>
+
+              <!-- Geocoding 進度（路徑） -->
+              <div v-if="routeGeoLoading" class="g-card-solid p-4">
+                <div class="flex items-center gap-3">
+                  <i class="fas fa-circle-notch fa-spin text-brand-500 flex-shrink-0"></i>
+                  <div class="flex-1">
+                    <p class="text-sm font-bold text-stone-700">地址定位中… ({{ routeGeoProgress.done }}/{{ routeGeoProgress.total }})</p>
+                    <div class="h-1.5 rounded-full mt-1.5 overflow-hidden" style="background:var(--glass-border-subtle)">
+                      <div class="h-full rounded-full transition-all" style="background:var(--brand);" :style="{width: routeGeoProgress.total > 0 ? (routeGeoProgress.done/routeGeoProgress.total*100)+'%' : '0%'}"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 路徑結果 -->
+              <template v-if="routeResult">
+                <!-- 地圖 -->
+                <div class="g-card-solid overflow-hidden" style="border-radius:var(--glass-radius);">
+                  <div id="map-route" style="height:420px;width:100%;"></div>
+                </div>
+                <!-- 路徑摘要 + Google Maps -->
+                <div class="g-card-solid p-4">
+                  <div class="flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                      <p class="font-black text-stone-800 flex items-center gap-2"><i class="fas fa-check-circle text-green-500"></i>路徑規劃完成</p>
+                      <p class="text-xs text-stone-500 mt-0.5">共 {{ routeResult.stops.length }} 個停靠點，預估直線距離約 {{ routeResult.totalDistanceKm }} 公里</p>
+                    </div>
+                    <a :href="routeResult.googleMapsUrl" target="_blank" rel="noopener noreferrer" class="g-btn g-btn-primary g-btn-sm">
+                      <i class="fab fa-google mr-1"></i>在 Google Maps 開啟導航
+                    </a>
+                  </div>
+                </div>
+                <!-- 配送順序 -->
+                <div class="g-card-solid p-5">
+                  <h3 class="font-black text-stone-800 mb-3 flex items-center gap-2">
+                    <i class="fas fa-list-ol text-brand-600"></i>建議配送順序
+                  </h3>
+                  <div class="space-y-2">
+                    <!-- 起點 -->
+                    <div class="flex items-start gap-3 p-3 rounded-xl" style="background:rgba(176,115,106,0.08);">
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 text-white" style="background:var(--brand);">出</div>
+                      <div class="flex-1 min-w-0 pt-0.5">
+                        <p class="text-sm font-bold text-stone-700">健美滷味（起點）</p>
+                        <p class="text-xs text-stone-400 mt-0.5">台北市中山區興安街80巷2號1樓</p>
+                      </div>
+                    </div>
+                    <!-- 停靠點 -->
+                    <div v-for="(stop, i) in routeResult.stops" :key="stop.id" class="flex items-start gap-3 p-3 rounded-xl" style="border:1px solid var(--glass-border-subtle);">
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 text-white" style="background:#6889A8;">{{ i+1 }}</div>
+                      <div class="flex-1 min-w-0 pt-0.5">
+                        <p class="text-sm font-bold text-stone-700">{{ stop.companyName || '未知客戶' }}</p>
+                        <p class="text-xs text-stone-400 mt-0.5"><i class="fas fa-map-marker-alt mr-1 text-red-400"></i>{{ stop.address }}</p>
+                        <p class="text-xs text-stone-400"><i class="fas fa-dollar-sign mr-1 text-green-500"></i>${{ (stop.totalAmount||0).toLocaleString() }}</p>
+                      </div>
+                      <div class="flex flex-col items-end gap-1 flex-shrink-0 pt-0.5">
+                        <span class="text-xs font-bold text-stone-500">{{ stop.distanceKm }} km</span>
+                        <span class="text-xs text-stone-400">前一點距離</span>
+                      </div>
+                    </div>
+                    <!-- 終點 -->
+                    <div class="flex items-start gap-3 p-3 rounded-xl" style="background:rgba(176,115,106,0.08);">
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 text-white" style="background:var(--brand);">回</div>
+                      <div class="flex-1 min-w-0 pt-0.5">
+                        <p class="text-sm font-bold text-stone-700">健美滷味（終點）</p>
+                        <p class="text-xs text-stone-400 mt-0.5">台北市中山區興安街80巷2號1樓</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
           </template>
 
           <div v-else-if="!analyticsLoading && !analyticsHasLoaded" class="text-center py-20 g-card">
@@ -4276,6 +4494,24 @@
         const analyticsData = ref(null);
         const analyticsLoading = ref(false);
         const analyticsHasLoaded = ref(false);
+        // 統計分析子頁籤
+        const analyticsSubTab = ref('overview'); // 'overview' | 'map' | 'route'
+        // 地圖分析
+        const mapAnalysisMode = ref('orders'); // 'orders' | 'revenue'
+        const mapGeocodingLoading = ref(false);
+        const mapGeocodingProgress = ref({ done: 0, total: 0 });
+        // 路徑規劃
+        const routeDate = ref('');
+        const routeGroupOrders = ref([]);
+        const routeSelectedIds = ref([]);
+        const routeLoading = ref(false);
+        const routeGeoLoading = ref(false);
+        const routeGeoProgress = ref({ done: 0, total: 0 });
+        const routeResult = ref(null);
+        const routeSearched = ref(false);
+        // 地圖實例（非響應式）
+        let _mapAnalysisInstance = null;
+        let _routeMapInstance = null;
 
         // computed: 出貨單總筆數
         const labelTotalOrderCount = computed(() =>
@@ -6139,6 +6375,17 @@
             }
             const topProducts = Object.values(productMap).sort((a, b) => b.qty - a.qty).slice(0, 10);
 
+            // 地址統計（地圖分析用）
+            const addressMap = {};
+            approvedGroups.forEach(g => {
+              const addr = (g.address || '').trim();
+              if (!addr) return;
+              if (!addressMap[addr]) addressMap[addr] = { address: addr, orderCount: 0, revenue: 0 };
+              addressMap[addr].orderCount++;
+              addressMap[addr].revenue += (g.totalAmount || 0);
+            });
+            const addressStats = Object.values(addressMap).sort((a, b) => b.orderCount - a.orderCount);
+
             analyticsData.value = {
               totalRevenue,
               totalOrders: approvedGroups.length,
@@ -6148,13 +6395,291 @@
               topCompanies,
               topProducts,
               statusBreakdown,
+              addressStats,
+              _geocodedAddresses: null, // 地圖 geocoding 結果（lazy）
+              _storeCoords: null,
             };
             analyticsHasLoaded.value = true;
+            analyticsSubTab.value = 'overview';
           } catch (e) {
             console.error('fetchAnalytics error:', e);
           } finally {
             analyticsLoading.value = false;
           }
+        };
+
+        // ════════════════════════════════════════════
+        // 地圖分析 & 路徑規劃
+        // ════════════════════════════════════════════
+
+        const STORE_ADDRESS = '台北市中山區興安街80巷2號1樓';
+        const GEO_CACHE_KEY = 'jm_geo_cache_v2';
+
+        const _loadGeoCache = () => {
+          try { return JSON.parse(localStorage.getItem(GEO_CACHE_KEY) || '{}'); } catch { return {}; }
+        };
+        const _saveGeoCache = (cache) => {
+          try { localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(cache)); } catch {}
+        };
+
+        const geocodeAddress = async (address) => {
+          // 標準化地址：移除樓層、室號等 Nominatim 無法解析的後綴
+          const normalize = (addr) => addr
+            .replace(/\d+樓之?\d*/g, '')   // 去除 N樓、N樓之M
+            .replace(/[A-Za-z]?\d+室/g, '') // 去除 N室
+            .replace(/（.*?）|\(.*?\)/g, '')  // 去除括號備註
+            .trim();
+          const cacheKey = address;
+          const queryAddr = normalize(address);
+          const cache = _loadGeoCache();
+          if (cache[cacheKey]) return cache[cacheKey];
+          try {
+            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queryAddr + ', 台灣')}&format=json&limit=1&accept-language=zh-TW`;
+            const resp = await fetch(url); // 不設 User-Agent，瀏覽器禁止此 header
+            if (!resp.ok) return null;
+            const data = await resp.json();
+            if (data && data.length > 0) {
+              const result = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+              cache[cacheKey] = result;
+              _saveGeoCache(cache);
+              return result;
+            }
+          } catch (e) {
+            console.warn('geocodeAddress error:', address, e);
+          }
+          return null;
+        };
+
+        const _sleep = ms => new Promise(r => setTimeout(r, ms));
+
+        const haversineKm = (lat1, lng1, lat2, lng2) => {
+          const R = 6371;
+          const dLat = (lat2 - lat1) * Math.PI / 180;
+          const dLng = (lng2 - lng1) * Math.PI / 180;
+          const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+          return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        };
+
+        const nearestNeighborTSP = (start, stops) => {
+          const remaining = stops.map((s, i) => ({ ...s, _idx: i }));
+          const route = [];
+          let current = start;
+          while (remaining.length > 0) {
+            let bestIdx = 0, bestDist = Infinity;
+            remaining.forEach((s, i) => {
+              const d = haversineKm(current.lat, current.lng, s.lat, s.lng);
+              if (d < bestDist) { bestDist = d; bestIdx = i; }
+            });
+            const next = remaining.splice(bestIdx, 1)[0];
+            next.distanceKm = bestDist.toFixed(1);
+            route.push(next);
+            current = next;
+          }
+          return route;
+        };
+
+        // ── 地圖分析 ──
+        const _renderMapMarkerLayer = (geocoded) => {
+          if (!window.L || !_mapAnalysisInstance) return;
+          _mapAnalysisInstance.eachLayer(layer => {
+            if (layer instanceof L.CircleMarker) _mapAnalysisInstance.removeLayer(layer);
+          });
+          const maxVal = geocoded.reduce((mx, a) => Math.max(mx, mapAnalysisMode.value === 'orders' ? a.orderCount : a.revenue), 1);
+          geocoded.forEach(a => {
+            const val = mapAnalysisMode.value === 'orders' ? a.orderCount : a.revenue;
+            const ratio = val / maxVal;
+            const radius = Math.max(10, Math.round(ratio * 40));
+            const circle = L.circleMarker([a.lat, a.lng], {
+              radius,
+              fillColor: `hsl(${Math.round(210 - ratio * 150)}, 70%, 50%)`,
+              color: 'white', weight: 2, opacity: 1, fillOpacity: 0.75
+            });
+            circle.bindPopup(
+              `<div style="font-family:sans-serif;min-width:180px;">` +
+              `<p style="font-weight:900;margin:0 0 5px;font-size:13px;">${a.address}</p>` +
+              `<p style="margin:3px 0;color:#555;font-size:12px;">訂購次數：<b>${a.orderCount}</b> 次</p>` +
+              `<p style="margin:3px 0;color:#555;font-size:12px;">訂購金額：<b>$${a.revenue.toLocaleString()}</b></p>` +
+              `</div>`
+            );
+            circle.addTo(_mapAnalysisInstance);
+          });
+        };
+
+        const renderMapMarkers = () => _renderMapMarkerLayer(analyticsData.value?._geocodedAddresses || []);
+
+        const initMapAnalysis = async () => {
+          if (!analyticsData.value) return;
+          // 若已有 geocoding 結果，直接渲染
+          if (analyticsData.value._geocodedAddresses) {
+            await nextTick();
+            if (_mapAnalysisInstance) { _mapAnalysisInstance.invalidateSize(); return; }
+          }
+          const stats = analyticsData.value.addressStats || [];
+          mapGeocodingLoading.value = true;
+          mapGeocodingProgress.value = { done: 0, total: stats.length + 1 }; // +1 store
+          // Geocode store
+          const storeCoords = await geocodeAddress(STORE_ADDRESS);
+          analyticsData.value._storeCoords = storeCoords;
+          mapGeocodingProgress.value.done++;
+          if (stats.length > 0) await _sleep(1100);
+          // Geocode addresses
+          const geocoded = [];
+          for (let i = 0; i < stats.length; i++) {
+            const coords = await geocodeAddress(stats[i].address);
+            if (coords) geocoded.push({ ...stats[i], ...coords });
+            mapGeocodingProgress.value.done++;
+            if (i < stats.length - 1) await _sleep(1100);
+          }
+          analyticsData.value._geocodedAddresses = geocoded;
+          mapGeocodingLoading.value = false;
+          await nextTick();
+          // 初始化地圖
+          const container = document.getElementById('map-analysis');
+          if (!container) return;
+          if (_mapAnalysisInstance) { _mapAnalysisInstance.remove(); _mapAnalysisInstance = null; }
+          const center = geocoded.length > 0 ? [geocoded[0].lat, geocoded[0].lng] : [25.055, 121.535];
+          _mapAnalysisInstance = L.map('map-analysis').setView(center, 12);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+          }).addTo(_mapAnalysisInstance);
+          // 店家標記
+          if (storeCoords) {
+            const storeIcon = L.divIcon({
+              className: '',
+              html: `<div style="background:#B0736A;color:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);">店</div>`,
+              iconSize: [34, 34], iconAnchor: [17, 17]
+            });
+            L.marker([storeCoords.lat, storeCoords.lng], { icon: storeIcon })
+              .bindPopup('<b>健美滷味（起點）</b><br>台北市中山區興安街80巷2號1樓')
+              .addTo(_mapAnalysisInstance);
+          }
+          _renderMapMarkerLayer(geocoded);
+          if (geocoded.length > 0) {
+            const allPts = geocoded.map(a => [a.lat, a.lng]);
+            if (storeCoords) allPts.push([storeCoords.lat, storeCoords.lng]);
+            _mapAnalysisInstance.fitBounds(L.latLngBounds(allPts), { padding: [30, 30] });
+          }
+        };
+
+        // ── 路徑規劃 ──
+        const initRouteTab = () => {
+          routeResult.value = null;
+          if (_routeMapInstance) { _routeMapInstance.remove(); _routeMapInstance = null; }
+        };
+
+        const fetchRouteOrders = async () => {
+          if (!routeDate.value) return;
+          routeLoading.value = true;
+          routeSearched.value = false;
+          routeGroupOrders.value = [];
+          routeResult.value = null;
+          if (_routeMapInstance) { _routeMapInstance.remove(); _routeMapInstance = null; }
+          try {
+            const [y, m, d] = routeDate.value.split('-').map(Number);
+            const startDate = new Date(y, m - 1, d, 0, 0, 0);
+            const endDate = new Date(y, m - 1, d, 23, 59, 59);
+            const q = query(
+              collection(db, 'GroupOrders'),
+              where('deliveryTime', '>=', Timestamp.fromDate(startDate)),
+              where('deliveryTime', '<=', Timestamp.fromDate(endDate))
+            );
+            const snap = await getDocs(q);
+            const orders = snap.docs
+              .map(d => ({ id: d.id, ...d.data() }))
+              .filter(g => g.status === 'approved' && g.address);
+            routeGroupOrders.value = orders;
+            routeSelectedIds.value = orders.map(g => g.id);
+            routeSearched.value = true;
+          } catch (e) {
+            console.error('fetchRouteOrders error:', e);
+          } finally {
+            routeLoading.value = false;
+          }
+        };
+
+        const computeOptimalRoute = async () => {
+          const selected = routeGroupOrders.value.filter(g => routeSelectedIds.value.includes(g.id) && g.address);
+          if (selected.length === 0) return;
+          routeGeoLoading.value = true;
+          routeGeoProgress.value = { done: 0, total: selected.length + 1 };
+          // Geocode store
+          const storeCoords = await geocodeAddress(STORE_ADDRESS);
+          routeGeoProgress.value.done++;
+          if (selected.length > 0) await _sleep(1100);
+          // Geocode delivery addresses
+          const geocodedStops = [];
+          for (let i = 0; i < selected.length; i++) {
+            const coords = await geocodeAddress(selected[i].address);
+            routeGeoProgress.value.done++;
+            if (coords) geocodedStops.push({ ...selected[i], ...coords });
+            if (i < selected.length - 1) await _sleep(1100);
+          }
+          routeGeoLoading.value = false;
+          if (!storeCoords) { showAlert('無法定位店家地址，請稍後再試', 'error'); return; }
+          if (geocodedStops.length === 0) { showAlert('所選地址均無法定位', 'error'); return; }
+          // TSP 最近鄰演算法
+          const store = { lat: storeCoords.lat, lng: storeCoords.lng };
+          const optimizedStops = nearestNeighborTSP(store, geocodedStops);
+          // 計算總距離
+          let totalDist = 0;
+          let prev = store;
+          optimizedStops.forEach(s => { totalDist += haversineKm(prev.lat, prev.lng, s.lat, s.lng); prev = s; });
+          totalDist += haversineKm(prev.lat, prev.lng, store.lat, store.lng);
+          // Google Maps 導航連結
+          const googleMapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(STORE_ADDRESS)}/${optimizedStops.map(s => encodeURIComponent(s.address)).join('/')}/${encodeURIComponent(STORE_ADDRESS)}`;
+          routeResult.value = { stops: optimizedStops, storeCoords, totalDistanceKm: totalDist.toFixed(1), googleMapsUrl };
+          await nextTick();
+          _renderRouteMap(storeCoords, optimizedStops);
+        };
+
+        const _renderRouteMap = async (storeCoords, stops) => {
+          if (!window.L) return;
+          const container = document.getElementById('map-route');
+          if (!container) return;
+          if (_routeMapInstance) { _routeMapInstance.remove(); _routeMapInstance = null; }
+          _routeMapInstance = L.map('map-route').setView([storeCoords.lat, storeCoords.lng], 13);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+          }).addTo(_routeMapInstance);
+          const allPts = [[storeCoords.lat, storeCoords.lng]];
+          // 店家標記
+          const storeIcon = L.divIcon({
+            className: '',
+            html: `<div style="background:#B0736A;color:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);">店</div>`,
+            iconSize: [34, 34], iconAnchor: [17, 17]
+          });
+          L.marker([storeCoords.lat, storeCoords.lng], { icon: storeIcon })
+            .bindPopup('<b>健美滷味（起/終點）</b><br>台北市中山區興安街80巷2號1樓')
+            .addTo(_routeMapInstance);
+          // 停靠點標記
+          stops.forEach((stop, i) => {
+            const icon = L.divIcon({
+              className: '',
+              html: `<div style="background:#6889A8;color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.25);">${i + 1}</div>`,
+              iconSize: [30, 30], iconAnchor: [15, 15]
+            });
+            L.marker([stop.lat, stop.lng], { icon })
+              .bindPopup(`<b>${i + 1}. ${stop.companyName || '未知客戶'}</b><br>${stop.address}`)
+              .addTo(_routeMapInstance);
+            allPts.push([stop.lat, stop.lng]);
+          });
+          // 嘗試用 OSRM 取得實際路線
+          try {
+            const coordStr = [[storeCoords.lng, storeCoords.lat], ...stops.map(s => [s.lng, s.lat]), [storeCoords.lng, storeCoords.lat]]
+              .map(c => c.join(',')).join(';');
+            const osrmResp = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordStr}?geometries=geojson&overview=full`);
+            const osrmData = await osrmResp.json();
+            if (osrmData.code === 'Ok' && osrmData.routes?.[0]?.geometry) {
+              L.geoJSON(osrmData.routes[0].geometry, { style: { color: '#B0736A', weight: 5, opacity: 0.8 } }).addTo(_routeMapInstance);
+            } else {
+              L.polyline([[storeCoords.lat, storeCoords.lng], ...stops.map(s => [s.lat, s.lng]), [storeCoords.lat, storeCoords.lng]], { color: '#B0736A', weight: 3, dashArray: '8,6', opacity: 0.7 }).addTo(_routeMapInstance);
+            }
+          } catch {
+            L.polyline([[storeCoords.lat, storeCoords.lng], ...stops.map(s => [s.lat, s.lng]), [storeCoords.lat, storeCoords.lng]], { color: '#B0736A', weight: 3, dashArray: '8,6', opacity: 0.7 }).addTo(_routeMapInstance);
+          }
+          _routeMapInstance.fitBounds(L.latLngBounds(allPts), { padding: [40, 40] });
         };
 
         // 監聽 adminTab 切換
@@ -7107,7 +7632,24 @@
           analyticsData,
           analyticsLoading,
           analyticsHasLoaded,
+          analyticsSubTab,
+          mapAnalysisMode,
+          mapGeocodingLoading,
+          mapGeocodingProgress,
+          routeDate,
+          routeGroupOrders,
+          routeSelectedIds,
+          routeLoading,
+          routeGeoLoading,
+          routeGeoProgress,
+          routeResult,
+          routeSearched,
           fetchAnalytics,
+          initMapAnalysis,
+          renderMapMarkers,
+          fetchRouteOrders,
+          computeOptimalRoute,
+          initRouteTab,
           window
         };
       }

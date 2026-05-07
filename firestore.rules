@@ -117,5 +117,18 @@ service cloud.firestore {
         get(/databases/$(database)/documents/GroupSessions/$(resource.data.sessionId)).data.organizerUid == request.auth.uid
       );
     }
+
+    // ── lineBindings（LINE 帳號綁定） ──────────────────
+    // 用戶透過 LIFF 綁定 LINE userId 與訂單編號的對應關係
+    match /lineBindings/{lineUserId} {
+      // 只有本人可讀（LIFF 頁面查詢自身綁定）
+      allow read: if isSignedIn() && request.auth.token.firebase.identities != null;
+      // LIFF 匿名或已登入的用戶可建立/更新（lineUserId 必須是文件 ID）
+      allow create, update: if isSignedIn()
+                            && request.resource.data.lineUserId == lineUserId
+                            && request.resource.data.orderNos is list;
+      // 不允許刪除（由 Cloud Functions 管理）
+      allow delete: if false;
+    }
   }
 }
