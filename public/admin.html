@@ -9,8 +9,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <!-- Leaflet 地圖 -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -6423,29 +6423,47 @@
         };
 
         const geocodeAddress = async (address) => {
-          // 標準化地址：移除樓層、室號等 Nominatim 無法解析的後綴
+          // 標準化地址：移除樓層、室號等 Nominatim 無法解析的部分
           const normalize = (addr) => addr
-            .replace(/\d+樓之?\d*/g, '')   // 去除 N樓、N樓之M
+            .replace(/\d+樓之?\d*/g, '')   // 去除 N樓
             .replace(/[A-Za-z]?\d+室/g, '') // 去除 N室
             .replace(/（.*?）|\(.*?\)/g, '')  // 去除括號備註
-            .trim();
+            .replace(/\s+/g, '').trim();
+
           const cacheKey = address;
-          const queryAddr = normalize(address);
           const cache = _loadGeoCache();
           if (cache[cacheKey]) return cache[cacheKey];
-          try {
-            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queryAddr + ', 台灣')}&format=json&limit=1&accept-language=zh-TW`;
-            const resp = await fetch(url); // 不設 User-Agent，瀏覽器禁止此 header
-            if (!resp.ok) return null;
-            const data = await resp.json();
-            if (data && data.length > 0) {
-              const result = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-              cache[cacheKey] = result;
-              _saveGeoCache(cache);
-              return result;
+
+          // 漸進式退化查詢：號 → 巷 → 路/街，逐步模糊直到有結果
+          const base = normalize(address);
+          const queries = [base];
+          // 去除門牌號：80巷2號 → 80巷
+          const noNum = base.replace(/\d+號.*$/, '').trim();
+          if (noNum && noNum !== base) queries.push(noNum);
+          // 去除巷弄號：興安街80巷 → 興安街
+          const noLane = noNum.replace(/\d+[巷弄].*$/, '').trim();
+          if (noLane && noLane !== noNum && noLane.length >= 6) queries.push(noLane);
+
+          for (let qi = 0; qi < queries.length; qi++) {
+            const q = queries[qi];
+            try {
+              const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ', 台灣')}&format=json&limit=1&accept-language=zh-TW`;
+              const resp = await fetch(url);
+              if (!resp.ok) { console.warn('geocode HTTP', resp.status, q); continue; }
+              const data = await resp.json();
+              if (data && data.length > 0) {
+                const result = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+                console.log(`geocoded "${address}" via "${q}" →`, result);
+                cache[cacheKey] = result;
+                _saveGeoCache(cache);
+                return result;
+              }
+              console.warn(`geocode no result for "${q}"`);
+            } catch (e) {
+              console.warn('geocodeAddress fetch error:', q, e);
             }
-          } catch (e) {
-            console.warn('geocodeAddress error:', address, e);
+            // 每次重試前等待，避免 rate limit
+            if (qi < queries.length - 1) await _sleep(1200);
           }
           return null;
         };
