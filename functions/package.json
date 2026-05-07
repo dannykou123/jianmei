@@ -1,0 +1,19 @@
+{
+  "name": "jianmei-functions",
+  "description": "LINE 官方帳號 Webhook & 推播通知 Cloud Functions",
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "^9.4.0",
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^5.0.0"
+  },
+  "private": true
+}
