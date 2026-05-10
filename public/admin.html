@@ -5302,32 +5302,39 @@
             const gUser  = result.user;
             const email  = gUser.email || '';
 
-            // 查詢 Accounts 是否已有此 email
-            const q    = query(collection(db, 'Accounts'), where('email', '==', email));
-            const snap = await getDocs(q);
-
+            // 1. 優先以 UID 直接讀取（新系統格式，符合 Firestore rules）
+            const uidSnap = await getDoc(doc(db, 'Accounts', gUser.uid));
             let accData;
-            if (snap.empty) {
-              // 尚未註冊，自動建立帳號，但預設待管理者授權
-              const newAcc = {
-                accountId:  email.split('@')[0],
-                email,
-                name:       gUser.displayName || email.split('@')[0],
-                phone:      gUser.phoneNumber || '',
-                role:       'user',
-                isAuthorized: false,
-                googleUid:  gUser.uid || '',
-                photoURL:   gUser.photoURL || '',
-                authProvider: 'google',
-                createdAt:  new Date().toISOString(),
-                updatedAt:  new Date().toISOString(),
-              };
-              const docRef = await addDoc(collection(db, 'Accounts'), newAcc);
-              accData = normalizeAccountRecord({ id: docRef.id, ...newAcc });
-              await rejectUnauthorizedAccess('已建立 Google 帳號資料，但尚未取得管理者授權，請通知管理者至「帳號管理」開通權限。');
-              return;
+
+            if (uidSnap.exists()) {
+              accData = normalizeAccountRecord({ id: uidSnap.id, ...uidSnap.data() });
             } else {
-              accData = normalizeAccountRecord({ id: snap.docs[0].id, ...snap.docs[0].data() });
+              // 2. 以 email 查詢（舊帳號相容；Firestore rules 須 allow list）
+              const q    = query(collection(db, 'Accounts'), where('email', '==', email));
+              const snap = await getDocs(q);
+
+              if (snap.empty) {
+                // 全新使用者：以 UID 為文件 ID 建立帳號（正確格式）
+                const newAcc = {
+                  accountId:    email.split('@')[0],
+                  email,
+                  name:         gUser.displayName || email.split('@')[0],
+                  phone:        gUser.phoneNumber || '',
+                  role:         'user',
+                  isAuthorized: false,
+                  googleUid:    gUser.uid || '',
+                  photoURL:     gUser.photoURL || '',
+                  authProvider: 'google',
+                  createdAt:    new Date().toISOString(),
+                  updatedAt:    new Date().toISOString(),
+                };
+                await setDoc(doc(db, 'Accounts', gUser.uid), newAcc);
+                accData = normalizeAccountRecord({ id: gUser.uid, ...newAcc });
+                await rejectUnauthorizedAccess('已建立 Google 帳號資料，但尚未取得管理者授權，請通知管理者至「帳號管理」開通權限。');
+                return;
+              } else {
+                accData = normalizeAccountRecord({ id: snap.docs[0].id, ...snap.docs[0].data() });
+              }
             }
 
             if (accData.isAuthorized === false) {

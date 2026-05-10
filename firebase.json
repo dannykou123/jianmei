@@ -9,6 +9,11 @@
     ],
     "rewrites": [
       {
+        "source": "/api/liff-bind",
+        "function": "liffBind",
+        "region": "us-central1"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

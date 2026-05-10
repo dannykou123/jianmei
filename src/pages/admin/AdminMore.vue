@@ -6,9 +6,10 @@ const router = useRouter();
 const auth = useAdminAuth();
 
 const items = [
-  { key: 'items', label: '商品管理', icon: 'fas fa-box', adminOnly: true, route: '/admin/items' },
-  { key: 'accounts', label: '帳號管理', icon: 'fas fa-users', adminOnly: true, route: '/admin/accounts' },
-  { key: 'analytics', label: '統計分析', icon: 'fas fa-chart-line', adminOnly: true, route: '/admin/analytics' },
+  { key: 'items',         label: '商品管理',   icon: 'fas fa-box',        adminOnly: true,  route: '/admin/items' },
+  { key: 'accounts',      label: '帳號管理',   icon: 'fas fa-users',      adminOnly: true,  route: '/admin/accounts' },
+  { key: 'analytics',     label: '統計分析',   icon: 'fas fa-chart-line', adminOnly: true,  route: '/admin/analytics' },
+  { key: 'line-settings', label: 'LINE 通知',  icon: 'fab fa-line',       adminOnly: true,  route: '/admin/line-settings', color: '#06C755' },
 ];
 </script>
 
@@ -21,7 +22,7 @@ const items = [
               :disabled="it.adminOnly && !auth.isAdmin"
               :class="{ 'opacity-40 cursor-not-allowed': it.adminOnly && !auth.isAdmin }"
               @click="router.push(it.route)">
-        <i :class="it.icon"></i>
+        <i :class="it.icon" :style="it.color ? `color: ${it.color}` : ''"></i>
         <span>{{ it.label }}</span>
       </button>
     </div>

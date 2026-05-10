@@ -16,7 +16,6 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.firebase.sign_in_provider == 'google.com';
     }
     function isAdmin() {
-      // 透過 email 對應 Accounts 文件（與既有 index.html 邏輯一致）
       return isGoogleUser()
         && exists(/databases/$(database)/documents/Accounts/$(request.auth.uid))
         && get(/databases/$(database)/documents/Accounts/$(request.auth.uid)).data.isAuthorized == true
@@ -30,17 +29,19 @@ service cloud.firestore {
 
     // ── Accounts（後台帳號） ────────────────────────────
     match /Accounts/{uid} {
-      // 自己可讀自己（供登入流程檢查授權狀態）
-      allow read: if isSignedIn() && request.auth.uid == uid;
-      // 自己可初始化（首次登入），admin 可全權管理
+      // 直接以 UID 讀取自己的帳號
+      allow get: if isSignedIn() && request.auth.uid == uid;
+      // admin.html 登入需要 email collection query；限制僅 Google 登入者可執行
+      allow list: if isGoogleUser();
+      // 新帳號只能由本人以 UID 為文件 ID 建立，且預設 isAuthorized: false
       allow create: if isSignedIn() && request.auth.uid == uid
                     && request.resource.data.isAuthorized == false;
+      // Admin 可讀寫全部帳號
       allow read, write: if isAdmin();
     }
 
     // ── Items（商品） ──────────────────────────────────
     match /Items/{id} {
-      // 公開讀（給訂購人列商品）
       allow read: if true;
       allow write: if isAdmin();
     }
@@ -52,66 +53,56 @@ service cloud.firestore {
 
     // ── GroupOrders（後台正式訂單） ─────────────────────
     match /GroupOrders/{id} {
-      // admin 全權
       allow read, write: if isAuthorizedAccount();
 
-      // 團購人可建立並關聯自己 session（送審用）
       allow create: if isGoogleUser()
                     && request.resource.data.organizerUid == request.auth.uid
                     && request.resource.data.status == 'pending';
 
-      // 團購人可讀／刪除自己關聯的 GroupOrder（收回用）
       allow read, delete: if isGoogleUser()
                          && resource.data.organizerUid == request.auth.uid;
+
+      // 配送狀態歷史紀錄（Admin 寫入，團購主可讀自己的）
+      match /deliveryStatusHistory/{historyId} {
+        allow read: if isAuthorizedAccount()
+                    || (isGoogleUser()
+                        && get(/databases/$(database)/documents/GroupOrders/$(id)).data.organizerUid == request.auth.uid);
+        allow write: if isAdmin();
+      }
     }
 
     // ── Orders（後台訂單明細） ──────────────────────────
     match /Orders/{id} {
       allow read, write: if isAuthorizedAccount();
-
-      // 團購人可建立關聯自己 GroupOrder 的 Orders（送審）
-      allow create: if isGoogleUser()
-                    && exists(/databases/$(database)/documents/GroupOrders/$(request.resource.data.groupOrderId))
-                    && get(/databases/$(database)/documents/GroupOrders/$(request.resource.data.groupOrderId)).data.organizerUid == request.auth.uid;
-
-      // 團購人可讀／刪除（收回時用）
-      allow read, delete: if isGoogleUser()
-                         && exists(/databases/$(database)/documents/GroupOrders/$(resource.data.groupOrderId))
-                         && get(/databases/$(database)/documents/GroupOrders/$(resource.data.groupOrderId)).data.organizerUid == request.auth.uid;
+      // organizerUid 由 batchCreateGroupWithOrders 直接寫入，無需跨集合查詢
+      allow create: if isGoogleUser() && request.resource.data.organizerUid == request.auth.uid;
+      allow read, delete: if isGoogleUser() && resource.data.organizerUid == request.auth.uid;
     }
 
     // ── Organizers（團購人 profile） ───────────────────
     match /Organizers/{uid} {
-      // 自己可全權
       allow read, write: if isGoogleUser() && request.auth.uid == uid;
-      // admin 可讀
       allow read: if isAdmin();
     }
 
     // ── GroupSessions（開團即時狀態） ───────────────────
     match /GroupSessions/{sessionId} {
-      // 公開讀（給訂購人 /order/:id 顯示商品）
       allow read: if true;
-      // 只有 owner organizer 可建立／編輯／刪除
       allow create: if isGoogleUser()
                     && request.resource.data.organizerUid == request.auth.uid;
       allow update, delete: if isGoogleUser()
                             && resource.data.organizerUid == request.auth.uid;
-      // admin 可讀寫
       allow read, write: if isAdmin();
     }
 
     // ── GroupSessionOrders（訂購人下單暫存） ───────────
     match /GroupSessionOrders/{id} {
-      // 任何人（含匿名訂購人）可讀（給團購人/訂購人共享狀態）
       allow read: if true;
 
-      // 訂購人可建立：sessionId 對應的 session 必須是 open
       allow create: if isSignedIn()
                     && exists(/databases/$(database)/documents/GroupSessions/$(request.resource.data.sessionId))
                     && get(/databases/$(database)/documents/GroupSessions/$(request.resource.data.sessionId)).data.status == 'open';
 
-      // 訂購人不可修改／刪除（只有 organizer owner 與 admin 可）
       allow update, delete: if isGoogleUser() && (
         isAdmin() ||
         get(/databases/$(database)/documents/GroupSessions/$(resource.data.sessionId)).data.organizerUid == request.auth.uid
@@ -119,16 +110,38 @@ service cloud.firestore {
     }
 
     // ── lineBindings（LINE 帳號綁定） ──────────────────
-    // 用戶透過 LIFF 綁定 LINE userId 與訂單編號的對應關係
+    // 文件 ID = LINE User ID，由 Cloud Functions 管理寫入
     match /lineBindings/{lineUserId} {
-      // 只有本人可讀（LIFF 頁面查詢自身綁定）
       allow read: if isSignedIn() && request.auth.token.firebase.identities != null;
-      // LIFF 匿名或已登入的用戶可建立/更新（lineUserId 必須是文件 ID）
-      allow create, update: if isSignedIn()
-                            && request.resource.data.lineUserId == lineUserId
-                            && request.resource.data.orderNos is list;
-      // 不允許刪除（由 Cloud Functions 管理）
-      allow delete: if false;
+      // 僅 Cloud Functions（透過 Admin SDK）可寫入，前端不可直接寫
+      allow write: if false;
+    }
+
+    // ── lineBindingTokens（一次性綁定 Token） ──────────
+    // 完全由 Cloud Functions 管理，前端不可直接讀寫
+    match /lineBindingTokens/{id} {
+      allow read, write: if false;
+    }
+
+    // ── notificationTemplates（店家通知範本） ──────────
+    // Admin 透過 Cloud Function 寫入；所有已登入用戶可讀（顯示預覽）
+    match /notificationTemplates/{id} {
+      allow read: if isSignedIn();
+      allow write: if false; // 僅 Cloud Functions 寫入
+    }
+
+    // ── userNotificationPreferences（用戶通知偏好） ────
+    // 文件 ID = {userId}_{status}，用戶只能讀寫自己的
+    match /userNotificationPreferences/{docId} {
+      allow read, write: if isGoogleUser()
+                         && docId.split('_')[0] == request.auth.uid;
+      allow read, write: if isAdmin();
+    }
+
+    // ── notificationLogs（推播紀錄，僅供審計） ─────────
+    match /notificationLogs/{id} {
+      allow read: if isAdmin();
+      allow write: if false; // 僅 Cloud Functions 寫入
     }
   }
 }

@@ -189,22 +189,29 @@ function startNewOrder() {
           <h3 class="font-bold text-sm mb-2">商品列表</h3>
           <div v-if="!items.length" class="text-center py-8 text-stone-400 text-sm">尚無可選商品</div>
           <div v-else class="space-y-2">
-            <div v-for="it in items" :key="it.id" class="g-card p-3 flex items-center gap-2">
+            <div v-for="it in items" :key="it.id"
+                 class="g-card p-3 flex items-center gap-3"
+                 :class="{ 'ring-2 ring-brand': Number(qtyMap[it.id] || 0) > 0 }">
               <div class="flex-1 min-w-0">
-                <p class="font-bold text-sm">{{ it.name }}</p>
-                <p class="text-xs text-stone-500">{{ fmtMoney(it.price) }}</p>
-                <p v-if="it.description" class="text-xs text-stone-500 truncate">{{ it.description }}</p>
+                <p class="font-bold text-sm leading-snug">{{ it.name }}</p>
+                <p class="text-xs text-stone-500 mt-0.5">{{ fmtMoney(it.price) }}</p>
+                <p v-if="it.description" class="text-xs text-stone-400 truncate mt-0.5">{{ it.description }}</p>
               </div>
-              <div class="flex items-center gap-1">
-                <button type="button" class="g-btn g-btn-glass g-btn-sm w-9 h-9 px-0"
+              <div class="flex items-center gap-1.5 flex-shrink-0">
+                <button type="button"
+                        class="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                        style="background: var(--surface-2); touch-action: manipulation"
                         @click="qtyMap[it.id] = Math.max(0, Number(qtyMap[it.id] || 0) - 1)">
-                  <i class="fas fa-minus"></i>
+                  <i class="fas fa-minus text-sm"></i>
                 </button>
-                <input v-model.number="qtyMap[it.id]" type="number" min="0"
-                       class="g-input text-center" style="width:4rem;height:2.25rem" />
-                <button type="button" class="g-btn g-btn-glass g-btn-sm w-9 h-9 px-0"
+                <span class="w-9 text-center font-bold text-base tabular-nums select-none">
+                  {{ qtyMap[it.id] || 0 }}
+                </span>
+                <button type="button"
+                        class="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                        style="background: var(--brand); color: #fff; touch-action: manipulation"
                         @click="qtyMap[it.id] = Number(qtyMap[it.id] || 0) + 1">
-                  <i class="fas fa-plus"></i>
+                  <i class="fas fa-plus text-sm"></i>
                 </button>
               </div>
             </div>
@@ -221,16 +228,22 @@ function startNewOrder() {
 
     <!-- Sticky bottom action -->
     <div v-if="isOpen && !submittedInfo && session"
-         class="fixed bottom-0 left-0 right-0 g-nav border-t z-30"
-         style="padding-bottom: env(safe-area-inset-bottom, 0px);">
-      <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-        <div>
-          <p class="text-xs text-stone-500">總金額</p>
-          <p class="text-2xl font-bold text-brand-700">{{ fmtMoney(totalAmount) }}</p>
+         class="fixed bottom-0 left-0 right-0 g-nav border-t z-30">
+      <div class="max-w-2xl mx-auto px-4 pt-3"
+           style="padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px)">
+        <div class="flex items-center gap-3">
+          <div class="min-w-0">
+            <p class="text-xs" style="color: var(--text-secondary)">合計</p>
+            <p class="text-xl font-bold" style="color: var(--brand)">{{ fmtMoney(totalAmount) }}</p>
+          </div>
+          <button class="g-btn g-btn-brand g-btn-lg flex-1 min-h-[2.75rem]"
+                  style="touch-action: manipulation"
+                  :disabled="submitting || totalAmount <= 0"
+                  @click="submit">
+            <i class="fas fa-paper-plane"></i>
+            {{ submitting ? '送出中...' : '送出訂單' }}
+          </button>
         </div>
-        <button class="g-btn g-btn-brand g-btn-lg flex-1 max-w-xs" :disabled="submitting || totalAmount <= 0" @click="submit">
-          <i class="fas fa-paper-plane"></i> {{ submitting ? '送出中...' : '送出訂單' }}
-        </button>
       </div>
     </div>
 

@@ -1,12 +1,11 @@
-// Vue Router：organizer / customer + 中性 landing + 404
-// 後台管理系統改用 legacy HTML（admin.html），不走 Vue Router
 import { createRouter, createWebHistory } from 'vue-router';
 import { useOrganizerAuth } from '@/stores/useOrganizerAuth';
+import { useAdminAuth } from '@/stores/useAdminAuth';
 
 const routes = [
   { path: '/', name: 'landing', component: () => import('@/pages/LandingNotice.vue') },
 
-  // ── Organizer 團購人 ────────────────────────
+  // ── Organizer 團購人 ────────────────────────────────────────────
   {
     path: '/organizer/login',
     name: 'organizer-login',
@@ -25,8 +24,30 @@ const routes = [
     ],
   },
 
-  // ── Customer 訂購人公開頁 ───────────────────
-  // :organizerId = 團購人的 Firebase UID（固定不變的永久網址）
+  // ── Admin 後台 ──────────────────────────────────────────────────
+  {
+    path: '/admin/login',
+    name: 'admin-login',
+    component: () => import('@/pages/admin/AdminLogin.vue'),
+  },
+  {
+    path: '/admin',
+    component: () => import('@/pages/admin/AdminLayout.vue'),
+    meta: { requiresAdminAuth: true },
+    children: [
+      { path: '', redirect: '/admin/review' },
+      { path: 'review',        name: 'admin-review',        component: () => import('@/pages/admin/AdminReview.vue') },
+      { path: 'details',       name: 'admin-details',       component: () => import('@/pages/admin/AdminDetails.vue') },
+      { path: 'contacts',      name: 'admin-contacts',      component: () => import('@/pages/admin/AdminContacts.vue') },
+      { path: 'items',         name: 'admin-items',         component: () => import('@/pages/admin/AdminItems.vue') },
+      { path: 'accounts',      name: 'admin-accounts',      component: () => import('@/pages/admin/AdminAccounts.vue') },
+      { path: 'analytics',     name: 'admin-analytics',     component: () => import('@/pages/admin/AdminAnalytics.vue') },
+      { path: 'more',          name: 'admin-more',          component: () => import('@/pages/admin/AdminMore.vue') },
+      { path: 'line-settings', name: 'admin-line-settings', component: () => import('@/pages/admin/AdminLineSettings.vue') },
+    ],
+  },
+
+  // ── Customer 訂購人公開頁 ───────────────────────────────────────
   {
     path: '/order/:organizerId',
     name: 'customer-order',
@@ -34,8 +55,9 @@ const routes = [
     props: true,
   },
 
-  // ── LINE 相關頁面 ──────────────────────────
-  // LIFF App 的訂單查詢頁（可在 LINE 內部瀏覽器開啟）
+  // ── LINE LIFF 頁面 ──────────────────────────────────────────────
+  // LIFF Endpoint URL 設定為：https://your-domain.com/line/order-status
+  // 攜帶 ?token=xxx 時執行綁定；否則顯示帳號狀態
   {
     path: '/line/order-status',
     name: 'line-order-status',
@@ -45,8 +67,6 @@ const routes = [
   { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/pages/NotFound.vue') },
 ];
 
-// 使用 import.meta.env.BASE_URL 讓 Vite build 時自動帶入正確的 base 路徑
-// GitHub Pages: /jianmei/，Firebase Hosting: /
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
@@ -58,6 +78,13 @@ router.beforeEach(async (to) => {
     const store = useOrganizerAuth();
     if (store.loading) await store.init();
     if (!store.isLoggedIn) return { name: 'organizer-login', query: { redirect: to.fullPath } };
+  }
+
+  if (to.meta.requiresAdminAuth) {
+    const store = useAdminAuth();
+    if (store.loading) await store.init();
+    if (!store.isLoggedIn) return { name: 'admin-login', query: { redirect: to.fullPath } };
+    if (!store.isAuthorized) return { name: 'admin-login' };
   }
 });
 

@@ -162,7 +162,13 @@ export async function batchCreateGroupWithOrders(groupData, ordersList) {
   batch.set(groupRef, { ...groupData, createdAt: Timestamp.now() });
   for (const o of ordersList) {
     const orderRef = doc(collection(db, ORDERS));
-    batch.set(orderRef, { ...o, groupOrderId: groupRef.id, createdAt: Timestamp.now() });
+    // organizerUid 直接寫入每筆 Order，讓 Firestore 規則可直接比對，不需跨集合 exists()
+    batch.set(orderRef, {
+      ...o,
+      groupOrderId: groupRef.id,
+      organizerUid: groupData.organizerUid,
+      createdAt: Timestamp.now(),
+    });
   }
   await batch.commit();
   return groupRef.id;
