@@ -5223,6 +5223,7 @@
             }
           }, (error) => {
             console.error('監聽待審核訂單錯誤:', error);
+            reviewHasLoaded.value = true; // 即使出錯也停止 spinner，避免無限轉圈
           });
         };
 
@@ -7344,6 +7345,9 @@
         onMounted(async () => {
           // 套用儲存的顏色主題（該行主要由 head 腳本處理，這裡確保 Vue 層也同步）
           document.documentElement.classList.toggle('dark', isDark.value);
+
+          // 等待 Firebase Auth 從 IndexedDB 還原登入狀態，避免 Firestore 查詢因 auth 尚未就緒而被拒絕
+          await auth.authStateReady();
 
           const savedUser = sessionStorage.getItem('user');
           const savedView = sessionStorage.getItem('currentView');
