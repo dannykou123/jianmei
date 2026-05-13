@@ -4960,7 +4960,7 @@
             reviewUnsubscribe.value();
             reviewUnsubscribe.value = null;
           }
-          reviewHasLoaded.value = false; // 重置，等待新的 snapshot
+          // 不重置 reviewHasLoaded，避免 fetchReviewList 已載入後又閃 spinner
           let initialized = false;
           const q = query(
             collection(db, "GroupOrders"),
@@ -5354,6 +5354,7 @@
             showAlert('獲取失敗', 'error');
           } finally {
             loading.value = false;
+            reviewHasLoaded.value = true;
           }
         };
 
