@@ -31,8 +31,8 @@ service cloud.firestore {
     match /Accounts/{uid} {
       // 直接以 UID 讀取自己的帳號
       allow get: if isSignedIn() && request.auth.uid == uid;
-      // admin.html 登入需要 email collection query；限制僅 Google 登入者可執行
-      allow list: if isGoogleUser();
+      // admin.html 登入需要 email collection query；任何已登入用戶可執行
+      allow list: if isSignedIn();
       // 新帳號只能由本人以 UID 為文件 ID 建立，且預設 isAuthorized: false
       allow create: if isSignedIn() && request.auth.uid == uid
                     && request.resource.data.isAuthorized == false;

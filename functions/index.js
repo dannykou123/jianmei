@@ -1,11 +1,11 @@
-<<<<<<< HEAD
 /**
  * 健美滷味 Cloud Functions
  *
  * 環境變數設定方式（Firebase Console → Functions → 環境設定）：
- *   LINE_LIFF_CHANNEL_ID    → LINE Developers → LIFF App 對應的 Channel ID
+ *   LINE_CHANNEL_SECRET       → LINE Developers → Messaging API Channel Secret
  *   LINE_CHANNEL_ACCESS_TOKEN → LINE Developers → Messaging API Channel Access Token
- *   LIFF_ID                 → LINE Developers → LIFF App ID（格式：1234567890-xxxxxxxx）
+ *   LINE_LIFF_CHANNEL_ID      → LINE Developers → LIFF App 對應的 Channel ID
+ *   LIFF_ID                   → LINE Developers → LIFF App ID（格式：1234567890-xxxxxxxx）
  *
  * 本地開發：在 functions/.env.local 填入上述變數（已加入 .gitignore）
  */
@@ -14,6 +14,8 @@ const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https')
 const admin = require('firebase-admin');
 const axios = require('axios');
 const crypto = require('crypto');
+const { handleWebhook } = require('./line/webhook');
+const { onSessionStatusChanged } = require('./line/pushNotification');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -293,40 +295,12 @@ exports.saveNotificationTemplate = onCall(async (request) => {
 
   return { success: true };
 });
-=======
-// Firebase Cloud Functions 入口
-// 使用 firebase-functions v2 (gen-2)
 
-const { onRequest } = require('firebase-functions/v2/https');
-const { initializeApp } = require('firebase-admin/app');
-const { handleWebhook } = require('./line/webhook');
-const { onSessionStatusChanged } = require('./line/pushNotification');
-
-// 初始化 Firebase Admin SDK（只呼叫一次）
-initializeApp();
-
-/**
- * LINE Webhook endpoint
- * POST https://asia-northeast1-jianmei-food-54760.cloudfunctions.net/lineWebhook
- *
- * 在 LINE Developer Console 設定此 URL 為 Webhook URL
- */
+// ── 5. lineWebhook ────────────────────────────────────────────────────
 exports.lineWebhook = onRequest(
-  {
-    region: 'asia-northeast1', // 東京，減少 LINE 到台灣的延遲
-    secrets: [
-      'LINE_CHANNEL_SECRET',
-      'LINE_CHANNEL_ACCESS_TOKEN',
-      'LIFF_ORDER_ID',
-      'LIFF_STATUS_ID',
-      'ORGANIZER_ID',
-    ],
-  },
+  { region: 'asia-northeast1' },
   handleWebhook
 );
 
-/**
- * Firestore 觸發器：GroupSession 狀態變更時推播 LINE 通知
- */
+// ── 6. lineNotifyOnSessionStatusChanged ───────────────────────────────
 exports.lineNotifyOnSessionStatusChanged = onSessionStatusChanged;
->>>>>>> a84a3f8c0da6fad1ef61a68b84e1ede7304de3a3

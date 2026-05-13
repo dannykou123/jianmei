@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useOrganizerAuth } from '@/stores/useOrganizerAuth';
 import { updateOrganizer } from '@/services/organizers.service';
@@ -11,6 +11,8 @@ import {
   saveNotificationPreference,
   DELIVERY_STATUSES,
 } from '@/services/line.service';
+import { onSnapshot, doc } from 'firebase/firestore';
+import { db } from '@/firebase';
 import CustomAlert from '@/components/CustomAlert.vue';
 
 const router = useRouter();
@@ -41,15 +43,39 @@ onMounted(async () => {
   if (!auth.firebaseUser) return;
   const uid = auth.firebaseUser.uid;
 
-  // 並行載入 LINE 狀態與通知偏好
-  const [ls, prefs] = await Promise.all([
-    getOrganizerLineStatus(uid),
-    getNotificationPreferences(uid),
-  ]);
-  lineStatus.value = ls;
+  // 通知偏好一次性讀取
+  const prefs = await getNotificationPreferences(uid);
   notifPrefs.value = prefs;
-  loadingLine.value = false;
   loadingPrefs.value = false;
+
+  // Firestore 即時監聽 Organizers/{uid}，手機綁定後電腦端自動更新
+  const unsub = onSnapshot(doc(db, 'Organizers', uid), (snap) => {
+    if (!snap.exists()) {
+      lineStatus.value = { isLineBound: false };
+      loadingLine.value = false;
+      return;
+    }
+    const d = snap.data();
+    lineStatus.value = {
+      isLineBound:      d.isLineBound      || false,
+      lineDisplayName:  d.lineDisplayName  || '',
+      linePictureUrl:   d.linePictureUrl   || '',
+      lineBoundAt:      d.lineBoundAt      || null,
+    };
+    loadingLine.value = false;
+  });
+
+  onUnmounted(unsub);
+
+  // 當使用者從 LIFF 綁定頁切回此頁時也刷新（補強）
+  const onVisibilityChange = async () => {
+    if (document.visibilityState === 'visible' && auth.firebaseUser) {
+      const fresh = await getOrganizerLineStatus(auth.firebaseUser.uid);
+      lineStatus.value = fresh;
+    }
+  };
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  onUnmounted(() => document.removeEventListener('visibilitychange', onVisibilityChange));
 });
 
 async function save() {
