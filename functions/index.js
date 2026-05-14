@@ -45,9 +45,16 @@ function renderTemplate(body, vars) {
 }
 
 async function verifyAdmin(uid) {
+  // 先用 Firebase Auth UID 直接查（新帳號文件 ID = uid）
   const snap = await db.collection('Accounts').doc(uid).get();
-  if (!snap.exists) return false;
-  const d = snap.data();
+  if (snap.exists) {
+    const d = snap.data();
+    return d.isAuthorized === true && d.role === 'admin';
+  }
+  // Fallback：舊帳號文件 ID 可能非 uid，改用 googleUid 欄位查詢
+  const q = await db.collection('Accounts').where('googleUid', '==', uid).limit(1).get();
+  if (q.empty) return false;
+  const d = q.docs[0].data();
   return d.isAuthorized === true && d.role === 'admin';
 }
 
@@ -296,11 +303,65 @@ exports.saveNotificationTemplate = onCall(async (request) => {
   return { success: true };
 });
 
-// ── 5. lineWebhook ────────────────────────────────────────────────────
+// ── 5. notifySessionStatusChange ─────────────────────────────────────
+// 後台審核（接單/拒單）後，直接呼叫此 function 通知對應團購主 LINE
+exports.notifySessionStatusChange = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', '請先登入');
+  if (!(await verifyAdmin(request.auth.uid))) throw new HttpsError('permission-denied', '無管理員權限');
+
+  const { groupOrderId, status, rejectedReason } = request.data;
+  if (!groupOrderId || !status) throw new HttpsError('invalid-argument', '缺少必要參數');
+  if (!['approved', 'rejected'].includes(status)) throw new HttpsError('invalid-argument', '無效的狀態');
+
+  const groupOrderSnap = await db.collection('GroupOrders').doc(groupOrderId).get();
+  if (!groupOrderSnap.exists) throw new HttpsError('not-found', '找不到訂單');
+
+  const { organizerUid, companyName } = groupOrderSnap.data();
+  if (!organizerUid) return { success: true, notified: false, reason: '訂單缺少 organizerUid' };
+
+  const organizerSnap = await db.collection('Organizers').doc(organizerUid).get();
+  const organizer = organizerSnap.exists ? organizerSnap.data() : null;
+
+  if (!organizer?.isLineBound || !organizer?.lineUserId) {
+    return { success: true, notified: false, reason: '團購主未綁定 LINE' };
+  }
+
+  // 確認通知偏好（未設定預設為開啟）
+  const prefSnap = await db.collection('userNotificationPreferences').doc(`${organizerUid}_${status}`).get();
+  if (prefSnap.exists && prefSnap.data().isEnabled === false) {
+    return { success: true, notified: false, reason: '用戶已關閉此狀態通知' };
+  }
+
+  const label = companyName || groupOrderId;
+  let text;
+  if (status === 'approved') {
+    text = `✅ 您的開團「${label}」已接單！\n\n請等待後續配送通知。`;
+  } else {
+    const reason = rejectedReason ? `\n原因：${rejectedReason}` : '';
+    text = `❌ 您的開團「${label}」已拒單。${reason}\n\n如有疑問請聯繫我們。`;
+  }
+
+  try {
+    await pushLineMessage(organizer.lineUserId, text);
+    await db.collection('notificationLogs').add({
+      groupOrderId, userId: organizerUid, status, result: 'success',
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return { success: true, notified: true };
+  } catch (err) {
+    await db.collection('notificationLogs').add({
+      groupOrderId, userId: organizerUid, status, result: 'failed',
+      errorMessage: err.message, sentAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    throw new HttpsError('internal', `LINE 通知發送失敗：${err.message}`);
+  }
+});
+
+// ── 6. lineWebhook ────────────────────────────────────────────────────
 exports.lineWebhook = onRequest(
   { region: 'asia-northeast1' },
   handleWebhook
 );
 
-// ── 6. lineNotifyOnSessionStatusChanged ───────────────────────────────
+// ── 7. lineNotifyOnSessionStatusChanged ───────────────────────────────
 exports.lineNotifyOnSessionStatusChanged = onSessionStatusChanged;

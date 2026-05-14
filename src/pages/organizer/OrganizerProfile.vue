@@ -9,7 +9,7 @@ import {
   unbindLine,
   getNotificationPreferences,
   saveNotificationPreference,
-  DELIVERY_STATUSES,
+  ORGANIZER_NOTIFICATION_STATUSES,
 } from '@/services/line.service';
 import { onSnapshot, doc } from 'firebase/firestore';
 import { db } from '@/firebase';
@@ -44,7 +44,7 @@ onMounted(async () => {
   const uid = auth.firebaseUser.uid;
 
   // 通知偏好一次性讀取
-  const prefs = await getNotificationPreferences(uid);
+  const prefs = await getNotificationPreferences(uid, ORGANIZER_NOTIFICATION_STATUSES);
   notifPrefs.value = prefs;
   loadingPrefs.value = false;
 
@@ -197,7 +197,7 @@ function fmtBoundAt(ts) {
     <div class="g-card-solid p-4 space-y-3">
       <h3 class="font-bold flex items-center gap-2">
         <i class="fab fa-line text-xl" style="color: #06C755"></i>
-        LINE 帳號綁定
+        LINE 帳號通知綁定
       </h3>
 
       <div v-if="loadingLine" class="text-center py-4 text-stone-400">
@@ -275,7 +275,7 @@ function fmtBoundAt(ts) {
     <div v-if="lineStatus?.isLineBound" class="g-card-solid p-4 space-y-3">
       <h3 class="font-bold">LINE 通知偏好</h3>
       <p class="text-sm" style="color: var(--text-secondary)">
-        選擇您希望接收哪些配送狀態的 LINE 通知。
+        選擇您希望接收哪些訂單狀態變動的 LINE 通知。
       </p>
 
       <div v-if="loadingPrefs" class="text-center py-4 text-stone-400">
@@ -284,7 +284,7 @@ function fmtBoundAt(ts) {
 
       <div v-else class="space-y-2">
         <label
-          v-for="s in DELIVERY_STATUSES"
+          v-for="s in ORGANIZER_NOTIFICATION_STATUSES"
           :key="s.value"
           class="flex items-center justify-between p-3 rounded-xl cursor-pointer"
           style="background: var(--surface-2)"

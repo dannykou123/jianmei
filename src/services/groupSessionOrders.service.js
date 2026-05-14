@@ -8,8 +8,8 @@ import { db } from '@/firebase';
 const COL = 'GroupSessionOrders';
 
 /**
- * 產生訂單編號：年(2碼)+月(2碼)+日(2碼)+時(2碼)+亂數(5碼)，共 13 碼
- * 例：2604301212345
+ * 產生訂單編號：年(2碼)+月(2碼)+日(2碼)+時(2碼)+分(2碼)+亂數(2碼)，共 12 碼
+ * 例：260514153247
  */
 function generateOrderNo() {
   const now = new Date();
@@ -17,8 +17,9 @@ function generateOrderNo() {
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
   const hh = String(now.getHours()).padStart(2, '0');
-  const rand = String(Math.floor(Math.random() * 100000)).padStart(5, '0');
-  return `${yy}${mm}${dd}${hh}${rand}`;
+  const min = String(now.getMinutes()).padStart(2, '0');
+  const rand = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+  return `${yy}${mm}${dd}${hh}${min}${rand}`;
 }
 
 /**

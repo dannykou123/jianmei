@@ -318,28 +318,28 @@ async function bindLineAccount() {
       <!-- 查詢輸入框 -->
       <div class="bg-white dark:bg-stone-800 rounded-2xl p-4 shadow-sm border border-stone-100 dark:border-stone-700">
         <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">
-          訂單編號（13 碼）
+          訂單編號（12 碼）
         </label>
         <div class="flex gap-2">
           <input
             v-model="inputOrderNo"
             type="text"
             inputmode="numeric"
-            maxlength="13"
-            placeholder="例：2605041234567"
+            maxlength="12"
+            placeholder="例：260514152347"
             class="flex-1 border border-stone-200 dark:border-stone-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#B0736A]"
             @keydown.enter="searchOrder"
           />
           <button
             @click="searchOrder"
-            :disabled="searching || inputOrderNo.length !== 13"
+            :disabled="searching || inputOrderNo.length !== 12"
             class="bg-[#B0736A] hover:bg-[#9e6560] disabled:opacity-40 text-white rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"
           >
             <i class="fa-solid fa-magnifying-glass"></i>
           </button>
         </div>
-        <p v-if="inputOrderNo && inputOrderNo.length !== 13" class="text-xs text-orange-500 mt-1">
-          訂單編號需為 13 碼數字
+        <p v-if="inputOrderNo && inputOrderNo.length !== 12" class="text-xs text-orange-500 mt-1">
+          訂單編號需為 12 碼數字
         </p>
       </div>
 

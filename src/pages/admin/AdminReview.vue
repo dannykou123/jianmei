@@ -3,18 +3,21 @@ import { onMounted, onUnmounted, ref, computed } from 'vue';
 import {
   subscribeGroupOrders, listOrdersByGroup, updateGroupOrder, deleteGroupOrder, batchDeleteGroupWithOrders,
 } from '@/services/orders.service';
+import { notifySessionStatusChange } from '@/services/line.service';
 import { useAdminAuth } from '@/stores/useAdminAuth';
 import { Timestamp } from 'firebase/firestore';
 import { fmtTs, fmtMoney, fmtDate } from '@/composables/useFmt';
 import StatusBadge from '@/components/StatusBadge.vue';
 import GlassModal from '@/components/GlassModal.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import CustomAlert from '@/components/CustomAlert.vue';
 
 const auth = useAdminAuth();
 const list = ref([]);
 const loading = ref(true);
 const detailModal = ref({ show: false, group: null, orders: [] });
 const confirmState = ref({ show: false, action: null, group: null });
+const alertState = ref({ show: false, title: '', message: '', type: 'info' });
 
 let unsub = null;
 onMounted(() => {
@@ -45,6 +48,7 @@ async function handleConfirm() {
   const { action, group } = confirmState.value;
   if (!group) return;
   const now = new Date().toISOString();
+
   if (action === 'approve') {
     await updateGroupOrder(group.id, {
       status: 'approved',
@@ -52,6 +56,17 @@ async function handleConfirm() {
       approvedBy: auth.account?.email || '',
       updatedAt: now,
     });
+    // 發送 LINE 通知給團購主
+    try {
+      const result = await notifySessionStatusChange(group.id, 'approved');
+      if (result.notified) {
+        alertState.value = { show: true, title: '已接單', message: 'LINE 通知已發送給團購主', type: 'success' };
+      } else {
+        alertState.value = { show: true, title: '已接單', message: `LINE 通知未發送：${result.reason || '團購主未綁定 LINE'}`, type: 'info' };
+      }
+    } catch (e) {
+      alertState.value = { show: true, title: '已接單', message: `LINE 通知失敗：${e.message}`, type: 'warn' };
+    }
   } else if (action === 'reject') {
     await updateGroupOrder(group.id, {
       status: 'rejected',
@@ -59,9 +74,21 @@ async function handleConfirm() {
       rejectedBy: auth.account?.email || '',
       updatedAt: now,
     });
+    // 發送 LINE 通知給團購主
+    try {
+      const result = await notifySessionStatusChange(group.id, 'rejected');
+      if (result.notified) {
+        alertState.value = { show: true, title: '已拒單', message: 'LINE 通知已發送給團購主', type: 'success' };
+      } else {
+        alertState.value = { show: true, title: '已拒單', message: `LINE 通知未發送：${result.reason || '團購主未綁定 LINE'}`, type: 'info' };
+      }
+    } catch (e) {
+      alertState.value = { show: true, title: '已拒單', message: `LINE 通知失敗：${e.message}`, type: 'warn' };
+    }
   } else if (action === 'delete') {
     await batchDeleteGroupWithOrders(group.id);
   }
+
   confirmState.value = { show: false, action: null, group: null };
   if (detailModal.value.group?.id === group.id) detailModal.value.show = false;
 }
@@ -172,6 +199,14 @@ const confirmText = computed(() => {
       :message="confirmState.group?.companyName || ''"
       @confirm="handleConfirm"
       @cancel="confirmState.show = false"
+    />
+
+    <CustomAlert
+      :show="alertState.show"
+      :title="alertState.title"
+      :message="alertState.message"
+      :type="alertState.type"
+      @close="alertState.show = false"
     />
   </section>
 </template>

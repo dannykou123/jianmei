@@ -16,6 +16,15 @@ export const DELIVERY_STATUSES = [
   { value: 'exception',  label: '配送異常', icon: 'fa-triangle-exclamation', color: '#dc2626' },
 ];
 
+// 團購主 LINE 通知偏好使用的狀態清單
+export const ORGANIZER_NOTIFICATION_STATUSES = [
+  { value: 'pending',   label: '待審核', icon: 'fa-clock',        color: '#f97316' },
+  { value: 'approved',  label: '已接單', icon: 'fa-check',        color: '#16a34a' },
+  { value: 'rejected',  label: '已拒單', icon: 'fa-xmark',        color: '#dc2626' },
+  { value: 'shipped',   label: '已出貨', icon: 'fa-truck',        color: '#2563eb' },
+  { value: 'delivered', label: '已送達', icon: 'fa-circle-check', color: '#059669' },
+];
+
 export const DEFAULT_TEMPLATES = {
   preparing:  '【健美滷味】{{用戶姓名}}，您的訂單正在備貨中 📦\n\n如有問題歡迎聯繫我們！',
   shipped:    '【健美滷味】{{用戶姓名}}，您的訂單已出貨！🚚\n預計送達：{{預計送貨日}}\n\n感謝您的支持！',
@@ -60,15 +69,15 @@ export async function unbindLine(uid) {
 
 // ── 通知偏好設定 ──────────────────────────────────────────────────────
 
-export async function getNotificationPreferences(uid) {
+export async function getNotificationPreferences(uid, statuses = DELIVERY_STATUSES) {
   const prefs = {};
   await Promise.all(
-    DELIVERY_STATUSES.map(async ({ value }) => {
+    statuses.map(async ({ value }) => {
       const snap = await getDoc(doc(db, 'userNotificationPreferences', `${uid}_${value}`));
       prefs[value] = snap.exists() ? snap.data().isEnabled : true;
     })
   );
-  return prefs; // { preparing: true, shipped: true, ... }
+  return prefs; // { pending: true, approved: true, ... }
 }
 
 export async function saveNotificationPreference(uid, status, isEnabled) {
@@ -108,5 +117,11 @@ export async function getNotificationTemplates() {
 export async function saveNotificationTemplate(status, body) {
   const fn = httpsCallable(functions, 'saveNotificationTemplate');
   const result = await fn({ status, body });
+  return result.data;
+}
+
+export async function notifySessionStatusChange(groupOrderId, status, rejectedReason = '') {
+  const fn = httpsCallable(functions, 'notifySessionStatusChange');
+  const result = await fn({ groupOrderId, status, rejectedReason });
   return result.data;
 }

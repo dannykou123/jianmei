@@ -4,8 +4,8 @@
 const { getFirestore } = require('firebase-admin/firestore');
 const { buildOrderStatusMessage, buildOrderNotFoundMessage } = require('./richMessages');
 
-// 13 碼訂單編號格式（YYMMDDHHXXXXX）
-const ORDER_NO_REGEX = /^\d{13}$/;
+// 12 碼訂單編號格式（YYMMDDHHMM+2碼亂數）
+const ORDER_NO_REGEX = /^\d{12}$/;
 
 /**
  * 處理 LINE message 事件

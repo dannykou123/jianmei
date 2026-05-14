@@ -298,11 +298,9 @@ const confirmInfo = computed(() => {
       </button>
     </div>
 
-    <!-- 已接單：關團（左）、已接單無法修改（右） -->
-    <div v-if="session.status === SESSION_STATUS.APPROVED" class="flex justify-between">
-      <button class="g-btn g-btn-danger g-btn-sm" @click="askClose">
-        <i class="fas fa-power-off"></i> 關團
-      </button>
+    <!-- 已接單：顯示說明，不可關團 -->
+    <div v-if="session.status === SESSION_STATUS.APPROVED" class="flex justify-end">
+      <span class="text-sm text-stone-400"><i class="fas fa-lock mr-1"></i>已接單，請等候店家安排配送</span>
     </div>
 
     <!-- Header -->
