@@ -1,5 +1,16 @@
 # Copilot Instructions
 
+## 工作規則
+
+- 任何超過 1 個檔案的功能修改，必須先建立 OpenSpec change。
+- 實作前必須閱讀：
+  - openspec/project.md
+  - openspec/changes/<change-id>/proposal.md
+  - openspec/changes/<change-id>/design.md
+  - openspec/changes/<change-id>/tasks.md
+  - openspec/changes/<change-id>/spec.md
+- 不可直接跳過 OpenSpec tasks 實作未定義功能。
+
 ## Project Context
 
 This project is a frontend web application.
